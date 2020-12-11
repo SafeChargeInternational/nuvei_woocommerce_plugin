@@ -1,5 +1,9 @@
 *** WooCommerce Extension Template Changelog ***
 
+version 3.6
+	* Changes in readme.txt
+	* Plugin moved to new repo.
+
 version 3.5.1
 	* Get plugin version directly from the description of the main file. Removed old plugin version variable.
 

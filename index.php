@@ -3,7 +3,7 @@
  * Plugin Name: Nuvei Payments
  * Plugin URI: https://github.com/SafeChargeInternational/safecharge_woocommerce_plugin
  * Description: Nuvei gateway for WooCommerce
- * Version: 3.5.1
+ * Version: 3.6
  * Author: Nuvei
  * Author URI: https://nuvei.com
  * Require at least: 4.7

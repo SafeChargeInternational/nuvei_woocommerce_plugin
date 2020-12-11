@@ -33,7 +33,7 @@ Upload the provided archive and install it. As a final step you should activate 
 4. If downloaded as a zip archive, install it from WordPress > Plugins > Add New. Go to point 8.
 5. If the plugin is extracted or prefer this way - continue.
 6. Read through the "readme" file thoroughly to ensure you follow the installation instructions.
-7. With your FTP program, upload the Plugin folder (safecharge_woocommerce_plugin) to the wp-content/plugins folder in your WordPress directory online.
+7. With your FTP program, upload the Plugin folder (nuveie_woocommerce_plugin) to the wp-content/plugins folder in your WordPress directory online.
 8. Go to Plugins screen and find the newly uploaded Plugin in the list.
 9. Click Activate to activate it.
 
