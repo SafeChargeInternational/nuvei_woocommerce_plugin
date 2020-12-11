@@ -4,11 +4,11 @@
 
 ## Requirements
 Wordpress: 
-	- minimum v4.7
-	- tested up to v5.5.3
+  - minimum v4.7
+  - tested up to v5.5.3
 WooCommerce: 
-	- minimum v 3.0
-	- tested up to v4.7.0
+  - minimum v 3.0
+  - tested up to v4.7.0
 Stable tag: main
 
 ## Description
