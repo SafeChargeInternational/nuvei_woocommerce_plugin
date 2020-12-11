@@ -1,6 +1,7 @@
 *** WooCommerce Extension Template Changelog ***
 
 version 3.6
+	* Use readme md instead of txt file.
 	* Changes in readme.txt
 	* Plugin moved to new repo.
 
