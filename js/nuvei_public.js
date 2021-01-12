@@ -14,7 +14,6 @@ var cardExpiry		= null;
 var cardCvc			= null;
 var scData			= {};
 var lastCvcHolder	= '';
-var scDeleteUpoFlag = false;
 
 // set some classes for the Fields
 var elementClasses = {
@@ -104,8 +103,14 @@ function scValidateAPMFields() {
 		merchantId      : scMerchantId,
 		merchantSiteId  : scMerchantSiteId,
 		webMasterId		: scTrans.webMasterId,
-		userTokenId		: scUserTokenId
 	};
+	
+	if (
+		jQuery('body').find('#nuvei_save_upo').is(':checked')
+		|| typeof jQuery('input[name="sc_payment_method"]:checked').attr('data-upo-name') != 'undefined'
+	) {
+		nuveiPaymentParams.userTokenId = scUserTokenId;
+	}
 
 	console.log(selectedPM)
 
@@ -365,8 +370,6 @@ function getNewSessionToken() {
 }
 
 function deleteScUpo(upoId) {
-	scDeleteUpoFlag = true;
-	
 	if(confirm(scTrans.AskDeleteUpo)) {
 		jQuery('#sc_remove_upo_' + upoId).hide();
 		jQuery('#sc_loader_background').show();
@@ -562,6 +565,16 @@ function scPrintApms(data) {
 					'</li>';
 		}
 		
+		if(1 == scTrans.useUpos) {
+			apmHmtl +=
+					'<li class="apm_container" id="nuvei_save_upo_li">'
+						+ '<label class="apm_title">'
+							+ '<input type="checkbox" name="nuvei_save_upo" id="nuvei_save_upo" value="0" />&nbsp;&nbsp;'
+							+ scTrans.ConfirmSaveUpo
+						+ '</label>'
+					+ '</li>';
+		}
+		
 		jQuery('#sc_second_step_form #sc_apms_list').html(apmHmtl);
 	}
 }
@@ -573,15 +586,15 @@ jQuery(function() {
 		// hide all containers with fields
 		jQuery('.apm_fields').hide();
 		
-		if(scDeleteUpoFlag) {
-			console.log('scDeleteUpoFlag', scDeleteUpoFlag);
-			
-			scDeleteUpoFlag = false;
-			return;
-		}
-		
 		var currInput		= jQuery(this);
 		var filedsToShowId	= currInput.closest('li').find('.apm_fields');
+		
+		if(undefined !== currInput.attr('data-upo-name')) {
+			jQuery('body').find('#nuvei_save_upo_li').hide();
+		}
+		else {
+			jQuery('body').find('#nuvei_save_upo_li').show();
+		}
 		
 		// reset sc fields holders
 		cardNumber = sfcFirstField = cardExpiry = cardCvc = null;
@@ -660,6 +673,12 @@ jQuery(function() {
 			
 			jQuery('input[name="payment_method"]').prop('checked', false);
 		}
+	});
+	
+	jQuery('body').on('change', '#nuvei_save_upo', function() {
+		var _self = jQuery(this);
+		
+		_self.val(_self.is(':checked') ? 1 : 0);
 	});
 });
 // document ready function END

@@ -1,11 +1,13 @@
-<?php
+<?php 
 /*
  * Plugin Name: Nuvei Payments
  * Plugin URI: https://github.com/SafeChargeInternational/safecharge_woocommerce_plugin
  * Description: Nuvei gateway for WooCommerce
- * Version: 3.6
+ * Version: 3.7
  * Author: Nuvei
  * Author URI: https://nuvei.com
+ * Text Domain: nuvei_woocommerce
+ * Domain Path: /languages
  * Require at least: 4.7
  * Tested up to: 5.5.3
  * WC requires at least: 3.0
@@ -47,6 +49,8 @@ function woocommerce_sc_init() {
 	global $wc_sc;
 	$wc_sc = new WC_SC();
 	
+	load_plugin_textdomain( 'nuvei_woocommerce', false, dirname( plugin_basename( __FILE__ ) ) . '/languages/' );
+	
 	add_action('init', 'sc_enqueue');
 	// load WC styles
 	add_filter('woocommerce_enqueue_styles', 'sc_enqueue_wo_files');
@@ -56,8 +60,15 @@ function woocommerce_sc_init() {
 			return;
 		}
 		
-		wp_register_style('sc_admin_style', plugins_url('/css/sc_admin_style.css', __FILE__), '', 1, 'all');
-		wp_enqueue_style('sc_admin_style');
+		wp_register_style(
+			'nuvei_admin_style',
+			plugins_url('/css/nuvei_admin_style.css',
+			__FILE__),
+			'',
+			1,
+			'all'
+		);
+		wp_enqueue_style('nuvei_admin_style');
 	});
 	// add void and/or settle buttons to completed orders, we check in the method is this order made via SC paygate
 	add_action('woocommerce_order_item_add_action_buttons', 'sc_add_buttons');
@@ -115,7 +126,7 @@ function woocommerce_sc_init() {
 				&& is_order_received_page()
 				&& get_the_ID() === $id
 			) {
-				$title = esc_html__('Order error', 'sc');
+				$title = esc_html__('Order error', 'nuvei_woocommerce');
 			}
 
 			return $title;
@@ -125,7 +136,7 @@ function woocommerce_sc_init() {
 			'woocommerce_thankyou_order_received_text',
 		
 			function ( $str, $order) {
-				return esc_html__('There is an error with your order. Please, check if the order was recieved or what is the status!', 'sc');
+				return esc_html__('There is an error with your order. Please, check if the order was recieved or what is the status!', 'nuvei_woocommerce');
 			}, 10, 2);
 	} elseif ('canceled' === strtolower($wc_sc->get_request_status())) {
 		add_filter('the_title', function ( $title, $id) {
@@ -134,14 +145,14 @@ function woocommerce_sc_init() {
 				&& is_order_received_page()
 				&& get_the_ID() === $id
 			) {
-				$title = esc_html__('Order canceled', 'sc');
+				$title = esc_html__('Order canceled', 'nuvei_woocommerce');
 			}
 
 			return $title;
 		}, 10, 2);
 		
 		add_filter('woocommerce_thankyou_order_received_text', function ( $str, $order) {
-			return esc_html__('Please, check the order for details!', 'sc');
+			return esc_html__('Please, check the order for details!', 'nuvei_woocommerce');
 		}, 10, 2);
 	}
 	
@@ -212,7 +223,7 @@ function sc_ajax_action() {
 		$wc_sc->sc_download_subscr_pans();
 	}
 	
-	wp_send_json_error(__('Not recognized Ajax call.', 'nuvei'));
+	wp_send_json_error(__('Not recognized Ajax call.', 'nuvei_woocommerce'));
 	wp_die();
 }
 
@@ -241,13 +252,13 @@ function sc_enqueue_wo_files( $styles) {
 		
 	// novo style
 	wp_register_style(
-		'sc_style',
-		$plugin_url . 'css/sc_style.css',
+		'nuvei_style',
+		$plugin_url . 'css/nuvei_style.css',
 		'',
 		'2.2',
 		'all'
 	);
-	wp_enqueue_style('sc_style');
+	wp_enqueue_style('nuvei_style');
 	
 	// WebSDK URL for integration and production
 	wp_register_script(
@@ -260,20 +271,20 @@ function sc_enqueue_wo_files( $styles) {
 
 	// main JS
 	wp_register_script(
-		'sc_js_public',
-		$plugin_url . 'js/sc_public.js',
+		'nuvei_js_public',
+		$plugin_url . 'js/nuvei_public.js',
 		array('jquery'),
-		'1.1'
+		'1.3'
 	);
 	
 	// reorder js
 	wp_register_script(
-		'sc_js_reorder',
-		$plugin_url . 'js/sc_reorder.js',
+		'nuvei_js_reorder',
+		$plugin_url . 'js/nuvei_reorder.js',
 		array('jquery'),
 		'1'
 	);
-	wp_enqueue_script('sc_js_reorder');
+	wp_enqueue_script('nuvei_js_reorder');
 	
 	// get selected WC price separators
 	$wcThSep  = '';
@@ -300,40 +311,42 @@ function sc_enqueue_wo_files( $styles) {
 	
 	// put translations here into the array
 	wp_localize_script(
-		'sc_js_public',
+		'nuvei_js_public',
 		'scTrans',
 		array(
-			'ajaxurl'            => admin_url('admin-ajax.php'),
-			'security'            => wp_create_nonce('sc-security-nonce'),
-			'webMasterId'        => 'WooCommerce ' . WOOCOMMERCE_VERSION,
-			'sourceApplication'    => SC_SOURCE_APPLICATION,
+			'ajaxurl'           => admin_url('admin-ajax.php'),
+			'security'          => wp_create_nonce('sc-security-nonce'),
+			'webMasterId'       => 'WooCommerce ' . WOOCOMMERCE_VERSION,
+			'sourceApplication'	=> SC_SOURCE_APPLICATION,
 			'plugin_dir_url'    => plugin_dir_url(__FILE__),
-			'wcThSep'            => $wcThSep,
-			'wcDecSep'            => $wcDecSep,
+			'wcThSep'           => $wcThSep,
+			'wcDecSep'          => $wcDecSep,
+			'useUpos'			=> $wc_sc->can_use_upos(),
 			
 			// translations
-			'paymentDeclined'    => __('Your Payment was DECLINED. Please try another payment method!', 'nuvei'),
-			'paymentError'        => __('Error with your Payment. Please try again later!', 'nuvei'),
-			'unexpectedError'    => __('Unexpected error, please try again later!', 'nuvei'),
-			'choosePM'            => __('Please, choose payment method, and fill all fields!', 'nuvei'),
-			'fillFields'        => __('Please fill all fields marked with * !', 'nuvei'),
-			'errorWithPMs'        => __('Error when try to get the Payment Methods. Please try again later or use different Payment Option!', 'nuvei'),
-			'errorWithSToken'    => __('Error when try to get the Session Token. Please try again later', 'nuvei'),
-			'missData'            => __('Mandatory data is missing, please try again later!', 'nuvei'),
-			'proccessError'        => __('Error in the proccess. Please, try again later!', 'nuvei'),
-	//          'chooseUPO'         => __('Choose from you preferred payment methods', 'nuvei'),
-	//          'chooseAPM'         => __('Choose from the payment options', 'nuvei'),
-			'goBack'            => __('Go back', 'nuvei'),
-			'CCNameIsEmpty'        => __('Card Holder Name is empty.', 'nuvei'),
-			'CCNumError'        => __('Card Number is empty or wrong.', 'nuvei'),
-			'CCExpDateError'    => __('Card Expiry Date is not correct.', 'nuvei'),
-			'CCCvcError'        => __('Card CVC is not correct.', 'nuvei'),
-			'AskDeleteUpo'        => __('Do you want to delete this UPO?', 'nuvei'),
+			'paymentDeclined'	=> __('Your Payment was DECLINED. Please try another payment method!', 'nuvei_woocommerce'),
+			'paymentError'      => __('Error with your Payment. Please try again later!', 'nuvei_woocommerce'),
+			'unexpectedError'	=> __('Unexpected error, please try again later!', 'nuvei_woocommerce'),
+			'choosePM'          => __('Please, choose payment method, and fill all fields!', 'nuvei_woocommerce'),
+			'fillFields'        => __('Please fill all fields marked with * !', 'nuvei_woocommerce'),
+			'errorWithPMs'      => __('Error when try to get the Payment Methods. Please try again later or use different Payment Option!', 'nuvei_woocommerce'),
+			'errorWithSToken'	=> __('Error when try to get the Session Token. Please try again later', 'nuvei_woocommerce'),
+			'missData'          => __('Mandatory data is missing, please try again later!', 'nuvei_woocommerce'),
+			'proccessError'     => __('Error in the proccess. Please, try again later!', 'nuvei_woocommerce'),
+	//          'chooseUPO'         => __('Choose from you preferred payment methods', 'nuvei_woocommerce'),
+	//          'chooseAPM'         => __('Choose from the payment options', 'nuvei_woocommerce'),
+			'goBack'            => __('Go back', 'nuvei_woocommerce'),
+			'CCNameIsEmpty'     => __('Card Holder Name is empty.', 'nuvei_woocommerce'),
+			'CCNumError'        => __('Card Number is empty or wrong.', 'nuvei_woocommerce'),
+			'CCExpDateError'    => __('Card Expiry Date is not correct.', 'nuvei_woocommerce'),
+			'CCCvcError'        => __('Card CVC is not correct.', 'nuvei_woocommerce'),
+			'AskDeleteUpo'      => __('Do you want to delete this UPO?', 'nuvei_woocommerce'),
+			'ConfirmSaveUpo'	=> __('Would you like Nuvei to keep the selected payment method as Preferred?', 'nuvei_woocommerce'),
 		)
 	);
 
 	// connect the translations with some of the JS files
-	wp_enqueue_script('sc_js_public');
+	wp_enqueue_script('nuvei_js_public');
 	
 	return $styles;
 }
@@ -372,8 +385,8 @@ function sc_enqueue( $hook) {
 	if (is_admin()) {
 		// main JS
 		wp_register_script(
-			'sc_js_admin',
-			$plugin_url . 'js/sc_admin.js',
+			'nuvei_js_admin',
+			$plugin_url . 'js/nuvei_admin.js',
 			array('jquery'),
 			'1'
 		);
@@ -385,19 +398,19 @@ function sc_enqueue( $hook) {
 		
 		// put translations here into the array
 		wp_localize_script(
-			'sc_js_admin',
+			'nuvei_js_admin',
 			'scTrans',
 			array(
 				'ajaxurl'				=> admin_url('admin-ajax.php'),
 				'security'				=> wp_create_nonce('sc-security-nonce'),
 				'scPlansLastModTime'	=> $sc_plans_last_mod_time,
 				// translations
-				'refundQuestion'		=> __('Are you sure about this Refund?', 'nuvei'),
-				'LastDownload'			=> __('Last Download', 'nuvei'),
+				'refundQuestion'		=> __('Are you sure about this Refund?', 'nuvei_woocommerce'),
+				'LastDownload'			=> __('Last Download', 'nuvei_woocommerce'),
 			)
 		);
 		
-		wp_enqueue_script('sc_js_admin');
+		wp_enqueue_script('nuvei_js_admin');
 	}
 	# load external files END
 }
@@ -407,13 +420,13 @@ function sc_show_final_text() {
 	global $woocommerce;
 	global $wc_sc;
 	
-	$msg = __('Your payment is being processed. Your order status will be updated soon.', 'sc');
+	$msg = __('Your payment is being processed. Your order status will be updated soon.', 'nuvei_woocommerce');
    
 	// REST API tahnk you page handler
 	if (
 		!empty($_REQUEST['Status'])
 		&& 'error' == sanitize_text_field($_REQUEST['Status'])) {
-		$msg = __('Your payment failed. Please, try again.', 'sc');
+		$msg = __('Your payment failed. Please, try again.', 'nuvei_woocommerce');
 	} else {
 		$woocommerce->cart->empty_cart();
 	}
@@ -498,20 +511,32 @@ function sc_add_buttons() {
 			 */
 			&& ( '1' != $order_has_refund && !$refunds_exists )
 		) {
+			$question = sprintf(
+				/* translators: %d is replaced with "decimal" */
+				__('Are you sure, you want to Cancel Order #%d?', 'nuvei_woocommerce'),
+				$order_id
+			);
+			
 			echo
 				'<button id="sc_void_btn" type="button" onclick="settleAndCancelOrder(\''
-					. esc_html__('Are you sure, you want to Cancel Order #' . $order_id . '?', 'sc') . '\', '
-					. '\'void\', ' . esc_html($order_id) . ')" class="button generate-items">'
-					. esc_html__('Void', 'sc') . '</button>';
+					. esc_html($question) . '\', \'void\', ' . esc_html($order_id)
+					. ')" class="button generate-items">'
+					. esc_html__('Void', 'nuvei_woocommerce') . '</button>';
 		}
 		
 		// show SETTLE button ONLY if P3D resonse transaction_type IS Auth
 		if ('pending' == $order_status && 'Auth' == $order->get_meta(SC_RESP_TRANS_TYPE)) {
+			$question = sprintf(
+				/* translators: %d is replaced with "decimal" */
+				__('Are you sure, you want to Settle Order #%d?', 'nuvei_woocommerce'),
+				$order_id
+			);
+			
 			echo
 				'<button id="sc_settle_btn" type="button" onclick="settleAndCancelOrder(\''
-					. esc_html__('Are you sure, you want to Settle Order #' . $order_id . '?', 'sc') . '\', '
-					. '\'settle\', \'' . esc_html($order_id) . '\')" class="button generate-items">'
-					. esc_html__('Settle', 'sc') . '</button>';
+					. esc_html($question)
+					. '\', \'settle\', \'' . esc_html($order_id) . '\')" class="button generate-items">'
+					. esc_html__('Settle', 'nuvei_woocommerce') . '</button>';
 		}
 		
 		// add loading screen
@@ -613,7 +638,7 @@ function nuvei_change_title_order_received( $title, $id) {
 		&& is_order_received_page()
 		&& get_the_ID() === $id
 	) {
-		$title = esc_html__('Order error', 'sc');
+		$title = esc_html__('Order error', 'nuvei_woocommerce');
 	}
 	
 	return $title;
@@ -673,7 +698,7 @@ function nuvei_show_message_on_cart( $data) {
  */
 function sc_filter_woocommerce_product_data_tabs( $tabs ) { 
 	$tabs['sc_subscr'] = array(
-		'label'		=> __( 'Nuvei Subscription', 'sc' ),
+		'label'		=> __( 'Nuvei Subscription', 'nuvei_woocommerce' ),
 		'priority' 	=> 10000,
 		'target'	=> 'sc_subscr_settings', // the container div ID
 	);
@@ -689,9 +714,9 @@ function sc_add_product_subscr_data_fields() {
 	global $wc_sc;
 
 	$units    = array(
-		'day'	=> __( 'DAY', 'nuvei' ),
-		'month'	=> __( 'MONTH', 'nuvei' ),
-		'year'	=> __( 'YEAR', 'nuvei' ),
+		'day'	=> __( 'DAY', 'nuvei_woocommerce' ),
+		'month'	=> __( 'MONTH', 'nuvei_woocommerce' ),
+		'year'	=> __( 'YEAR', 'nuvei_woocommerce' ),
 	);
 	$currency = get_woocommerce_currency_symbol();
 	$post     = $wc_sc->get_param('post', 'int', '', $_GET);
@@ -708,7 +733,7 @@ function sc_add_product_subscr_data_fields() {
 	//      woocommerce_wp_checkbox(array( 
 	//          'id'            => '_sc_subscr_enabled', 
 	////            'wrapper_class' => 'show_if_simple', 
-	//          'label'         => __( 'Enable Subscription', 'nuvei' ),
+	//          'label'         => __( 'Enable Subscription', 'nuvei_woocommerce' ),
 	////            'description'   => __( 'My Custom Field Description', 'my_text_domain' ),
 	////            'default'       => 'no',
 	//          'value'         => $sc_subscr_enabled,
@@ -717,17 +742,17 @@ function sc_add_product_subscr_data_fields() {
 		
 	woocommerce_wp_select(array(
 		'id'		=> '_sc_subscr_enabled', 
-		'label'		=> __( 'Enable Subscription', 'nuvei' ),
+		'label'		=> __( 'Enable Subscription', 'nuvei_woocommerce' ),
 		'value'		=> $sc_subscr_enabled,
 		'options'	=> array(
-			0	=> __( 'NO', 'nuvei' ),
-			1	=> __( 'YES', 'nuvei' ),
+			0	=> __( 'NO', 'nuvei_woocommerce' ),
+			1	=> __( 'YES', 'nuvei_woocommerce' ),
 		),
 	));
 	# _sc_subscr_enabled END
 
 	# _sc_subscr_plan_id
-	$plans_list = array('' => __('Select a Plan', 'nuvei'));
+	$plans_list = array('' => __('Select a Plan', 'nuvei_woocommerce'));
 		
 	if (is_readable(plugin_dir_path(__FILE__) . '/tmp/sc_plans.json')) {
 		$plans = json_decode(file_get_contents(plugin_dir_path(__FILE__) . '/tmp/sc_plans.json', true));
@@ -748,7 +773,7 @@ function sc_add_product_subscr_data_fields() {
 		
 	woocommerce_wp_select(array(
 		'id'		=> '_sc_subscr_plan_id', 
-		'label'		=> __( 'Subscription Plan', 'nuvei' ),
+		'label'		=> __( 'Subscription Plan', 'nuvei_woocommerce' ),
 		'value'		=> $sc_subscr_plan_id,
 		'options'	=> $plans_list,
 	));
@@ -764,7 +789,7 @@ function sc_add_product_subscr_data_fields() {
 		
 		woocommerce_wp_text_input(array(
 			'id'	=> '_sc_subscr_initial_amount', 
-			'label'	=> __( 'Initial Amount', 'nuvei' ) . ' (' . $currency . ')',
+			'label'	=> __( 'Initial Amount', 'nuvei_woocommerce' ) . ' (' . $currency . ')',
 			'value'	=> $sc_subscr_initial_amount,
 			'class'	=> 'wc_input_price'
 		));
@@ -780,7 +805,7 @@ function sc_add_product_subscr_data_fields() {
 		
 	woocommerce_wp_text_input(array(
 		'id'	=> '_sc_subscr_recurr_amount', 
-		'label'	=> __( 'Recurring Amount', 'nuvei' ) . ' (' . $currency . ')',
+		'label'	=> __( 'Recurring Amount', 'nuvei_woocommerce' ) . ' (' . $currency . ')',
 		'value'	=> $sc_subscr_recurr_amount,
 		'class'	=> 'wc_input_price'
 	));
@@ -796,7 +821,7 @@ function sc_add_product_subscr_data_fields() {
 		
 	woocommerce_wp_select(array(
 		'id'		=> '_sc_subscr_recurr_units', 
-		'label'		=> __( 'Recurring Units', 'nuvei' ),
+		'label'		=> __( 'Recurring Units', 'nuvei_woocommerce' ),
 		'value'		=> $sc_subscr_recurr_units,
 		'options'	=> $units,
 	));
@@ -812,7 +837,7 @@ function sc_add_product_subscr_data_fields() {
 		
 	woocommerce_wp_text_input(array(
 		'id'	=> '_sc_subscr_recurr_period', 
-		'label'	=> __( 'Recurring Period', 'nuvei' ),
+		'label'	=> __( 'Recurring Period', 'nuvei_woocommerce' ),
 		'value'	=> $sc_subscr_recurr_period,
 		'class'	=> 'wc_input_price'
 	));
@@ -828,7 +853,7 @@ function sc_add_product_subscr_data_fields() {
 		
 	woocommerce_wp_select(array(
 		'id'		=> '_sc_subscr_trial_units', 
-		'label'		=> __( 'Trial Units', 'nuvei' ),
+		'label'		=> __( 'Trial Units', 'nuvei_woocommerce' ),
 		'value'		=> $sc_subscr_trial_units,
 		'options'	=> $units,
 	));
@@ -844,7 +869,7 @@ function sc_add_product_subscr_data_fields() {
 		
 	woocommerce_wp_text_input(array(
 		'id'	=> '_sc_subscr_trial_period', 
-		'label'	=> __( 'Trial Period', 'nuvei' ),
+		'label'	=> __( 'Trial Period', 'nuvei_woocommerce' ),
 		'value'	=> $sc_subscr_trial_period,
 		'class'	=> 'wc_input_price'
 	));
@@ -860,7 +885,7 @@ function sc_add_product_subscr_data_fields() {
 		
 	woocommerce_wp_select(array(
 		'id'		=> '_sc_subscr_end_after_units', 
-		'label'		=> __( 'End After Units', 'nuvei' ),
+		'label'		=> __( 'End After Units', 'nuvei_woocommerce' ),
 		'value'		=> $sc_subscr_end_after_units,
 		'options'	=> $units,
 	));
@@ -876,7 +901,7 @@ function sc_add_product_subscr_data_fields() {
 		
 	woocommerce_wp_text_input(array(
 		'id'	=> '_sc_subscr_end_after_period', 
-		'label'	=> __( 'End After Period', 'nuvei' ),
+		'label'	=> __( 'End After Period', 'nuvei_woocommerce' ),
 		'value'	=> $sc_subscr_end_after_period,
 		'class'	=> 'wc_input_price'
 	));

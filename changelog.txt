@@ -1,5 +1,10 @@
 *** WooCommerce Extension Template Changelog ***
 
+version 3.7
+	* Changed names of the styles and JS files.
+	* Add checkbox for the user to accept or not UPO creation.
+	* Added translation files and domain.
+
 version 3.6
 	* Use readme md instead of txt file.
 	* Changes in readme.txt

@@ -14,10 +14,10 @@ if (!session_id()) {
 
 class WC_SC extends WC_Payment_Gateway {
 	# payments URL
-	private $webMasterId	= 'WooCommerce ';
-	private $stop_dmn		= 0; // when 1 - stops the DMN for testing
-	private $cuid_postfix	= '_sandbox_apm'; // postfix for Sandbox APM payments
-	private $plugin_data	= array();
+	private $webMasterId  = 'WooCommerce ';
+	private $stop_dmn     = 0; // when 1 - stops the DMN for testing
+	private $cuid_postfix = '_sandbox_apm'; // postfix for Sandbox APM payments
+	private $plugin_data  = array();
 	private $sc_order;
 	
 	// the fields for the subscription
@@ -38,7 +38,7 @@ class WC_SC extends WC_Payment_Gateway {
 		$this->description	= $this->sc_get_setting('description', '');
 		$this->test			= $this->sc_get_setting('test', '');
 		$this->rewrite_dmn	= $this->sc_get_setting('rewrite_dmn', 'no');
-		$this->webMasterId	.= WOOCOMMERCE_VERSION;
+		$this->webMasterId .= WOOCOMMERCE_VERSION;
 		$this->plugin_data	= get_plugin_data(plugin_dir_path(__FILE__) . 'index.php'); // get plugin data from the index.
 		
 		$_SESSION['SC_Variables']['sc_create_logs'] = $this->sc_get_setting('save_logs');
@@ -70,25 +70,25 @@ class WC_SC extends WC_Payment_Gateway {
 	public function init_form_fields() {
 		$this->form_fields = array(
 			'enabled' => array(
-				'title' => __('Enable/Disable', 'sc'),
+				'title' => __('Enable/Disable', 'nuvei_woocommerce'),
 				'type' => 'checkbox',
-				'label' => __('Enable ' . SC_GATEWAY_TITLE . ' Payment Module.', 'sc'),
+				'label' => __('Enable ' . SC_GATEWAY_TITLE . ' Payment Module.', 'nuvei_woocommerce'),
 				'default' => 'no'
 			),
 		   'title' => array(
-				'title' => __('Default title:', 'sc'),
+				'title' => __('Default title:', 'nuvei_woocommerce'),
 				'type'=> 'text',
-				'description' => __('This is the payment method which the user sees during checkout.', 'sc'),
-				'default' => __('Secure Payment with Nuvei', 'sc')
+				'description' => __('This is the payment method which the user sees during checkout.', 'nuvei_woocommerce'),
+				'default' => __('Secure Payment with Nuvei', 'nuvei_woocommerce')
 			),
 			'description' => array(
-				'title' => __('Description:', 'sc'),
+				'title' => __('Description:', 'nuvei_woocommerce'),
 				'type' => 'textarea',
-				'description' => __('This controls the description which the user sees during checkout.', 'sc'),
+				'description' => __('This controls the description which the user sees during checkout.', 'nuvei_woocommerce'),
 				'default' => 'Place order to get to our secured payment page to select your payment option'
 			),
 			'test' => array(
-				'title' => __('Site Mode', 'sc') . ' *',
+				'title' => __('Site Mode', 'nuvei_woocommerce') . ' *',
 				'type' => 'select',
 				'required' => 'required',
 				'options' => array(
@@ -98,28 +98,28 @@ class WC_SC extends WC_Payment_Gateway {
 				),
 			),
 			'merchantId' => array(
-				'title' => __('Merchant ID', 'sc') . ' *',
+				'title' => __('Merchant ID', 'nuvei_woocommerce') . ' *',
 				'type' => 'text',
 				'required' => true,
 				'description' => __('Merchant ID is provided by ' . SC_GATEWAY_TITLE . '.')
 			),
 			'merchantSiteId' => array(
-				'title' => __('Merchant Site ID', 'sc') . ' *',
+				'title' => __('Merchant Site ID', 'nuvei_woocommerce') . ' *',
 				'type' => 'text',
 				'required' => true,
 				'description' => __('Merchant Site ID is provided by ' . SC_GATEWAY_TITLE . '.')
 			),
 			'secret' => array(
-				'title' => __('Secret key', 'sc') . ' *',
+				'title' => __('Secret key', 'nuvei_woocommerce') . ' *',
 				'type' => 'text',
 				'required' => true,
-				'description' =>  __('Secret key is provided by ' . SC_GATEWAY_TITLE, 'sc'),
+				'description' =>  __('Secret key is provided by ' . SC_GATEWAY_TITLE, 'nuvei_woocommerce'),
 			),
 			'hash_type' => array(
-				'title' => __('Hash type', 'sc') . ' *',
+				'title' => __('Hash type', 'nuvei_woocommerce') . ' *',
 				'type' => 'select',
 				'required' => true,
-				'description' => __('Choose Hash type provided by ' . SC_GATEWAY_TITLE, 'sc'),
+				'description' => __('Choose Hash type provided by ' . SC_GATEWAY_TITLE, 'nuvei_woocommerce'),
 				'options' => array(
 					'' => __('Select an option...'),
 					'sha256' => 'sha256',
@@ -127,7 +127,7 @@ class WC_SC extends WC_Payment_Gateway {
 				)
 			),
 			'payment_action' => array(
-				'title' => __('Payment action', 'sc') . ' *',
+				'title' => __('Payment action', 'nuvei_woocommerce') . ' *',
 				'type' => 'select',
 				'required' => true,
 				'options' => array(
@@ -137,7 +137,7 @@ class WC_SC extends WC_Payment_Gateway {
 				)
 			),
 			'use_upos' => array(
-				'title' => __('Allow client to use UPOs', 'sc'),
+				'title' => __('Allow client to use UPOs', 'nuvei_woocommerce'),
 				'type' => 'select',
 				'options' => array(
 					0 => 'No',
@@ -145,45 +145,45 @@ class WC_SC extends WC_Payment_Gateway {
 				)
 			),
 			'merchant_style' => array(
-				'title' => __('Custom style', 'sc'),
+				'title' => __('Custom style', 'nuvei_woocommerce'),
 				'type' => 'textarea',
 				'default' => '',
-				'description' => __('Override the build-in style for the Nuvei elements.', 'sc')
+				'description' => __('Override the build-in style for the Nuvei elements.', 'nuvei_woocommerce')
 			),
 			'notify_url' => array(
-				'title' => __('Notify URL', 'sc'),
+				'title' => __('Notify URL', 'nuvei_woocommerce'),
 				'type' => 'text',
 				'default' => '',
 				'description' => $this->set_notify_url(),
 				'type' => 'hidden'
 			),
 			'use_http' => array(
-				'title' => __('Use HTTP', 'sc'),
+				'title' => __('Use HTTP', 'nuvei_woocommerce'),
 				'type' => 'checkbox',
-				'label' => __('Force protocol where receive DMNs to be HTTP. You must have valid certificate for HTTPS! In case the checkbox is not set the default Protocol will be used.', 'sc'),
+				'label' => __('Force protocol where receive DMNs to be HTTP. You must have valid certificate for HTTPS! In case the checkbox is not set the default Protocol will be used.', 'nuvei_woocommerce'),
 				'default' => 'no'
 			),
 			// actually this is not for the DMN, but for return URL after Cashier page
 			'rewrite_dmn' => array(
-				'title' => __('Rewrite DMN', 'sc'),
+				'title' => __('Rewrite DMN', 'nuvei_woocommerce'),
 				'type' => 'checkbox',
-				'label' => __('Check this option ONLY when URL symbols like "+", " " and "%20" in the DMN cause error 404 - Page not found.', 'sc'),
+				'label' => __('Check this option ONLY when URL symbols like "+", " " and "%20" in the DMN cause error 404 - Page not found.', 'nuvei_woocommerce'),
 				'default' => 'no'
 			),
 			'use_wpml_thanks_page' => array(
-				'title' => __('Use WPML "Thank you" page.', 'sc'),
+				'title' => __('Use WPML "Thank you" page.', 'nuvei_woocommerce'),
 				'type' => 'checkbox',
-				'label' => __('Works only if you have installed and configured WPML plugin. Please, use it careful, this option can brake your "Thank you" page and DMN recieve page!', 'sc'),
+				'label' => __('Works only if you have installed and configured WPML plugin. Please, use it careful, this option can brake your "Thank you" page and DMN recieve page!', 'nuvei_woocommerce'),
 				'default' => 'no'
 			),
 			'save_logs' => array(
-				'title' => __('Save logs', 'sc'),
+				'title' => __('Save logs', 'nuvei_woocommerce'),
 				'type' => 'checkbox',
-				'label' => __('Create and save daily log files. This can help for debugging and catching bugs.', 'sc'),
+				'label' => __('Create and save daily log files. This can help for debugging and catching bugs.', 'nuvei_woocommerce'),
 				'default' => 'yes'
 			),
 		//          'get_plans_btn' => array(
-		//              'title' => __('Download Subscriptions plans', 'sc'),
+		//              'title' => __('Download Subscriptions plans', 'nuvei_woocommerce'),
 		//              'type' => 'button',
 		//          ),
 		);
@@ -251,7 +251,7 @@ class WC_SC extends WC_Payment_Gateway {
 	// Generate the HTML For the settings form.
 	public function admin_options() {
 		echo
-			'<h3>' . esc_html(SC_GATEWAY_TITLE . ' ', 'sc') . '</h3>'
+			'<h3>' . esc_html(SC_GATEWAY_TITLE . ' ', 'nuvei_woocommerce') . '</h3>'
 				. '<p>' . esc_html__('SC payment option') . '</p>'
 				. '<table class="form-table">';
 		
@@ -378,7 +378,7 @@ class WC_SC extends WC_Payment_Gateway {
 		$params = array(
 			'merchantId'        => $this->sc_get_setting('merchantId'),
 			'merchantSiteId'    => $this->sc_get_setting('merchantSiteId'),
-			'userTokenId'       => $order->get_billing_email(),
+		//          'userTokenId'       => $order->get_billing_email(),
 			'clientUniqueId'    => $this->set_cuid($order_id),
 			'clientRequestId'   => $time . '_' . uniqid(),
 			'currency'          => $order->get_currency(),
@@ -449,6 +449,7 @@ class WC_SC extends WC_Payment_Gateway {
 		if (is_numeric($sc_payment_method)) {
 			$endpoint_method                                = 'payment';
 			$params['paymentOption']['userPaymentOptionId'] = $sc_payment_method;
+			$params['userTokenId']							= $order->get_billing_email();
 		} else {
 			// APM
 			$endpoint_method         = 'paymentAPM.do';
@@ -457,12 +458,16 @@ class WC_SC extends WC_Payment_Gateway {
 			if (!empty($post_array[$sc_payment_method])) {
 				$params['userAccountDetails'] = $post_array[$sc_payment_method];
 			}
+			
+			if ($this->get_param('nuvei_save_upo') == 1) {
+				$params['userTokenId'] = $order->get_billing_email();
+			}
 		}
 		
 		$resp = $this->callRestApi($endpoint_method, $params);
 		
 		if (!$resp) {
-			$msg = __('There is no response for the Order.', 'sc');
+			$msg = __('There is no response for the Order.', 'nuvei_woocommerce');
 			
 			$order->add_order_note($msg);
 			$order->save();
@@ -474,7 +479,7 @@ class WC_SC extends WC_Payment_Gateway {
 		}
 
 		if (empty($this->get_request_status($resp))) {
-			$msg = __('There is no Status for the Order.', 'sc');
+			$msg = __('There is no Status for the Order.', 'nuvei_woocommerce');
 			
 			$order->add_order_note($msg);
 			$order->save();
@@ -494,7 +499,7 @@ class WC_SC extends WC_Payment_Gateway {
 			'DECLINED' === $this->get_request_status($resp)
 			|| 'DECLINED' === @$resp['transactionStatus']
 		) {
-			$order->add_order_note(__('Order Declined.', 'sc'));
+			$order->add_order_note(__('Order Declined.', 'nuvei_woocommerce'));
 			$order->set_status('cancelled');
 			$order->save();
 			
@@ -510,7 +515,7 @@ class WC_SC extends WC_Payment_Gateway {
 		) {
 			$order->set_status('failed');
 
-			$error_txt = 'Payment error';
+			$error_txt = __('Payment error', 'nuvei_woocommerce');
 
 			if (!empty($resp['reason'])) {
 				$error_txt .= ': ' . $resp['errCode'] . ' - ' . $resp['reason'] . '.';
@@ -520,9 +525,7 @@ class WC_SC extends WC_Payment_Gateway {
 				$error_txt .= ': ' . $resp['message'] . '.';
 			}
 			
-			$msg = __($error_txt, 'sc');
-			
-			$order->add_order_note($msg);
+			$order->add_order_note($error_txt);
 			$order->save();
 			
 			return array(
@@ -536,7 +539,7 @@ class WC_SC extends WC_Payment_Gateway {
 			( isset($resp['gwErrorCode']) && -1 === $resp['gwErrorCode'] )
 			|| isset($resp['gwErrorReason'])
 		) {
-			$msg = __('Error with the Payment: ' . $resp['gwErrorReason'] . '.', 'sc');
+			$msg = __('Error with the Payment: ', 'nuvei_woocommerce') . $resp['gwErrorReason'] . '.';
 
 			$order->add_order_note($msg);
 			$order->save();
@@ -559,9 +562,9 @@ class WC_SC extends WC_Payment_Gateway {
 		}
 
 		if (isset($resp['transactionId']) && '' !== $resp['transactionId']) {
-			$order->add_order_note(__('Payment succsess for Transaction Id ', 'sc') . $resp['transactionId']);
+			$order->add_order_note(__('Payment succsess for Transaction Id ', 'nuvei_woocommerce') . $resp['transactionId']);
 		} else {
-			$order->add_order_note(__('Payment succsess.', 'sc'));
+			$order->add_order_note(__('Payment succsess.', 'nuvei_woocommerce'));
 		}
 
 		// save the response transactionType value
@@ -600,7 +603,7 @@ class WC_SC extends WC_Payment_Gateway {
 				'result'	=> 'failure',
 				'refresh'	=> false,
 				'reload'	=> false,
-				'messages'	=> '<ul id="sc_fake_error" class="woocommerce-error" role="alert"><li>' . __('Unexpected error, please try again later!', 'nuvei') . '</li></ul>'
+				'messages'	=> '<ul id="sc_fake_error" class="woocommerce-error" role="alert"><li>' . __('Unexpected error, please try again later!', 'nuvei_woocommerce') . '</li></ul>'
 			));
 
 			exit;
@@ -645,7 +648,7 @@ class WC_SC extends WC_Payment_Gateway {
 				'result'	=> 'failure',
 				'refresh'	=> false,
 				'reload'	=> false,
-				'messages'	=> '<ul id="sc_fake_error" class="woocommerce-error" role="alert"><li>' . __('Can not obtain Payment Methods, please try again later!', 'nuvei') . '</li></ul>'
+				'messages'	=> '<ul id="sc_fake_error" class="woocommerce-error" role="alert"><li>' . __('Can not obtain Payment Methods, please try again later!', 'nuvei_woocommerce') . '</li></ul>'
 			));
 
 			exit;
@@ -655,8 +658,9 @@ class WC_SC extends WC_Payment_Gateway {
 		# get APMs END
 		
 		# get UPOs
-		$icons = array();
-		$upos  = array();
+		$icons     = array();
+		$upos      = array();
+		$user_mail = '';
 
 		// get them only for registred users when there are APMs
 		if (
@@ -664,14 +668,20 @@ class WC_SC extends WC_Payment_Gateway {
 			&& is_user_logged_in()
 			&& !empty($apms_data['paymentMethods'])
 		) {
+			$user_mail = $this->get_param('billing_email', 'mail');
+		
+			if (empty($user_mail)) {
+				$addresses = $this->get_order_addresses();
+				
+				if (!empty($addresses['billingAddress']['email'])) {
+					$user_mail = $addresses['billingAddress']['email'];
+				}
+			}
+			
 			$upo_params = array(
 				'merchantId'        => $apms_params['merchantId'],
 				'merchantSiteId'    => $apms_params['merchantSiteId'],
-			//              
-				// OO request set userTokenId in the session
-				'userTokenId'       => isset($_SESSION['nuvei_last_open_order_details']['userTokenId'])
-					? $_SESSION['nuvei_last_open_order_details']['userTokenId'] : '',
-				
+				'userTokenId'       => $user_mail,
 				'clientRequestId'   => $apms_params['clientRequestId'],
 				'timeStamp'         => $time,
 			);
@@ -713,8 +723,7 @@ class WC_SC extends WC_Payment_Gateway {
 		# get UPOs END
 		
 		$resp_data['orderAmount'] = WC()->cart->total;
-		$resp_data['userTokenId'] = !empty($this->get_param('billing_email', 'mail'))
-			? $this->get_param('billing_email', 'mail') : $resp['userTokenId'];
+		$resp_data['userTokenId'] = $user_mail;
 		$resp_data['pluginUrl']   = plugin_dir_url(__FILE__);
 		$resp_data['siteUrl']     = get_site_url();
 			
@@ -836,7 +845,8 @@ class WC_SC extends WC_Payment_Gateway {
 		) {
 			$this->is_order_valid($order_id);
 			
-			$msg = __('DMN for Order #' . $order_id . ', was received.', 'sc');
+			/* translators: %d is replaced with "decimal" */
+			$msg = sprintf(__('DMN for Order #%d, was received.', 'nuvei_woocommerce'), $order_id);
 			
 			if ('Settle' == $transactionType) {
 				$this->save_update_order_numbers();
@@ -976,7 +986,7 @@ class WC_SC extends WC_Payment_Gateway {
 			
 			wp_send_json(array(
 				'status' => 0,
-				'msg' => __('Post parameter is less than 1.', 'nuvei'),
+				'msg' => __('Post parameter is less than 1.', 'nuvei_woocommerce'),
 				'data' => array($order_id)
 			));
 			exit;
@@ -986,7 +996,7 @@ class WC_SC extends WC_Payment_Gateway {
 		if ($ref_amount < 0) {
 			wp_send_json(array(
 				'status' => 0,
-				'msg' => __('Invalid Refund amount.', 'nuvei')));
+				'msg' => __('Invalid Refund amount.', 'nuvei_woocommerce')));
 			exit;
 		}
 		
@@ -997,7 +1007,7 @@ class WC_SC extends WC_Payment_Gateway {
 		if (empty($tr_id)) {
 			wp_send_json(array(
 				'status' => 0,
-				'msg' => __('The Order missing Transaction ID.', 'nuvei')));
+				'msg' => __('The Order missing Transaction ID.', 'nuvei_woocommerce')));
 			exit;
 		}
 		
@@ -1033,7 +1043,7 @@ class WC_SC extends WC_Payment_Gateway {
 		$msg  = '';
 
 		if (false === $resp) {
-			$msg = __('The REST API retun false.', 'nuvei');
+			$msg = __('The REST API retun false.', 'nuvei_woocommerce');
 
 			$this->sc_order->add_order_note($msg);
 			$this->sc_order->save();
@@ -1051,7 +1061,7 @@ class WC_SC extends WC_Payment_Gateway {
 		}
 
 		if (!is_array($json_arr)) {
-			$msg = __('Invalid API response.', 'nuvei');
+			$msg = __('Invalid API response.', 'nuvei_woocommerce');
 
 			$this->sc_order->add_order_note($msg);
 			$this->sc_order->save();
@@ -1075,7 +1085,7 @@ class WC_SC extends WC_Payment_Gateway {
 		
 		// in case we have message but without status
 		if (!isset($json_arr['status']) && isset($json_arr['msg'])) {
-			$msg = __('Refund request problem: ', 'nuvei') . $json_arr['msg'];
+			$msg = __('Refund request problem: ', 'nuvei_woocommerce') . $json_arr['msg'];
 
 			$this->sc_order->add_order_note($msg);
 			$this->sc_order->save();
@@ -1091,7 +1101,7 @@ class WC_SC extends WC_Payment_Gateway {
 		
 		// the status of the request is ERROR
 		if (isset($json_arr['status']) && 'ERROR' === $json_arr['status']) {
-			$msg = __('Request ERROR: ', 'nuvei') . $json_arr['reason'];
+			$msg = __('Request ERROR: ', 'nuvei_woocommerce') . $json_arr['reason'];
 
 			$this->sc_order->add_order_note($msg);
 			$this->sc_order->save();
@@ -1112,7 +1122,7 @@ class WC_SC extends WC_Payment_Gateway {
 			} elseif (isset($json_arr['paymentMethodErrorReason']) && !empty($json_arr['paymentMethodErrorReason'])) {
 				$msg = $json_arr['paymentMethodErrorReason'];
 			} else {
-				$msg = __('Transaction error.', 'nuvei');
+				$msg = __('Transaction error.', 'nuvei_woocommerce');
 			}
 
 			$this->sc_order->add_order_note($msg);
@@ -1128,7 +1138,7 @@ class WC_SC extends WC_Payment_Gateway {
 		}
 
 		if (isset($json_arr['transactionStatus']) && 'DECLINED' === $json_arr['transactionStatus']) {
-			$msg = __('The refund was declined.', 'nuvei');
+			$msg = __('The refund was declined.', 'nuvei_woocommerce');
 
 			$this->sc_order->add_order_note($msg);
 			$this->sc_order->save();
@@ -1142,9 +1152,9 @@ class WC_SC extends WC_Payment_Gateway {
 			exit;
 		}
 
-		$msg = __('The status of Refund request is UNKONOWN.', 'nuvei');
+		$msg = __('The status of Refund request is UNKONOWN.', 'nuvei_woocommerce');
 
-		$this->sc_order->add_order_note(__($msg, 'sc'));
+		$this->sc_order->add_order_note($msg);
 		$this->sc_order->save();
 		
 		$this->create_log($msg);
@@ -1240,17 +1250,14 @@ class WC_SC extends WC_Payment_Gateway {
 					. $this->sc_get_setting('secret')
 			);
 
-			//          $resp = SC_CLASS::call_rest_api($this->getEndPointBase() . $method, $params);
 			$resp = $this->callRestApi($method, $params);
 		} catch (Exception $ex) {
 			$this->create_log($ex->getMessage(), 'Create void exception:');
 			
 			wp_send_json(array(
 				'status' => 0,
-				'msg' => __(
-					'Unexpexted error during the ' . $action . ':',
-					'sc'
-			)));
+				'msg' => 'Unexpexted error during the ' . $action
+			));
 			exit;
 		}
 		
@@ -1276,7 +1283,7 @@ class WC_SC extends WC_Payment_Gateway {
 			wp_send_json(
 				array(
 				'status' => 'error',
-				'msg' => __('Invalid UPO ID parameter.', 'sc')
+				'msg' => __('Invalid UPO ID parameter.', 'nuvei_woocommerce')
 				)
 			);
 
@@ -1287,7 +1294,7 @@ class WC_SC extends WC_Payment_Gateway {
 			wp_send_json(
 				array(
 				'status' => 'error',
-				'msg' => __('The user in not logged in.', 'sc')
+				'msg' => 'The user in not logged in.'
 				)
 			);
 
@@ -1297,12 +1304,10 @@ class WC_SC extends WC_Payment_Gateway {
 		$curr_user = wp_get_current_user();
 		
 		if (empty($curr_user->user_email) || !filter_var($curr_user->user_email, FILTER_VALIDATE_EMAIL)) {
-			wp_send_json(
-				array(
+			wp_send_json(array(
 				'status' => 'error',
-				'msg' => __('The user email is not valid.', 'sc')
-				)
-			);
+				'msg' => 'The user email is not valid.'
+			));
 
 			exit;
 		}
@@ -1442,7 +1447,7 @@ class WC_SC extends WC_Payment_Gateway {
 		if (empty($products_ids) || !is_array($products_ids)) {
 			wp_send_json(array(
 				'status' => 0,
-				'msg' => __('Problem with the Products IDs.', 'nuvei')
+				'msg' => __('Problem with the Products IDs.', 'nuvei_woocommerce')
 			));
 			exit;
 		}
@@ -1455,7 +1460,7 @@ class WC_SC extends WC_Payment_Gateway {
 			$product = $prod_factory->get_product($id);
 		
 			if ('in-stock' != $product->get_availability()['class'] ) {
-				$msg = __('Some of the Products are not availavle, and are not added in the new Order.', 'nuvei');
+				$msg = __('Some of the Products are not availavle, and are not added in the new Order.', 'nuvei_woocommerce');
 				continue;
 			}
 
@@ -1466,7 +1471,7 @@ class WC_SC extends WC_Payment_Gateway {
 		if (!$is_prod_added) {
 			wp_send_json(array(
 				'status' => 0,
-				'msg' => __('There are no added Products to the Cart.', 'nuvei'),
+				'msg' => 'There are no added Products to the Cart.',
 			));
 			exit;
 		}
@@ -1766,7 +1771,7 @@ class WC_SC extends WC_Payment_Gateway {
 			),
 			
 			'deviceDetails'     => SC_CLASS::get_device_details(),
-			'userTokenId'       => $this->get_param('billing_email', 'mail', '', $ajax_params),
+		//          'userTokenId'       => $this->get_param('billing_email', 'mail', '', $ajax_params),
 			'billingAddress'	=> isset($addresses['billingAddress']) ? $addresses['billingAddress'] : array(),
 			'shippingAddress'	=> isset($addresses['shippingAddress']) ? $addresses['shippingAddress'] : array(),
 			'webMasterId'       => $this->webMasterId,
@@ -1811,7 +1816,7 @@ class WC_SC extends WC_Payment_Gateway {
 			'amount'			=> $oo_params['amount'],
 			'merchantDetails'	=> $oo_params['merchantDetails'],
 			'sessionToken'		=> $resp['sessionToken'],
-			'userTokenId'		=> $oo_params['userTokenId'],
+		//          'userTokenId'       => $oo_params['userTokenId'],
 			'clientRequestId'	=> $oo_params['clientRequestId'],
 			'orderId'			=> $resp['orderId'],
 			'billingAddress'	=> $oo_params['billingAddress'],
@@ -1826,6 +1831,10 @@ class WC_SC extends WC_Payment_Gateway {
 		}
 		
 		return array_merge($resp, $oo_params);
+	}
+	
+	public function can_use_upos() {
+		return $this->settings['use_upos'];
 	}
 	
 	/**
@@ -1843,7 +1852,7 @@ class WC_SC extends WC_Payment_Gateway {
 			empty($_SESSION['nuvei_last_open_order_details'])
 			|| empty($_SESSION['nuvei_last_open_order_details']['sessionToken'])
 			|| empty($_SESSION['nuvei_last_open_order_details']['orderId'])
-			|| empty($_SESSION['nuvei_last_open_order_details']['userTokenId'])
+		//          || empty($_SESSION['nuvei_last_open_order_details']['userTokenId'])
 			|| empty($_SESSION['nuvei_last_open_order_details']['clientRequestId'])
 		) {
 			$this->create_log('update_order() - Missing last Order session data.');
@@ -1873,7 +1882,7 @@ class WC_SC extends WC_Payment_Gateway {
 			'orderId'			=> $_SESSION['nuvei_last_open_order_details']['orderId'],
 			'merchantId'		=> $this->sc_get_setting('merchantId'),
 			'merchantSiteId'	=> $this->sc_get_setting('merchantSiteId'),
-			'userTokenId'		=> $_SESSION['nuvei_last_open_order_details']['userTokenId'],
+		//          'userTokenId'       => $_SESSION['nuvei_last_open_order_details']['userTokenId'],
 			'clientRequestId'	=> $_SESSION['nuvei_last_open_order_details']['clientRequestId'],
 			'currency'			=> get_woocommerce_currency(),
 			'amount'			=> $cart_amount,
@@ -2112,18 +2121,18 @@ class WC_SC extends WC_Payment_Gateway {
 			'WC_SC change_order_status()'
 		);
 		
-		$gw_data = '<br/>' . __('Status: ', 'sc') . $req_status
-			. '<br/>' . __('PPP Transaction ID: ', 'sc') . $this->get_param('PPP_TransactionID', 'int')
-			. ',<br/>' . __('Transaction Type: ', 'sc') . $transactionType
-			. ',<br/>' . __('Transaction ID: ', 'sc') . $this->get_param('TransactionID', 'int')
-			. ',<br/>' . __('Payment Method: ', 'sc') . $this->get_param('payment_method');
+		$gw_data = '<br/>' . __('Status: ', 'nuvei_woocommerce') . $req_status
+			. '<br/>' . __('PPP Transaction ID: ', 'nuvei_woocommerce') . $this->get_param('PPP_TransactionID', 'int')
+			. ',<br/>' . __('Transaction Type: ', 'nuvei_woocommerce') . $transactionType
+			. ',<br/>' . __('Transaction ID: ', 'nuvei_woocommerce') . $this->get_param('TransactionID', 'int')
+			. ',<br/>' . __('Payment Method: ', 'nuvei_woocommerce') . $this->get_param('payment_method');
 		
 		$message = '';
 		$status  = $this->sc_order->get_status();
 		
 		switch ($req_status) {
 			case 'CANCELED':
-				$message            = __('Your action was Canceld.', 'sc') . $gw_data;
+				$message            = __('Your action was Canceld.', 'nuvei_woocommerce') . $gw_data;
 				$this->msg['class'] = 'woocommerce_message';
 				
 				if (in_array($transactionType, array('Auth', 'Settle', 'Sale'))) {
@@ -2133,12 +2142,12 @@ class WC_SC extends WC_Payment_Gateway {
 
 			case 'APPROVED':
 				if ('Void' === $transactionType) {
-					$message = __('DMN Void message', 'sc')
-						. $gw_data . '<br/>' . __('Plsese check your stock!', 'sc');
+					$message = __('DMN Void message', 'nuvei_woocommerce')
+						. $gw_data . '<br/>' . __('Plsese check your stock!', 'nuvei_woocommerce');
 					
 					$status = 'cancelled';
 				} elseif (in_array($transactionType, array('Credit', 'Refund'), true)) {
-					$message = __('DMN Refund message', 'sc') . $gw_data;
+					$message = __('DMN Refund message', 'nuvei_woocommerce') . $gw_data;
 					$status  = 'completed';
 					
 					// get current refund amount
@@ -2156,10 +2165,10 @@ class WC_SC extends WC_Payment_Gateway {
 						$status = 'refunded';
 					}
 				} elseif ('Auth' === $transactionType) {
-					$message = __('The amount has been authorized and wait for Settle.', 'sc') . $gw_data;
+					$message = __('The amount has been authorized and wait for Settle.', 'nuvei_woocommerce') . $gw_data;
 					$status  = 'pending';
 				} elseif (in_array($transactionType, array('Settle', 'Sale'), true)) {
-					$message = __('The amount has been authorized and captured by ', 'sc') . SC_GATEWAY_TITLE . '.' . $gw_data;
+					$message = __('The amount has been authorized and captured by ', 'nuvei_woocommerce') . SC_GATEWAY_TITLE . '.' . $gw_data;
 					$status  = 'completed';
 					
 					$this->sc_order->payment_complete($order_id);
@@ -2171,9 +2180,9 @@ class WC_SC extends WC_Payment_Gateway {
 					$dmn_amount   = round($this->get_param('totalAmount', 'float'), 2);
 					
 					if ($order_amount !== $dmn_amount) {
-						$message .= '<hr/><b>' . __('Payment ERROR!', 'sc') . '</b> ' 
+						$message .= '<hr/><b>' . __('Payment ERROR!', 'nuvei_woocommerce') . '</b> ' 
 							. $dmn_amount . ' ' . $this->get_param('currency')
-							. ' ' . __('paid instead of', 'sc') . ' ' . $order_amount
+							. ' ' . __('paid instead of', 'nuvei_woocommerce') . ' ' . $order_amount
 							. ' ' . $this->sc_order->get_currency() . '!';
 						
 						$status = 'failed';
@@ -2194,16 +2203,16 @@ class WC_SC extends WC_Payment_Gateway {
 			case 'ERROR':
 			case 'DECLINED':
 			case 'FAIL':
-				$reason = ',<br/>' . __('Reason: ', 'sc');
+				$reason = ',<br/>' . __('Reason: ', 'nuvei_woocommerce');
 				if ('' != $this->get_param('reason')) {
 					$reason .= $this->get_param('reason');
 				} elseif ('' != $this->get_param('Reason')) {
 					$reason .= $this->get_param('Reason');
 				}
 				
-				$message = __('Transaction failed.', 'sc')
-					. '<br/>' . __('Error code: ', 'sc') . $this->get_param('ErrCode')
-					. '<br/>' . __('Message: ', 'sc') . $this->get_param('message') . $reason . $gw_data;
+				$message = __('Transaction failed.', 'nuvei_woocommerce')
+					. '<br/>' . __('Error code: ', 'nuvei_woocommerce') . $this->get_param('ErrCode')
+					. '<br/>' . __('Message: ', 'nuvei_woocommerce') . $this->get_param('message') . $reason . $gw_data;
 				
 				// do not change status
 				if ('Void' === $transactionType) {
@@ -2221,7 +2230,7 @@ class WC_SC extends WC_Payment_Gateway {
 					break;
 				}
 
-				$message            = __('Payment is still pending.', 'sc') . $gw_data;
+				$message            = __('Payment is still pending.', 'nuvei_woocommerce') . $gw_data;
 				$this->msg['class'] = 'woocommerce_message woocommerce_message_info';
 				$status             = 'on-hold';
 				break;

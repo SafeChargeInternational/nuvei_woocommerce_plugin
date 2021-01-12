@@ -1,0 +1,511 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: Nuvei Payments\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-01-11 12:42+0000\n"
+"PO-Revision-Date: 2021-01-11 13:03+0000\n"
+"Last-Translator: \n"
+"Language-Team: English (United States)\n"
+"Language: en-US\n"
+"Plural-Forms: nplurals=2; plural=n != 1;\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Loco https://localise.biz/\n"
+"X-Loco-Version: 2.5.0; wp-5.5.3\n"
+"X-Domain: nuvei_woocommerce"
+
+#: WC_SC.php:75
+msgid " Payment Module."
+msgstr ""
+
+#: WC_SC.php:140
+msgid "Allow client to use UPOs"
+msgstr ""
+
+#: index.php:408
+msgid "Are you sure about this Refund?"
+msgstr ""
+
+#: index.php:516
+#, php-format
+msgid "Are you sure, you want to Cancel Order #%d?"
+msgstr ""
+
+#: index.php:525
+#, php-format
+msgid "Are you sure, you want to Settle Order #%d?"
+msgstr ""
+
+#: WC_SC.php:650
+msgid "Can not obtain Payment Methods, please try again later!"
+msgstr ""
+
+#: index.php:342
+msgid "Card CVC is not correct."
+msgstr ""
+
+#: index.php:341
+msgid "Card Expiry Date is not correct."
+msgstr ""
+
+#: index.php:339
+msgid "Card Holder Name is empty."
+msgstr ""
+
+#: index.php:340
+msgid "Card Number is empty or wrong."
+msgstr ""
+
+#: WC_SC.php:170
+msgid ""
+"Check this option ONLY when URL symbols like \"+\", \" \" and \"%20\" in the "
+"DMN cause error 404 - Page not found."
+msgstr ""
+
+#: templates/sc_second_step_form.php:26
+msgid "Choose from the payment options"
+msgstr ""
+
+#: templates/sc_second_step_form.php:23
+msgid "Choose from yours preferred payment methods"
+msgstr ""
+
+#: WC_SC.php:182
+msgid ""
+"Create and save daily log files. This can help for debugging and catching "
+"bugs."
+msgstr ""
+
+#: WC_SC.php:148
+msgid "Custom style"
+msgstr ""
+
+#: index.php:705
+msgid "DAY"
+msgstr ""
+
+#: WC_SC.php:79
+msgid "Default title:"
+msgstr ""
+
+#: WC_SC.php:85
+msgid "Description:"
+msgstr ""
+
+#: WC_SC.php:841
+#, php-format
+msgid "DMN for Order #%d, was received."
+msgstr ""
+
+#: WC_SC.php:2142
+msgid "DMN Refund message"
+msgstr ""
+
+#: WC_SC.php:2137
+msgid "DMN Void message"
+msgstr ""
+
+#: index.php:343
+msgid "Do you want to delete this UPO?"
+msgstr ""
+
+#: index.php:733
+msgid "Enable Subscription"
+msgstr ""
+
+#: WC_SC.php:73
+msgid "Enable/Disable"
+msgstr ""
+
+#: index.php:892
+msgid "End After Period"
+msgstr ""
+
+#: index.php:876
+msgid "End After Units"
+msgstr ""
+
+#: WC_SC.php:2206
+msgid "Error code: "
+msgstr ""
+
+#: index.php:335
+msgid "Error in the proccess. Please, try again later!"
+msgstr ""
+
+#: index.php:332
+msgid ""
+"Error when try to get the Payment Methods. Please try again later or use "
+"different Payment Option!"
+msgstr ""
+
+#: index.php:333
+msgid "Error when try to get the Session Token. Please try again later"
+msgstr ""
+
+#: WC_SC.php:541
+msgid "Error with the Payment: "
+msgstr ""
+
+#: index.php:328
+msgid "Error with your Payment. Please try again later!"
+msgstr ""
+
+#: WC_SC.php:163
+msgid ""
+"Force protocol where receive DMNs to be HTTP. You must have valid "
+"certificate for HTTPS! In case the checkbox is not set the default Protocol "
+"will be used."
+msgstr ""
+
+#: index.php:338
+msgid "Go back"
+msgstr ""
+
+#: WC_SC.php:119
+msgid "Hash type"
+msgstr ""
+
+#. URI of the plugin
+msgid ""
+"https://github.com/SafeChargeInternational/safecharge_woocommerce_plugin"
+msgstr ""
+
+#. Author URI of the plugin
+msgid "https://nuvei.com"
+msgstr ""
+
+#: index.php:780
+msgid "Initial Amount"
+msgstr ""
+
+#: WC_SC.php:1056
+msgid "Invalid API response."
+msgstr ""
+
+#: WC_SC.php:991
+msgid "Invalid Refund amount."
+msgstr ""
+
+#: WC_SC.php:1278
+msgid "Invalid UPO ID parameter."
+msgstr ""
+
+#: index.php:409
+msgid "Last Download"
+msgstr ""
+
+#: index.php:334
+msgid "Mandatory data is missing, please try again later!"
+msgstr ""
+
+#: WC_SC.php:101
+msgid "Merchant ID"
+msgstr ""
+
+#: WC_SC.php:107
+msgid "Merchant Site ID"
+msgstr ""
+
+#: WC_SC.php:2207
+msgid "Message: "
+msgstr ""
+
+#: index.php:706
+msgid "MONTH"
+msgstr ""
+
+#: index.php:736
+msgid "NO"
+msgstr ""
+
+#: index.php:226
+msgid "Not recognized Ajax call."
+msgstr ""
+
+#: WC_SC.php:154
+msgid "Notify URL"
+msgstr ""
+
+#. Author of the plugin
+msgid "Nuvei"
+msgstr ""
+
+#. Description of the plugin
+msgid "Nuvei gateway for WooCommerce"
+msgstr ""
+
+#. Name of the plugin
+msgid "Nuvei Payments"
+msgstr ""
+
+#: index.php:689
+msgid "Nuvei Subscription"
+msgstr ""
+
+#: index.php:148
+msgid "Order canceled"
+msgstr ""
+
+#: WC_SC.php:501
+msgid "Order Declined."
+msgstr ""
+
+#: index.php:129 index.php:629
+msgid "Order error"
+msgstr ""
+
+#: WC_SC.php:151
+msgid "Override the build-in style for the Nuvei elements."
+msgstr ""
+
+#: WC_SC.php:2177
+msgid "paid instead of"
+msgstr ""
+
+#: WC_SC.php:130
+msgid "Payment action"
+msgstr ""
+
+#: WC_SC.php:517
+msgid "Payment error"
+msgstr ""
+
+#: WC_SC.php:2175
+msgid "Payment ERROR!"
+msgstr ""
+
+#: WC_SC.php:2225
+msgid "Payment is still pending."
+msgstr ""
+
+#: WC_SC.php:2120
+msgid "Payment Method: "
+msgstr ""
+
+#: WC_SC.php:564
+msgid "Payment succsess for Transaction Id "
+msgstr ""
+
+#: WC_SC.php:566
+msgid "Payment succsess."
+msgstr ""
+
+#: index.php:331
+msgid "Please fill all fields marked with * !"
+msgstr ""
+
+#: index.php:155
+msgid "Please, check the order for details!"
+msgstr ""
+
+#: index.php:330
+msgid "Please, choose payment method, and fill all fields!"
+msgstr ""
+
+#: WC_SC.php:2138
+msgid "Plsese check your stock!"
+msgstr ""
+
+#: WC_SC.php:981
+msgid "Post parameter is less than 1."
+msgstr ""
+
+#: WC_SC.php:2117
+msgid "PPP Transaction ID: "
+msgstr ""
+
+#: WC_SC.php:1442
+msgid "Problem with the Products IDs."
+msgstr ""
+
+#: templates/sc_second_step_form.php:17
+msgid "Processing your Payment..."
+msgstr ""
+
+#: WC_SC.php:2198
+msgid "Reason: "
+msgstr ""
+
+#: index.php:796
+msgid "Recurring Amount"
+msgstr ""
+
+#: index.php:828
+msgid "Recurring Period"
+msgstr ""
+
+#: index.php:812
+msgid "Recurring Units"
+msgstr ""
+
+#: WC_SC.php:1080
+msgid "Refund request problem: "
+msgstr ""
+
+#: WC_SC.php:1096
+msgid "Request ERROR: "
+msgstr ""
+
+#: WC_SC.php:168
+msgid "Rewrite DMN"
+msgstr ""
+
+#: WC_SC.php:180
+msgid "Save logs"
+msgstr ""
+
+#: WC_SC.php:113
+msgid "Secret key"
+msgstr ""
+
+#: WC_SC.php:82
+msgid "Secure Payment with Nuvei"
+msgstr ""
+
+#: index.php:743
+msgid "Select a Plan"
+msgstr ""
+
+#: index.php:527
+msgid "Settle"
+msgstr ""
+
+#: WC_SC.php:91
+msgid "Site Mode"
+msgstr ""
+
+#: WC_SC.php:1455
+msgid ""
+"Some of the Products are not availavle, and are not added in the new Order."
+msgstr ""
+
+#: WC_SC.php:2116
+msgid "Status: "
+msgstr ""
+
+#: index.php:764
+msgid "Subscription Plan"
+msgstr ""
+
+#: WC_SC.php:2163
+msgid "The amount has been authorized and captured by "
+msgstr ""
+
+#: WC_SC.php:2160
+msgid "The amount has been authorized and wait for Settle."
+msgstr ""
+
+#: WC_SC.php:1002
+msgid "The Order missing Transaction ID."
+msgstr ""
+
+#: WC_SC.php:1133
+msgid "The refund was declined."
+msgstr ""
+
+#: WC_SC.php:1038
+msgid "The REST API retun false."
+msgstr ""
+
+#: WC_SC.php:1147
+msgid "The status of Refund request is UNKONOWN."
+msgstr ""
+
+#: index.php:139
+msgid ""
+"There is an error with your order. Please, check if the order was recieved "
+"or what is the status!"
+msgstr ""
+
+#: WC_SC.php:469
+msgid "There is no response for the Order."
+msgstr ""
+
+#: WC_SC.php:481
+msgid "There is no Status for the Order."
+msgstr ""
+
+#: WC_SC.php:87
+msgid "This controls the description which the user sees during checkout."
+msgstr ""
+
+#: WC_SC.php:81
+msgid "This is the payment method which the user sees during checkout."
+msgstr ""
+
+#: WC_SC.php:1117
+msgid "Transaction error."
+msgstr ""
+
+#: WC_SC.php:2205
+msgid "Transaction failed."
+msgstr ""
+
+#: WC_SC.php:2119
+msgid "Transaction ID: "
+msgstr ""
+
+#: WC_SC.php:2118
+msgid "Transaction Type: "
+msgstr ""
+
+#: index.php:860
+msgid "Trial Period"
+msgstr ""
+
+#: index.php:844
+msgid "Trial Units"
+msgstr ""
+
+#: WC_SC.php:605 index.php:329
+msgid "Unexpected error, please try again later!"
+msgstr ""
+
+#: WC_SC.php:161
+msgid "Use HTTP"
+msgstr ""
+
+#: WC_SC.php:174
+msgid "Use WPML \"Thank you\" page."
+msgstr ""
+
+#: index.php:518
+msgid "Void"
+msgstr ""
+
+#: WC_SC.php:176
+msgid ""
+"Works only if you have installed and configured WPML plugin. Please, use it "
+"careful, this option can brake your \"Thank you\" page and DMN recieve page!"
+msgstr ""
+
+#: index.php:344
+msgid "Would you like Nuvei to keep the selected payment method as Preferred?"
+msgstr ""
+
+#: index.php:707
+msgid "YEAR"
+msgstr ""
+
+#: index.php:737
+msgid "YES"
+msgstr ""
+
+#: WC_SC.php:2127
+msgid "Your action was Canceld."
+msgstr ""
+
+#: index.php:429
+msgid "Your payment failed. Please, try again."
+msgstr ""
+
+#: index.php:423
+msgid ""
+"Your payment is being processed. Your order status will be updated soon."
+msgstr ""
+
+#: index.php:327
+msgid "Your Payment was DECLINED. Please try another payment method!"
+msgstr ""
