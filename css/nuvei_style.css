@@ -111,6 +111,7 @@
 #sc_second_step_form .upo_title input {
     vertical-align: middle;
 	width: auto;
+	outline: none;
 }
 
 #sc_second_step_form .apm_title img, #sc_second_step_form .upo_title img {
@@ -165,11 +166,13 @@
 	background: none;
 	border-radius: 0;
 	padding: 0.6180469716em;
+	outline: none;
 }
 
 #sc_second_step_form #sc_card_holder_name::placeholder,
 #sc_second_step_form .apm_fields input::placeholder {
 	text-transform: capitalize;
+	border: none;
 }
 
 #sc_second_step_form a.button, #sc_second_step_form button {
