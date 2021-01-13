@@ -8,9 +8,6 @@
 	
 	<div id="sc_loader_background">
 		<div class="sc_modal">
-			<div class="sc_header"><span onclick="closeScLoadingModal()">&times;</span></div>
-			<hr/>
-
 			<div class="sc_content">
 				<h3>
 					<img src="<?php echo esc_attr($plugin_url); ?>icons/loader.gif" alt="loading..." />
@@ -20,7 +17,9 @@
 		</div>
 	</div>
 
-	<h3><?php echo esc_html_e('Choose from yours preferred payment methods', 'nuvei_woocommerce'); ?></h3>
+	<h3 id="upos_list_title">
+		<?php echo esc_html_e('Choose from yours preferred payment methods', 'nuvei_woocommerce'); ?>
+	</h3>
 	<ul id="sc_upos_list"></ul>
 
 	<h3><?php echo esc_html_e('Choose from the payment options', 'nuvei_woocommerce'); ?></h3>

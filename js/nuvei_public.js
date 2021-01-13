@@ -298,7 +298,7 @@ function scFormFalse(text) {
 		text = scTrans.choosePM;
 	}
 	
-	jQuery('#sc_checkout_messages').append(
+	jQuery('#sc_checkout_messages').html(
 	   '<div class="woocommerce-error" role="alert">'
 		   +'<strong>'+ text +'</strong>'
 	   +'</div>'
@@ -434,6 +434,8 @@ function scPrintApms(data) {
 	if(Object.keys(data.upos).length > 0) {
 		var upoHtml = '';
 		
+		jQuery('#upos_list_title, #sc_upos_list').show();
+		
 		for(var i in data.upos) {
 			if ('cc_card' == data.upos[i]['paymentMethodName']) {
 				var img = '<img src="' + data.pluginUrl + 'icons/visa_mc_maestro.svg" alt="'
@@ -477,6 +479,9 @@ function scPrintApms(data) {
 		}
 		
 		jQuery('#sc_second_step_form #sc_upos_list').html(upoHtml);
+	}
+	else {
+		jQuery('#upos_list_title, #sc_upos_list').hide();
 	}
 	
 	if(Object.keys(data.apms).length > 0) {
@@ -545,13 +550,19 @@ function scPrintApms(data) {
 					) {
 						placeholder = data.apms[j]['fields'][f]['caption'][0]['message'];
 					} else {
-						placeholder = data.apms[j]['fields'][f]['name'].replace('_', ' ');
+						placeholder = data.apms[j]['fields'][f]['name'].replaceAll('_', ' ');
+					}
+					
+					var field_type = data.apms[j]['fields'][f]['type'];
+					if('apmgw_Neteller' == data.apms[j]['paymentMethod']) {
+						field_type	= 'email';
+						placeholder	= placeholder.replace(/netteler/ig, 'neteller');
 					}
 					
 					apmHmtl +=
 							'<input id="' + data.apms[j]['paymentMethod'] + '_' + data.apms[j]['fields'][f]['name']
 								+ '" name="' + data.apms[j]['paymentMethod'] + '[' + data.apms[j]['fields'][f]['name'] + ']'
-								+ '" type="' + data.apms[j]['fields'][f]['type']
+								+ '" type="' + field_type
 								+ '" pattern="' + pattern
 								+ '" placeholder="' + placeholder
 								+ '" autocomplete="new-password" />';

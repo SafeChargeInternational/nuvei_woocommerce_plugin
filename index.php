@@ -3,7 +3,7 @@
  * Plugin Name: Nuvei Payments
  * Plugin URI: https://github.com/SafeChargeInternational/safecharge_woocommerce_plugin
  * Description: Nuvei gateway for WooCommerce
- * Version: 3.7
+ * Version: 3.7.1
  * Author: Nuvei
  * Author URI: https://nuvei.com
  * Text Domain: nuvei_woocommerce
@@ -136,7 +136,7 @@ function woocommerce_sc_init() {
 			'woocommerce_thankyou_order_received_text',
 		
 			function ( $str, $order) {
-				return esc_html__('There is an error with your order. Please, check if the order was recieved or what is the status!', 'nuvei_woocommerce');
+				return esc_html__(' There is an error with your order. Please check your Order status for more information.', 'nuvei_woocommerce');
 			}, 10, 2);
 	} elseif ('canceled' === strtolower($wc_sc->get_request_status())) {
 		add_filter('the_title', function ( $title, $id) {

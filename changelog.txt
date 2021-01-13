@@ -1,5 +1,8 @@
 *** WooCommerce Extension Template Changelog ***
 
+version 3.7.1
+	* Small UI changes.
+
 version 3.7
 	* Changed names of the styles and JS files.
 	* Add checkbox for the user to accept or not UPO creation.
