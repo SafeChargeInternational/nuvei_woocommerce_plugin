@@ -576,7 +576,7 @@ function scPrintApms(data) {
 					'</li>';
 		}
 		
-		if(1 == scTrans.useUpos) {
+		if(1 == scTrans.useUpos && scTrans.isUserLogged) {
 			apmHmtl +=
 					'<li class="apm_container" id="nuvei_save_upo_li">'
 						+ '<label class="apm_title">'
