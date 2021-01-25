@@ -308,7 +308,7 @@ function sc_enqueue_wo_files( $styles) {
 			}
 		}
 	}
-	
+	var_dump(is_user_logged_in());
 	// put translations here into the array
 	wp_localize_script(
 		'nuvei_js_public',
@@ -322,7 +322,7 @@ function sc_enqueue_wo_files( $styles) {
 			'wcThSep'           => $wcThSep,
 			'wcDecSep'          => $wcDecSep,
 			'useUpos'			=> $wc_sc->can_use_upos(),
-			'isUserLogged'		=> is_user_logged_in(),
+			'isUserLogged'		=> is_user_logged_in() ? 1 : 0,
 			
 			// translations
 			'paymentDeclined'	=> __('Your Payment was DECLINED. Please try another payment method!', 'nuvei_woocommerce'),
