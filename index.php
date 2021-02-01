@@ -308,7 +308,7 @@ function sc_enqueue_wo_files( $styles) {
 			}
 		}
 	}
-	var_dump(is_user_logged_in());
+	
 	// put translations here into the array
 	wp_localize_script(
 		'nuvei_js_public',
