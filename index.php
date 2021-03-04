@@ -3,7 +3,7 @@
  * Plugin Name: Nuvei Payments
  * Plugin URI: https://github.com/SafeChargeInternational/safecharge_woocommerce_plugin
  * Description: Nuvei gateway for WooCommerce
- * Version: 3.7.2
+ * Version: 3.7.3
  * Author: Nuvei
  * Author URI: https://nuvei.com
  * Text Domain: nuvei_woocommerce
@@ -15,10 +15,6 @@
 */
 
 defined('ABSPATH') || die('die');
-
-if (!session_id()) {
-	session_start();
-}
 
 // check if there is the version with "nuvei" in the name of directory, in this case deactivate the current plugin
 add_action('admin_init', function() {
@@ -35,21 +31,25 @@ require_once 'SC_CLASS.php';
 
 $wc_sc = null;
 
-add_filter('woocommerce_payment_gateways', 'woocommerce_add_sc_gateway');
-add_action('plugins_loaded', 'woocommerce_sc_init', 0);
+add_filter('woocommerce_payment_gateways',  'nuvei_add_gateway');
+add_action('plugins_loaded',                'nuvei_init', 0);
 
-function woocommerce_sc_init() {
+function nuvei_init() {
 	if (!class_exists('WC_Payment_Gateway')) {
 		return;
 	}
-	
+    
 	require_once ABSPATH . 'wp-admin/includes/plugin.php';
 	require_once 'WC_SC.php';
 	
 	global $wc_sc;
 	$wc_sc = new WC_SC();
 	
-	load_plugin_textdomain( 'nuvei_woocommerce', false, dirname( plugin_basename( __FILE__ ) ) . '/languages/' );
+	load_plugin_textdomain(
+        'nuvei_woocommerce',
+        false,
+        dirname( plugin_basename( __FILE__ ) ) . '/languages/'
+    );
 	
 	add_action('init', 'sc_enqueue');
 	// load WC styles
@@ -230,7 +230,7 @@ function sc_ajax_action() {
 /**
 * Add the Gateway to WooCommerce
 **/
-function woocommerce_add_sc_gateway( $methods) {
+function nuvei_add_gateway( $methods) {
 	$methods[] = 'WC_SC';
 	return $methods;
 }

@@ -1,5 +1,8 @@
 *** WooCommerce Extension Template Changelog ***
 
+version 3.7.3
+	* Fixed Health Issue for not closed Session.
+
 version 3.7.2
 	* Do not show 'Would you like Nuvei to keep the selected payment method as Preferred?' to the guests users.
 

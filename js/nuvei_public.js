@@ -180,7 +180,7 @@ function scValidateAPMFields() {
 				CVV: cardCvc
 			}
 		};
-		
+		console.log(nuveiPaymentParams);
 		// create payment with WebSDK
 		sfc.createPayment(nuveiPaymentParams, function(resp){
 			afterSdkResponse(resp);

@@ -4,13 +4,11 @@
  * WC_SC Class
  *
  * Main class for the Nuvei Plugin
- *
- * 2018
  */
 
-if (!session_id()) {
-	session_start();
-}
+//if (!session_id()) {
+//	session_start();
+//}
 
 class WC_SC extends WC_Payment_Gateway {
 	# payments URL
@@ -41,7 +39,7 @@ class WC_SC extends WC_Payment_Gateway {
 		$this->webMasterId .= WOOCOMMERCE_VERSION;
 		$this->plugin_data	= get_plugin_data(plugin_dir_path(__FILE__) . 'index.php'); // get plugin data from the index.
 		
-		$_SESSION['SC_Variables']['sc_create_logs'] = $this->sc_get_setting('save_logs');
+//		$_SESSION['SC_Variables']['sc_create_logs'] = $this->sc_get_setting('save_logs');
 		
 		$this->use_wpml_thanks_page = !empty($this->settings['use_wpml_thanks_page']) 
 			? $this->settings['use_wpml_thanks_page'] : 'no';
@@ -285,7 +283,8 @@ class WC_SC extends WC_Payment_Gateway {
 	public function process_payment( $order_id) {
 		$this->create_log('Process payment(), Order #' . $order_id);
 		
-		$_SESSION['nuvei_last_open_order_details'] = array();
+//		$_SESSION['nuvei_last_open_order_details'] = array();
+        session_destroy();
 		
 		$sc_nonce = $this->get_param('sc_nonce');
 		
@@ -594,6 +593,7 @@ class WC_SC extends WC_Payment_Gateway {
 	public function get_payment_methods() {
 		global $woocommerce;
 		
+        $cart = $woocommerce->cart;
 		$resp_data = array(); // use it in the template
 		# OpenOrder
 		$oo_data = $this->open_order();
@@ -892,16 +892,16 @@ class WC_SC extends WC_Payment_Gateway {
 		exit;
 	}
 	
-	public function sc_checkout_process() {
-		$_SESSION['sc_subpayment'] = '';
-		$sc_payment_method         = $this->get_param('sc_payment_method');
-		
-		if ('' != $sc_payment_method) {
-			$_SESSION['sc_subpayment'] = $sc_payment_method;
-		}
-		
-		return true;
-	}
+//	public function sc_checkout_process() {
+//		$_SESSION['sc_subpayment'] = '';
+//		$sc_payment_method         = $this->get_param('sc_payment_method');
+//		
+//		if ('' != $sc_payment_method) {
+//			$_SESSION['sc_subpayment'] = $sc_payment_method;
+//		}
+//		
+//		return true;
+//	}
 
 	public function showMessage( $content) {
 		return '<div class="box ' . $this->msg['class'] . '-box">' . $this->msg['message'] . '</div>' . $content;
@@ -1694,11 +1694,12 @@ class WC_SC extends WC_Payment_Gateway {
 	public function open_order( $is_ajax = false ) {
 		global $woocommerce;
 		
-		$time          = gmdate('YmdHis');
-		$uniq_str      = $time . '_' . uniqid();
-		$ajax_params   = array();
-		$subscr_data   = array();
-		$products_data = array();
+        $cart           = $woocommerce->cart;
+		$time           = gmdate('YmdHis');
+		$uniq_str       = $time . '_' . uniqid();
+		$ajax_params    = array();
+		$subscr_data    = array();
+		$products_data  = array();
 		
 		# try to update Order
 		$resp = $this->update_order();
@@ -1721,7 +1722,7 @@ class WC_SC extends WC_Payment_Gateway {
 		}
 		
 		// check for product with subscription
-		foreach ($woocommerce->cart->get_cart() as $item_id => $item) {
+		foreach ($cart->get_cart() as $item_id => $item) {
 			// check for enabled subscription
 			if (current(get_post_meta($item['product_id'], '_sc_subscr_enabled')) == '1') {
 				// mandatory data
@@ -1762,7 +1763,7 @@ class WC_SC extends WC_Payment_Gateway {
 			'merchantSiteId'    => $this->sc_get_setting('merchantSiteId'),
 			'clientRequestId'	=> $uniq_str,
 			'clientUniqueId'    => $uniq_str . '_wc_cart',
-			'amount'            => $woocommerce->cart->total,
+			'amount'            => $cart->total,
 			'currency'          => get_woocommerce_currency(),
 			'timeStamp'         => $time,
 			
@@ -1771,12 +1772,13 @@ class WC_SC extends WC_Payment_Gateway {
 			),
 			
 			'deviceDetails'     => SC_CLASS::get_device_details(),
-		//          'userTokenId'       => $this->get_param('billing_email', 'mail', '', $ajax_params),
-			'billingAddress'	=> isset($addresses['billingAddress']) ? $addresses['billingAddress'] : array(),
-			'shippingAddress'	=> isset($addresses['shippingAddress']) ? $addresses['shippingAddress'] : array(),
+			'billingAddress'	=> isset($addresses['billingAddress'])
+                ? $addresses['billingAddress'] : array(),
+			'shippingAddress'	=> isset($addresses['shippingAddress'])
+                ? $addresses['shippingAddress'] : array(),
 			'webMasterId'       => $this->webMasterId,
-			'paymentOption'        => array('card' => array('threeD' => array('isDynamic3D' => 1))),
-			'transactionType'    => $this->sc_get_setting('payment_action'),
+			'paymentOption'     => array('card' => array('threeD' => array('isDynamic3D' => 1))),
+			'transactionType'   => $this->sc_get_setting('payment_action'),
 			
 			'merchantDetails'	=> array(
 				'customField1' => json_encode($subscr_data), // put subscr data here
@@ -1789,8 +1791,11 @@ class WC_SC extends WC_Payment_Gateway {
 		
 		$oo_params['checksum'] = hash(
 			$this->sc_get_setting('hash_type'),
-			$this->sc_get_setting('merchantId') . $this->sc_get_setting('merchantSiteId') . $oo_params['clientRequestId']
-				. $oo_params['amount'] . $oo_params['currency'] . $time . $this->sc_get_setting('secret')
+			$this->sc_get_setting('merchantId')
+                . $this->sc_get_setting('merchantSiteId')
+                . $oo_params['clientRequestId']
+				. $oo_params['amount'] . $oo_params['currency'] . $time
+                . $this->sc_get_setting('secret')
 		);
 		
 		$resp = $this->callRestApi('openOrder', $oo_params);
@@ -1816,11 +1821,12 @@ class WC_SC extends WC_Payment_Gateway {
 			'amount'			=> $oo_params['amount'],
 			'merchantDetails'	=> $oo_params['merchantDetails'],
 			'sessionToken'		=> $resp['sessionToken'],
-		//          'userTokenId'       => $oo_params['userTokenId'],
 			'clientRequestId'	=> $oo_params['clientRequestId'],
 			'orderId'			=> $resp['orderId'],
 			'billingAddress'	=> $oo_params['billingAddress'],
 		);
+        
+        $this->create_log($cart->nuvei_last_open_order_details, 'nuvei_last_open_order_details');
 		
 		if ($is_ajax) {
 			wp_send_json(array(
@@ -1843,6 +1849,10 @@ class WC_SC extends WC_Payment_Gateway {
 	 * @return array
 	 */
 	private function update_order() {
+        if (!session_id()) {
+            session_start();
+        }
+        
 		$this->create_log(
 			isset($_SESSION['nuvei_last_open_order_details']) ? $_SESSION['nuvei_last_open_order_details'] : '',
 			'update_order() - session[nuvei_last_open_order_details]'
@@ -1852,7 +1862,6 @@ class WC_SC extends WC_Payment_Gateway {
 			empty($_SESSION['nuvei_last_open_order_details'])
 			|| empty($_SESSION['nuvei_last_open_order_details']['sessionToken'])
 			|| empty($_SESSION['nuvei_last_open_order_details']['orderId'])
-		//          || empty($_SESSION['nuvei_last_open_order_details']['userTokenId'])
 			|| empty($_SESSION['nuvei_last_open_order_details']['clientRequestId'])
 		) {
 			$this->create_log('update_order() - Missing last Order session data.');
@@ -1882,12 +1891,13 @@ class WC_SC extends WC_Payment_Gateway {
 			'orderId'			=> $_SESSION['nuvei_last_open_order_details']['orderId'],
 			'merchantId'		=> $this->sc_get_setting('merchantId'),
 			'merchantSiteId'	=> $this->sc_get_setting('merchantSiteId'),
-		//          'userTokenId'       => $_SESSION['nuvei_last_open_order_details']['userTokenId'],
-			'clientRequestId'	=> $_SESSION['nuvei_last_open_order_details']['clientRequestId'],
+			'clientRequestId'	=> $cart->nuvei_last_open_order_details['clientRequestId'],
 			'currency'			=> get_woocommerce_currency(),
 			'amount'			=> $cart_amount,
-			'billingAddress'	=> isset($addresses['billingAddress']) ? $addresses['billingAddress'] : array(),
-			'shippingAddress'	=> isset($addresses['shippingAddress']) ? $addresses['shippingAddress'] : array(),
+			'billingAddress'	=> isset($addresses['billingAddress'])
+                ? $addresses['billingAddress'] : array(),
+			'shippingAddress'	=> isset($addresses['shippingAddress'])
+                ? $addresses['shippingAddress'] : array(),
 			'timeStamp'			=> $time,
 			
 			'items'				=> array(
@@ -2546,5 +2556,3 @@ class WC_SC extends WC_Payment_Gateway {
 	}
 	
 }
-
-?>
