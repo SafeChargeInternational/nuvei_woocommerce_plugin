@@ -31,14 +31,14 @@ require_once 'SC_CLASS.php';
 
 $wc_sc = null;
 
-add_filter('woocommerce_payment_gateways',  'nuvei_add_gateway');
-add_action('plugins_loaded',                'nuvei_init', 0);
+add_filter('woocommerce_payment_gateways', 'nuvei_add_gateway');
+add_action('plugins_loaded', 'nuvei_init', 0);
 
 function nuvei_init() {
 	if (!class_exists('WC_Payment_Gateway')) {
 		return;
 	}
-    
+	
 	require_once ABSPATH . 'wp-admin/includes/plugin.php';
 	require_once 'WC_SC.php';
 	
@@ -46,10 +46,10 @@ function nuvei_init() {
 	$wc_sc = new WC_SC();
 	
 	load_plugin_textdomain(
-        'nuvei_woocommerce',
-        false,
-        dirname( plugin_basename( __FILE__ ) ) . '/languages/'
-    );
+		'nuvei_woocommerce',
+		false,
+		dirname( plugin_basename( __FILE__ ) ) . '/languages/'
+	);
 	
 	add_action('init', 'sc_enqueue');
 	// load WC styles
