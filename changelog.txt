@@ -1,5 +1,9 @@
 *** WooCommerce Extension Template Changelog ***
 
+version 3.7.4
+	* Fixed Refund problem on Sale flow.
+	* Plugin was tested with WordPress 5.7, WooCommerce 5.1.0 and Multi-Step Checkout for WooCommerce 2.15.
+
 version 3.7.3
 	* Fixed Health Issue for not closed Session.
 

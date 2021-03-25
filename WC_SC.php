@@ -993,6 +993,7 @@ class WC_SC extends WC_Payment_Gateway {
 		}
 		
 		$ref_amount = round($ref_amount, 2);
+        
 		if ($ref_amount < 0) {
 			wp_send_json(array(
 				'status' => 0,
@@ -1017,12 +1018,11 @@ class WC_SC extends WC_Payment_Gateway {
 		$ref_parameters = array(
 			'merchantId'            => $this->settings['merchantId'],
 			'merchantSiteId'        => $this->settings['merchantSiteId'],
-			'clientRequestId'       => $time . '_' . $order_meta_data['order_tr_id'],
+			'clientRequestId'       => $order_id . '_' . $time . '_' . uniqid(),
 			'clientUniqueId'        => $time . '_' . uniqid(),
 			'amount'                => number_format($ref_amount, 2, '.', ''),
 			'currency'              => get_woocommerce_currency(),
 			'relatedTransactionId'  => $tr_id, // GW Transaction ID
-			'comment'               => '', // optional
 			'url'                   => $notify_url,
 			'timeStamp'             => $time,
 		);
@@ -1625,6 +1625,8 @@ class WC_SC extends WC_Payment_Gateway {
 	 * @return bool|WC_Order
 	 */
 	public function is_order_valid( $order_id, $return = false) {
+        $this->create_log('is_order_vali() check.');
+        
 		$this->sc_order = wc_get_order( $order_id );
 		
 		if ( ! is_a( $this->sc_order, 'WC_Order') ) {
@@ -1763,7 +1765,7 @@ class WC_SC extends WC_Payment_Gateway {
 			'merchantSiteId'    => $this->sc_get_setting('merchantSiteId'),
 			'clientRequestId'	=> $uniq_str,
 			'clientUniqueId'    => $uniq_str . '_wc_cart',
-			'amount'            => $cart->total,
+			'amount'            => (string) number_format((float) $cart->total, 2, '.', ''),
 			'currency'          => get_woocommerce_currency(),
 			'timeStamp'         => $time,
 			
@@ -1873,7 +1875,7 @@ class WC_SC extends WC_Payment_Gateway {
 		
 		$cart        = $woocommerce->cart;
 		$time        = gmdate('YmdHis');
-		$cart_amount = (string) round($cart->total, 2);
+		$cart_amount = (string) number_format((float) $cart->total, 2, '.', '');
 		$cart_items  = array();
 		$addresses   = $this->get_order_addresses();
 
@@ -2388,39 +2390,31 @@ class WC_SC extends WC_Payment_Gateway {
 	 * @param int $order_id
 	 * @return int the order id
 	 */
-	private function create_refund_record( $order_id) {
+	private function create_refund_record($order_id) {
 		$refunds	= array();
 		$ref_amount = 0;
 		$tries		= 0;
 		$ref_tr_id	= $this->get_param('TransactionID', 'int');
+        
+        $this->is_order_valid($order_id);
+        
+        if ( !in_array($this->sc_order->get_status(), array('completed', 'processing')) ) {
+            $this->create_log(
+                $this->sc_order->get_status(),
+                'DMN Refund Error - the Order status does not allow refunds, the status is:'
+            );
+
+            echo wp_json_encode(array('DMN Refund Error - the Order status does not allow refunds.'));
+            exit;
+        }
 		
 		// there is chance of slow saving of meta data (in create_refund_record()), so let's wait
 		do {
-			$this->is_order_valid($order_id);
-		
-			if ( !in_array($this->sc_order->get_status(), array('completed', 'processing')) ) {
-				$this->create_log(
-					$this->sc_order->get_status(),
-					'DMN Error for Cpanel Refund - the Order status does not allow refunds. The status is:'
-				);
-
-				echo wp_json_encode(array('DMN Error for Cpanel Refund - the Order status does not allow refunds.'));
-				exit;
-			}
-			
 			$refunds = json_decode($this->sc_order->get_meta('_sc_refunds'), true);
-			$tries++;
+			$this->create_log('create_refund_record() Wait for Refund meta data.');
 			
-			$this->create_log(
-				array(
-					'order_id'	=> $order_id,
-					'ref_tr_id'	=> $ref_tr_id,
-					'tries'		=> $tries,
-					'refunds'	=> $refunds,
-				),
-				'create_refund_record() Wait for Refund meta data for Order'
-			);
-			sleep(3);
+            sleep(3);
+            $tries++;
 		} while (empty($refunds[$ref_tr_id]) && $tries < 5);
 		
 		$this->create_log($refunds, 'create_refund_record() Saved refunds for Order #' . $order_id);
@@ -2433,23 +2427,17 @@ class WC_SC extends WC_Payment_Gateway {
 		) {
 			$ref_amount = $refunds[$ref_tr_id]['refund_amount'];
 		}
-		
 		// in case of CPanel refund - add Refund meta data here
-		if (0 == $ref_amount && strpos($this->get_param('clientRequestId'), 'gwp_') !== false) {
+		elseif (0 == $ref_amount && strpos($this->get_param('clientRequestId'), 'gwp_') !== false) {
 			$ref_amount = $this->get_param('totalAmount', 'float');
-			
-			$this->save_refund_meta_data(
-				$this->get_param('TransactionID'),
-				$ref_amount
-			);
-			
-			$refunds = json_decode($this->sc_order->get_meta('_sc_refunds'), true);
 		}
 		
 		if (0 == $ref_amount) {
+            $this->create_log('create_refund_record() Refund Amount is 0, do not create Refund in WooCommerce.');
+            
 			return;
 		}
-		
+        
 		$refund = wc_create_refund(array(
 			'amount'	=> round(floatval($ref_amount), 2),
 			'order_id'	=> $order_id,
@@ -2461,12 +2449,19 @@ class WC_SC extends WC_Payment_Gateway {
 			echo wp_json_encode(array('create_refund_record() - the Refund process in WC returns error.'));
 			exit;
 		}
-		
-		$refunds[$ref_tr_id]['status'] = 'approved';
-		$refunds[$ref_tr_id]['wc_id']  = $refund->get_id();
-		
-		$this->sc_order->update_meta_data('_sc_refunds', json_encode($refunds));
-		$this->sc_order->save();
+        
+        $this->save_refund_meta_data(
+            $this->get_param('TransactionID'),
+            $ref_amount,
+            'approved',
+            $refund->get_id()
+        );
+
+//		$refunds[$ref_tr_id]['status'] = 'approved';
+//		$refunds[$ref_tr_id]['wc_id']  = $refund->get_id();
+//		
+//		$this->sc_order->update_meta_data('_sc_refunds', json_encode($refunds));
+//		$this->sc_order->save();
 
 		return true;
 	}
@@ -2489,29 +2484,29 @@ class WC_SC extends WC_Payment_Gateway {
 		return round($sum, 2);
 	}
 	
-	private function save_refund_meta_data( $trans_id, $ref_amount) {
+	private function save_refund_meta_data( $trans_id, $ref_amount, $status = '', $wc_id = 0) {
 		$refunds = json_decode($this->sc_order->get_meta('_sc_refunds'), true);
 		
 		if (empty($refunds)) {
 			$refunds = array();
 		}
 		
-		$this->create_log($refunds, 'save_refund_meta_data() Saved Refunds meta data before add the current one.');
-		$this->create_log($ref_amount, 'save_refund_meta_data ref_amount');
+//		$this->create_log($refunds, 'save_refund_meta_data(): Saved Refunds before the current one.');
 		
 		// add the new refund
 		$refunds[$trans_id] = array(
-			'refund_amount'	=> round(floatval($ref_amount), 2),
-			'status'		=> 'pending'
+			'refund_amount'	=> round((float) $ref_amount, 2),
+			'status'		=> empty($status) ? 'pending' : $status
 		);
+        
+        if(0 < $wc_id) {
+            $refunds[$trans_id]['wc_id'] = $wc_id;
+        }
 
 		$this->sc_order->update_meta_data('_sc_refunds', json_encode($refunds));
 		$order_id = $this->sc_order->save();
 		
-		$this->create_log(
-			json_decode($this->sc_order->get_meta('_sc_refunds'), true),
-			'save_refund_meta_data() Saved Refunds after the request.'
-		);
+		$this->create_log('save_refund_meta_data() Saved Refund with Tr ID ' . $trans_id);
 		
 		return $order_id;
 	}

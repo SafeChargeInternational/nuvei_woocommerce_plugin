@@ -121,7 +121,7 @@ function scValidateAPMFields() {
 			|| typeof scMerchantId == 'undefined'
 			|| typeof scMerchantSiteId == 'undefined'
 		) {
-			scFormFalse('Unexpected error, please try again later!');
+			scFormFalse(scTrans.unexpectedError);
 			console.error('Missing SDK parameters.');
 			return;
 		}
@@ -158,6 +158,9 @@ function scValidateAPMFields() {
 		nuveiPaymentParams.cardHolderName	= document.getElementById('sc_card_holder_name').value;
 		nuveiPaymentParams.paymentOption	= sfcFirstField;
 
+		console.log('sfcFirstField', sfcFirstField);
+		console.log('nuveiPaymentParams', nuveiPaymentParams);
+
 		// create payment with WebSDK
 		sfc.createPayment(nuveiPaymentParams, function(resp) {
 			afterSdkResponse(resp);
@@ -180,7 +183,7 @@ function scValidateAPMFields() {
 				CVV: cardCvc
 			}
 		};
-		console.log(nuveiPaymentParams);
+		
 		// create payment with WebSDK
 		sfc.createPayment(nuveiPaymentParams, function(resp){
 			afterSdkResponse(resp);
