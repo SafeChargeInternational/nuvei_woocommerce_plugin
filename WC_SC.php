@@ -6,10 +6,6 @@
  * Main class for the Nuvei Plugin
  */
 
-//if (!session_id()) {
-//	session_start();
-//}
-
 class WC_SC extends WC_Payment_Gateway {
 	# payments URL
 	private $webMasterId  = 'WooCommerce ';
@@ -180,10 +176,10 @@ class WC_SC extends WC_Payment_Gateway {
 				'label' => __('Create and save daily log files. This can help for debugging and catching bugs.', 'nuvei_woocommerce'),
 				'default' => 'yes'
 			),
-		//          'get_plans_btn' => array(
-		//              'title' => __('Download Subscriptions plans', 'nuvei_woocommerce'),
-		//              'type' => 'button',
-		//          ),
+            'get_plans_btn' => array(
+                'title' => __('Download Payment Plans', 'nuvei_woocommerce'),
+                'type' => 'button',
+            ),
 		);
 	}
 	
@@ -377,7 +373,6 @@ class WC_SC extends WC_Payment_Gateway {
 		$params = array(
 			'merchantId'        => $this->sc_get_setting('merchantId'),
 			'merchantSiteId'    => $this->sc_get_setting('merchantSiteId'),
-		//          'userTokenId'       => $order->get_billing_email(),
 			'clientUniqueId'    => $this->set_cuid($order_id),
 			'clientRequestId'   => $time . '_' . uniqid(),
 			'currency'          => $order->get_currency(),
@@ -451,7 +446,7 @@ class WC_SC extends WC_Payment_Gateway {
 			$params['userTokenId']							= $order->get_billing_email();
 		} else {
 			// APM
-			$endpoint_method         = 'paymentAPM.do';
+			$endpoint_method         = 'paymentAPM';
 			$params['paymentMethod'] = $sc_payment_method;
 			
 			if (!empty($post_array[$sc_payment_method])) {
@@ -1492,10 +1487,20 @@ class WC_SC extends WC_Payment_Gateway {
 	}
 	
 	/**
-	 * Function sc_download_subscr_pans
-	 * Download the subscriptions plans and save them to a json file
+	 * Function download_subscr_pans
+	 * 
+     * Download the Active Payment pPlans and save them to a json file.
+     * If there are no Active Plans, create default one with name, based
+     * on MerchatSiteId parameter, and get it.
+     * 
+     * @param int $recursions
 	 */
-	public function sc_download_subscr_pans() {
+	public function download_subscr_pans($recursions = 0) {
+        if($recursions > 1) {
+            wp_send_json(array('status' => 0));
+            exit;
+        }
+        
 		$time     = gmdate('YmdHis');
 		$uniq_str = $time . '_' . uniqid();
 		
@@ -1524,6 +1529,57 @@ class WC_SC extends WC_Payment_Gateway {
 			wp_send_json(array('status' => 0));
 			exit;
 		}
+        
+        // in case there are  no active plans - create default one
+        if(isset($resp['total']) && 0 == $resp['total']) {
+            $time = gmdate('YmdHis');
+            
+            $create_params = array(
+                'merchantId'        => $params['merchantId'],
+                'merchantSiteId'    => $params['merchantSiteId'],
+                'name'              => 'Default_plan_for_site_' . $params['merchantSiteId'],
+                'initialAmount'     => 0,
+                'recurringAmount'   => 1,
+                'currency'          => get_woocommerce_currency(),
+                'timeStamp'         => $time,
+                
+                'clientRequestId'   => $time . '_' . uniqid(),
+                'webMasterId'       => $this->webMasterId,
+                'sourceApplication' => SC_SOURCE_APPLICATION,
+                'encoding'          => 'UTF-8',
+                
+                'startAfter'        => array(
+                    'day'   => 0,
+                    'month' => 1,
+                    'year'  => 0,
+                ),
+                'recurringPeriod'   => array(
+                    'day'   => 0,
+                    'month' => 1,
+                    'year'  => 0,
+                ),
+                'endAfter'          => array(
+                    'day'   => 0,
+                    'month' => 0,
+                    'year'  => 1,
+                ),
+                'planStatus'        => 'ACTIVE'
+            );
+            
+            $create_params['checksum'] = hash(
+                $this->sc_get_setting('hash_type'),
+                implode('', array_slice($create_params, 0, 7)) . $this->sc_get_setting('secret')
+            );
+                
+            $create_resp = $this->callRestApi('createPlan', $create_params);
+            
+            if (!empty($create_resp['planId'])) {
+                $recursions += 1;
+                $this->download_subscr_pans($recursions);
+                return;
+            }
+        }
+        // in case there are  no active plans - create default one END
 		
 		if (file_put_contents(plugin_dir_path(__FILE__) . '/tmp/sc_plans.json', json_encode($resp['plans']))) {
 			wp_send_json(array(
@@ -1535,7 +1591,7 @@ class WC_SC extends WC_Payment_Gateway {
 		
 		$this->create_log(
 			plugin_dir_path(__FILE__) . '/tmp/sc_plans.json',
-			'Get Plans was not save in temp file.'
+			'Plans list was not saved.'
 		);
 		
 		wp_send_json(array('status' => 0));

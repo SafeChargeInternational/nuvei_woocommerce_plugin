@@ -3,7 +3,7 @@
  * Plugin Name: Nuvei Payments
  * Plugin URI: https://github.com/SafeChargeInternational/safecharge_woocommerce_plugin
  * Description: Nuvei gateway for WooCommerce
- * Version: 3.7.4
+ * Version: 3.8.0
  * Author: Nuvei
  * Author URI: https://nuvei.com
  * Text Domain: nuvei_woocommerce
@@ -220,7 +220,7 @@ function sc_ajax_action() {
 	
 	// download Subscriptions Plans
 	if ($wc_sc->get_param('downloadPlans', 'int') == 1) {
-		$wc_sc->sc_download_subscr_pans();
+		$wc_sc->download_subscr_pans();
 	}
 	
 	wp_send_json_error(__('Not recognized Ajax call.', 'nuvei_woocommerce'));
@@ -343,6 +343,7 @@ function sc_enqueue_wo_files( $styles) {
 			'CCCvcError'        => __('Card CVC is not correct.', 'nuvei_woocommerce'),
 			'AskDeleteUpo'      => __('Do you want to delete this UPO?', 'nuvei_woocommerce'),
 			'ConfirmSaveUpo'	=> __('Would you like Nuvei to keep the selected payment method as Preferred?', 'nuvei_woocommerce'),
+			'RequestFail'       => __('Request fail.', 'nuvei_woocommerce'),
 		)
 	);
 

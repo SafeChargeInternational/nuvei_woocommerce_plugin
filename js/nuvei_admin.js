@@ -212,7 +212,7 @@ jQuery(function() {
 				dataType: 'json'
 			})
 			.fail(function( jqXHR, textStatus, errorThrown){
-				alert('Request fail.');
+				alert(scTrans.RequestFail);
 				
 				console.error(textStatus);
 				console.error(errorThrown);
