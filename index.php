@@ -11,7 +11,7 @@
  * Require at least: 4.7
  * Tested up to: 5.7
  * WC requires at least: 3.0
- * WC tested up to: 5.1.0
+ * WC tested up to: 5.2.0
 */
 
 defined('ABSPATH') || die('die');
@@ -65,7 +65,7 @@ function nuvei_init() {
 			plugins_url('/css/nuvei_admin_style.css',
 			__FILE__),
 			'',
-			1,
+			1.1,
 			'all'
 		);
 		wp_enqueue_style('nuvei_admin_style');
@@ -111,11 +111,11 @@ function nuvei_init() {
 		}
 		
 		// show admin product data Subscription tab
-		//      add_filter( 'woocommerce_product_data_tabs', 'sc_filter_woocommerce_product_data_tabs', 10, 1 );
-		//      // add admin product data Subscription tab content
-		//      add_action( 'woocommerce_product_data_panels', 'sc_add_product_subscr_data_fields' );
-		//      // save product Subscription data as meta data
-		//      add_action( 'woocommerce_process_product_meta', 'sc_save_product_custom_fields', 10, 3 );
+        add_filter( 'woocommerce_product_data_tabs', 'sc_filter_woocommerce_product_data_tabs', 10, 1 );
+        // add admin product data Subscription tab content
+        add_action( 'woocommerce_product_data_panels', 'sc_add_product_subscr_data_fields' );
+        // save product Subscription data as meta data
+        add_action( 'woocommerce_process_product_meta', 'sc_save_product_custom_fields', 10, 3 );
 	}
 	
 	// change Thank-you page title and text
@@ -393,11 +393,15 @@ function sc_enqueue( $hook) {
 			'1'
 		);
 		
+        $nuvei_plans_path       = plugin_dir_path(__FILE__) . '/tmp/sc_plans.json';
 		$sc_plans_last_mod_time = '';
-		if (is_readable(plugin_dir_path(__FILE__) . '/tmp/sc_plans.json')) {
-			$sc_plans_last_mod_time = gmdate('Y-m-d H:i:s', filemtime(plugin_dir_path(__FILE__) . '/tmp/sc_plans.json'));
+        $plans_list             = array();
+        
+		if (is_readable($nuvei_plans_path)) {
+			$sc_plans_last_mod_time = gmdate('Y-m-d H:i:s', filemtime($nuvei_plans_path));
+            $plans_list             = file_get_contents($nuvei_plans_path);
 		}
-		
+        
 		// put translations here into the array
 		wp_localize_script(
 			'nuvei_js_admin',
@@ -406,7 +410,9 @@ function sc_enqueue( $hook) {
 				'ajaxurl'				=> admin_url('admin-ajax.php'),
 				'security'				=> wp_create_nonce('sc-security-nonce'),
 				'scPlansLastModTime'	=> $sc_plans_last_mod_time,
-				// translations
+                'nuveiPaymentPlans'     => $plans_list,
+				
+                // translations
 				'refundQuestion'		=> __('Are you sure about this Refund?', 'nuvei_woocommerce'),
 				'LastDownload'			=> __('Last Download', 'nuvei_woocommerce'),
 			)
@@ -710,21 +716,21 @@ function sc_filter_woocommerce_product_data_tabs( $tabs ) {
 
 /**
  * Function sc_add_product_subscr_data_fields
- * Add Subscription settings
+ * Add Subscription settings to the product.
  */
 function sc_add_product_subscr_data_fields() {
 	global $wc_sc;
 
 	$units    = array(
-		'day'	=> __( 'DAY', 'nuvei_woocommerce' ),
-		'month'	=> __( 'MONTH', 'nuvei_woocommerce' ),
-		'year'	=> __( 'YEAR', 'nuvei_woocommerce' ),
+		'day'	=> __( 'DAY/S', 'nuvei_woocommerce' ),
+		'month'	=> __( 'MONTH/S', 'nuvei_woocommerce' ),
+		'year'	=> __( 'YEAR/S', 'nuvei_woocommerce' ),
 	);
 	$currency = get_woocommerce_currency_symbol();
 	$post     = $wc_sc->get_param('post', 'int', '', $_GET);
 	
 	echo '<div id="sc_subscr_settings" class="panel woocommerce_options_panel">';
-		# _sc_subscr_enabled
+    # _sc_subscr_enabled
 	$sc_subscr_enabled = 0;
 	$tmp               = get_post_meta($post, '_sc_subscr_enabled');
 	
@@ -775,13 +781,14 @@ function sc_add_product_subscr_data_fields() {
 		
 	woocommerce_wp_select(array(
 		'id'		=> '_sc_subscr_plan_id', 
-		'label'		=> __( 'Subscription Plan', 'nuvei_woocommerce' ),
+		'label'		=> __( 'Payment Plan', 'nuvei_woocommerce' ),
 		'value'		=> $sc_subscr_plan_id,
 		'options'	=> $plans_list,
 	));
 	# _sc_subscr_plan_id END
 		
 	# _sc_subscr_initial_amount
+    /**
 	$sc_subscr_initial_amount = '';
 	$tmp                      = get_post_meta($post, '_sc_subscr_initial_amount');
 	
@@ -795,10 +802,11 @@ function sc_add_product_subscr_data_fields() {
 			'value'	=> $sc_subscr_initial_amount,
 			'class'	=> 'wc_input_price'
 		));
+     */
 	# _sc_subscr_initial_amount END
 
 	# _sc_subscr_recurr_amount
-	$sc_subscr_recurr_amount = '';
+	$sc_subscr_recurr_amount =0;
 	$tmp                     = get_post_meta($post, '_sc_subscr_recurr_amount');
 	
 	if (!empty($tmp)) {
@@ -809,7 +817,9 @@ function sc_add_product_subscr_data_fields() {
 		'id'	=> '_sc_subscr_recurr_amount', 
 		'label'	=> __( 'Recurring Amount', 'nuvei_woocommerce' ) . ' (' . $currency . ')',
 		'value'	=> $sc_subscr_recurr_amount,
-		'class'	=> 'wc_input_price'
+		'class'	=> 'wc_input_price',
+        'type'  => 'number',
+        'custom_attributes' => array('min' => 0),
 	));
 	# _sc_subscr_recurr_amount END
 
@@ -830,7 +840,7 @@ function sc_add_product_subscr_data_fields() {
 	# _sc_subscr_recurr_units END
 
 	# _sc_subscr_recurr_period
-	$sc_subscr_recurr_period = '';
+	$sc_subscr_recurr_period = 1;
 	$tmp                     = get_post_meta($post, '_sc_subscr_recurr_period');
 	
 	if (!empty($tmp)) {
@@ -841,7 +851,8 @@ function sc_add_product_subscr_data_fields() {
 		'id'	=> '_sc_subscr_recurr_period', 
 		'label'	=> __( 'Recurring Period', 'nuvei_woocommerce' ),
 		'value'	=> $sc_subscr_recurr_period,
-		'class'	=> 'wc_input_price'
+		'type'  => 'number',
+        'custom_attributes' => array('min' => 1, 'step' => 1),
 	));
 	# _sc_subscr_recurr_period END
 
@@ -862,7 +873,7 @@ function sc_add_product_subscr_data_fields() {
 	# _sc_subscr_trial_units END
 
 	# _sc_subscr_trial_period
-	$sc_subscr_trial_period	= '';
+	$sc_subscr_trial_period	= 0;
 	$tmp					= get_post_meta($post, '_sc_subscr_trial_period');
 	
 	if (!empty($tmp)) {
@@ -873,7 +884,8 @@ function sc_add_product_subscr_data_fields() {
 		'id'	=> '_sc_subscr_trial_period', 
 		'label'	=> __( 'Trial Period', 'nuvei_woocommerce' ),
 		'value'	=> $sc_subscr_trial_period,
-		'class'	=> 'wc_input_price'
+		'type'  => 'number',
+        'custom_attributes' => array('min' => 0, 'step' => 1),
 	));
 	# _sc_subscr_recurr_period END
 
@@ -894,7 +906,7 @@ function sc_add_product_subscr_data_fields() {
 	# _sc_subscr_end_after_units END
 
 	# _sc_subscr_end_after_period
-	$sc_subscr_end_after_period = '';
+	$sc_subscr_end_after_period = '1';
 	$tmp						= get_post_meta($post, '_sc_subscr_end_after_period');
 		
 	if (!empty($tmp)) {
@@ -905,7 +917,8 @@ function sc_add_product_subscr_data_fields() {
 		'id'	=> '_sc_subscr_end_after_period', 
 		'label'	=> __( 'End After Period', 'nuvei_woocommerce' ),
 		'value'	=> $sc_subscr_end_after_period,
-		'class'	=> 'wc_input_price'
+        'type'  => 'number',
+        'custom_attributes' => array('min' => 1, 'step' => 1),
 	));
 	# _sc_subscr_end_after_period END
 	echo '</div>';
@@ -917,7 +930,7 @@ function sc_add_product_subscr_data_fields() {
  * 
  * @param int $post_id
  */
-function sc_save_product_custom_fields( $post_id) {
+function sc_save_product_custom_fields($post_id) {
 	global $wc_sc;
 	
 	foreach ($wc_sc->get_subscr_fields() as $field) {

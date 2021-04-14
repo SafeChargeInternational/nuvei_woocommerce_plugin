@@ -1,5 +1,6 @@
-var scSettleBtn = null;
-var scVoidBtn   = null;
+var scSettleBtn		= null;
+var scVoidBtn		= null;
+var nuveiPlansList	= JSON.parse(scTrans.nuveiPaymentPlans);
 
 // when the admin select to Settle or Void the Order
 function settleAndCancelOrder(question, action, orderId) {
@@ -211,7 +212,7 @@ jQuery(function() {
 				},
 				dataType: 'json'
 			})
-			.fail(function( jqXHR, textStatus, errorThrown){
+			.fail(function(jqXHR, textStatus, errorThrown){
 				alert(scTrans.RequestFail);
 				
 				console.error(textStatus);
@@ -238,5 +239,81 @@ jQuery(function() {
 		});
 	}
 	
+	// when change the Payment Plan settings, populate the fields
+	jQuery('body').on('change', '#_sc_subscr_plan_id', function() {
+		var _self = jQuery(this);
+		
+		for(var nuveiPlan in nuveiPlansList) {
+			if(_self.val() == nuveiPlansList[nuveiPlan].planId) {
+				jQuery('#_sc_subscr_recurr_amount').val(nuveiPlansList[nuveiPlan].recurringAmount);
+				
+				// recurring
+				if(0 != nuveiPlansList[nuveiPlan].recurringPeriod.year) {
+					jQuery('#_sc_subscr_recurr_units').val('year');
+					jQuery('#_sc_subscr_recurr_units').trigger('change');
+					
+					jQuery('#_sc_subscr_recurr_period').val(nuveiPlansList[nuveiPlan].recurringPeriod.year);
+				}
+				else if(0 != nuveiPlansList[nuveiPlan].recurringPeriod.month) {
+					jQuery('#_sc_subscr_recurr_units').val('month');
+					jQuery('#_sc_subscr_recurr_units').trigger('change');
+					
+					jQuery('#_sc_subscr_recurr_period').val(nuveiPlansList[nuveiPlan].recurringPeriod.month);
+				}
+				else {
+					jQuery('#_sc_subscr_recurr_units').val('day');
+					jQuery('#_sc_subscr_recurr_units').trigger('change');
+					
+					jQuery('#_sc_subscr_recurr_period').val(nuveiPlansList[nuveiPlan].recurringPeriod.day);
+				}
+				// recurring END
+				
+				// trial
+				if(0 != nuveiPlansList[nuveiPlan].startAfter.year) {
+					jQuery('#_sc_subscr_trial_units').val('year');
+					jQuery('#_sc_subscr_trial_units').trigger('change');
+					
+					jQuery('#_sc_subscr_trial_period').val(nuveiPlansList[nuveiPlan].startAfter.year);
+				}
+				else if(0 != nuveiPlansList[nuveiPlan].startAfter.month) {
+					jQuery('#_sc_subscr_trial_units').val('month');
+					jQuery('#_sc_subscr_trial_units').trigger('change');
+					
+					jQuery('#_sc_subscr_trial_period').val(nuveiPlansList[nuveiPlan].startAfter.month);
+				}
+				else {
+					jQuery('#_sc_subscr_trial_units').val('day');
+					jQuery('#_sc_subscr_trial_units').trigger('change');
+					
+					jQuery('#_sc_subscr_trial_period').val(nuveiPlansList[nuveiPlan].startAfter.day);
+				}
+				// trial END
+				
+				// end after
+				if(0 != nuveiPlansList[nuveiPlan].endAfter.year) {
+					jQuery('#_sc_subscr_end_after_units').val('year');
+					jQuery('#_sc_subscr_end_after_units').trigger('change');
+					
+					jQuery('#_sc_subscr_end_after_period').val(nuveiPlansList[nuveiPlan].endAfter.year);
+				}
+				else if(0 != nuveiPlansList[nuveiPlan].endAfter.month) {
+					jQuery('#_sc_subscr_end_after_units').val('month');
+					jQuery('#_sc_subscr_end_after_units').trigger('change');
+					
+					jQuery('#_sc_subscr_end_after_period').val(nuveiPlansList[nuveiPlan].endAfter.month);
+				}
+				else {
+					jQuery('#_sc_subscr_end_after_units').val('day');
+					jQuery('#_sc_subscr_end_after_units').trigger('change');
+					
+					jQuery('#_sc_subscr_end_after_period').val(nuveiPlansList[nuveiPlan].endAfter.day);
+				}
+				// end after END
+				
+				break;
+			}
+		}
+		
+	});
 });
 // document ready function END
