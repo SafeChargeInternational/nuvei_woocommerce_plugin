@@ -8,14 +8,18 @@
 
 class WC_SC extends WC_Payment_Gateway {
 	# payments URL
-	private $webMasterId  = 'WooCommerce ';
-	private $stop_dmn     = 0; // when 1 - stops the DMN for testing
-	private $cuid_postfix = '_sandbox_apm'; // postfix for Sandbox APM payments
-	private $plugin_data  = array();
+	private $webMasterId            = 'WooCommerce ';
+	private $stop_dmn               = 0; // when 1 - stops the DMN for testing
+	private $cuid_postfix           = '_sandbox_apm'; // postfix for Sandbox APM payments
+    private $nuvei_glob_attr_name   = 'Nuvei Payment Plan';
+    private $subscr_units           = array('year', 'month', 'day');
+    private $plugin_data            = array();
 	private $sc_order;
-	
+        
 	// the fields for the subscription
 	private $subscr_fields = array('_sc_subscr_enabled', '_sc_subscr_plan_id', '_sc_subscr_initial_amount', '_sc_subscr_recurr_amount', '_sc_subscr_recurr_units', '_sc_subscr_recurr_period', '_sc_subscr_trial_units', '_sc_subscr_trial_period', '_sc_subscr_end_after_units', '_sc_subscr_end_after_period');
+    
+    //'_sc_subscr_trial_units', '_sc_subscr_trial_period', '_sc_subscr_end_after_units', '_sc_subscr_end_after_period');
 	
 	public function __construct() {
 		# settings to get/save options
@@ -576,11 +580,7 @@ class WC_SC extends WC_Payment_Gateway {
 	
 	public function add_apms_step( $data) {
 		ob_start();
-		
-		$plugin_url = plugin_dir_url(__FILE__);
 		require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'templates/sc_second_step_form.php';
-		
-		//      $html = ob_get_contents();
 		ob_end_flush();
 	}
 	
@@ -1381,7 +1381,7 @@ class WC_SC extends WC_Payment_Gateway {
 	 *
 	 * @param string $key - request key
 	 * @param string $type - possible vaues: string, float, int, array, mail, other
-	 * @param mixed $default - returnd value if fail
+	 * @param mixed $default - return value if fail
 	 * @param array $parent - optional list with parameters
 	 *
 	 * @return mixed
@@ -1496,6 +1496,16 @@ class WC_SC extends WC_Payment_Gateway {
      * @param int $recursions
 	 */
 	public function download_subscr_pans($recursions = 0) {
+        $this->create_nuvei_global_attribute();
+        wp_send_json(array(
+            'status' => 1,
+            'time' => gmdate('Y-m-d H:i:s')
+        ));
+        exit;
+            
+            
+            
+        
         if($recursions > 1) {
             wp_send_json(array('status' => 0));
             exit;
@@ -1582,6 +1592,8 @@ class WC_SC extends WC_Payment_Gateway {
         // in case there are  no active plans - create default one END
 		
 		if (file_put_contents(plugin_dir_path(__FILE__) . '/tmp/sc_plans.json', json_encode($resp['plans']))) {
+            $this->create_nuvei_global_attribute();
+            
 			wp_send_json(array(
 				'status' => 1,
 				'time' => gmdate('Y-m-d H:i:s')
@@ -1600,6 +1612,10 @@ class WC_SC extends WC_Payment_Gateway {
 	
 	public function get_subscr_fields() {
 		return $this->subscr_fields;
+	}
+    
+	public function get_subscr_units() {
+		return $this->subscr_units;
 	}
 	
 	/**
@@ -1637,6 +1653,9 @@ class WC_SC extends WC_Payment_Gateway {
 			
 			if (!empty($data['paymentMethods']) && is_array($data['paymentMethods'])) {
 				$data['paymentMethods'] = json_encode($data['paymentMethods']);
+			}
+			if (!empty($data['plans']) && is_array($data['plans'])) {
+				$data['plans'] = json_encode($data['plans']);
 			}
 			
 			$d = $this->sc_get_setting('test') == 'yes' ? print_r($data, true) : json_encode($data);
@@ -1900,7 +1919,167 @@ class WC_SC extends WC_Payment_Gateway {
 	public function can_use_upos() {
 		return $this->settings['use_upos'];
 	}
-	
+    
+    public function get_slug($text = '') {
+        return str_replace(' ', '-', strtolower($text));
+    }
+    
+    public function create_nuvei_global_attribute() {
+        $this->create_log('create_nuvei_global_attribute()');
+        
+        $nuvei_plans_path           = plugin_dir_path(__FILE__) . '/tmp/sc_plans.json';
+        $nuvei_glob_attr_name_slug  = $this->get_slug($this->nuvei_glob_attr_name);
+        $taxonomy_name              = wc_attribute_taxonomy_name($nuvei_glob_attr_name_slug);
+        
+        // a check
+        if (!is_readable($nuvei_plans_path)) {
+            $this->create_log('Plans json is not readable.');
+            
+            wp_send_json(array(
+                'status'    => 0,
+                'msg'       => __('Plans json is not readable.')
+            ));
+            exit;
+        }
+        
+        $plans = json_decode(file_get_contents($nuvei_plans_path), true);
+
+        // a check
+        if(empty($plans) || !is_array($plans)) {
+            $this->create_log($plans, 'Unexpected problem with the Plans list.');
+
+            wp_send_json(array(
+                'status'    => 0,
+                'msg'       => __('Unexpected problem with the Plans list.')
+            ));
+            exit;
+        }
+        
+        // check if Taxonomy exists
+        if (taxonomy_exists($taxonomy_name)) {
+            $this->create_log('$taxonomy_name exists');
+            
+            /** TODO - update data */
+        }
+        else { // create the Global Attribute
+            $args = array(
+                'name'         => $this->nuvei_glob_attr_name,
+                'slug'         => $nuvei_glob_attr_name_slug,
+                'order_by'     => 'menu_order',
+                'has_archives' => true,
+            );
+
+            // create the attribute and check for errors
+            $attribute_id = wc_create_attribute($args);
+
+            if(is_wp_error($attribute_id)) {
+                $this->create_log(
+                    array(
+                        '$data'     => $data,
+                        '$args'     => $args,
+                        'message'   => $attribute_id->get_error_message(), 
+                    ),
+                    'Error when try to add Global Attribute with arguments'
+                );
+
+                wp_send_json(array(
+                    'status'    => 0,
+                    'msg'       => $attribute_id->get_error_message()
+                ));
+                exit;
+            }
+            
+            register_taxonomy(
+                $taxonomy_name, 
+                array('product'), 
+                array(
+                    'public' => false,
+                )
+            );
+        }
+        
+        $this->create_log('create_nuvei_global_attribute() 2');
+        
+        // try to create the Plans Terms
+        foreach($plans as $plan) {
+            $term_slug  = $this->get_slug($plan['name']);
+
+            $term       = wp_insert_term(
+                $plan['name'], 
+                $taxonomy_name,
+                array('slug' => $term_slug)
+            );
+
+            $this->create_log($term, 'resp term data after insert');
+
+            if(is_wp_error($term)) {
+                $this->create_log(
+                    array(
+                        '$taxonomy_name'    => $taxonomy_name,
+                        'term name'         => $plan['name'],
+                        'message'           => $term->get_error_message(),
+                    ),
+                    'Error when try to add a term to the Nuvei Global Attribute'
+                );
+
+                break;
+            }
+
+            // fill the plan data as Meta for the Term
+            add_term_meta( $term['term_id'], 'planId', $plan['planId'] );
+            add_term_meta( $term['term_id'], 'recurringAmount', $plan['recurringAmount'] );
+                
+            if($plan['startAfter']['year'] > 0) {
+                add_term_meta( $term['term_id'], 'startAfterUnit', 'year' );
+                add_term_meta( $term['term_id'], 'startAfterPeriod', $plan['startAfter']['year'] );
+            }
+            elseif($plan['startAfter']['month'] > 0) {
+                add_term_meta( $term['term_id'], 'startAfterUnit', 'month' );
+                add_term_meta( $term['term_id'], 'startAfterPeriod', $plan['startAfter']['month'] );
+            }
+            else {
+                add_term_meta( $term['term_id'], 'startAfterUnit', 'day' );
+                add_term_meta( $term['term_id'], 'startAfterPeriod', $plan['startAfter']['day'] );
+            }
+                
+            if($plan['recurringPeriod']['year'] > 0) {
+                add_term_meta( $term['term_id'], 'recurringPeriodUnit', 'year' );
+                add_term_meta( $term['term_id'], 'recurringPeriodPeriod', $plan['recurringPeriod']['year'] );
+            }
+            elseif($plan['recurringPeriod']['month'] > 0) {
+                add_term_meta( $term['term_id'], 'recurringPeriodUnit', 'month' );
+                add_term_meta( $term['term_id'], 'recurringPeriodPeriod', $plan['recurringPeriod']['month'] );
+            }
+            else {
+                add_term_meta( $term['term_id'], 'recurringPeriodUnit', 'day' );
+                add_term_meta( $term['term_id'], 'recurringPeriodPeriod', $plan['recurringPeriod']['day'] );
+            }
+
+            if($plan['endAfter']['year'] > 0) {
+                add_term_meta( $term['term_id'], 'endAfterUnit', 'year' );
+                add_term_meta( $term['term_id'], 'endAfterPeriod', $plan['endAfter']['year'] );
+            }
+            elseif($plan['endAfter']['month'] > 0) {
+                add_term_meta( $term['term_id'], 'endAfterUnit', 'month' );
+                add_term_meta( $term['term_id'], 'endAfterPeriod', $plan['endAfter']['month'] );
+            }
+            else {
+                add_term_meta( $term['term_id'], 'endAfterUnit', 'day' );
+                add_term_meta( $term['term_id'], 'endAfterPeriod', $plan['endAfter']['day'] );
+            }
+        }
+    }
+    
+    /**
+     * Function get_nuvei_glob_attr_name
+     * A get function.
+     * 
+     * @return string
+     */
+    public function get_nuvei_glob_attr_name() {
+        return $this->nuvei_glob_attr_name;
+    }
+    
 	/**
 	 * Function update_order
 	 * 

@@ -1,6 +1,6 @@
 var scSettleBtn		= null;
 var scVoidBtn		= null;
-var nuveiPlansList	= JSON.parse(scTrans.nuveiPaymentPlans);
+//var nuveiPlansList	= JSON.parse(scTrans.nuveiPaymentPlans);
 
 // when the admin select to Settle or Void the Order
 function settleAndCancelOrder(question, action, orderId) {

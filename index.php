@@ -9,9 +9,9 @@
  * Text Domain: nuvei_woocommerce
  * Domain Path: /languages
  * Require at least: 4.7
- * Tested up to: 5.7
+ * Tested up to: 5.7.1
  * WC requires at least: 3.0
- * WC tested up to: 5.2.0
+ * WC tested up to: 5.2.2
 */
 
 defined('ABSPATH') || die('die');
@@ -111,11 +111,11 @@ function nuvei_init() {
 		}
 		
 		// show admin product data Subscription tab
-        add_filter( 'woocommerce_product_data_tabs', 'sc_filter_woocommerce_product_data_tabs', 10, 1 );
+//        add_filter( 'woocommerce_product_data_tabs', 'sc_filter_woocommerce_product_data_tabs', 10, 1 );
         // add admin product data Subscription tab content
-        add_action( 'woocommerce_product_data_panels', 'sc_add_product_subscr_data_fields' );
+//        add_action( 'woocommerce_product_data_panels', 'sc_add_product_subscr_data_fields' );
         // save product Subscription data as meta data
-        add_action( 'woocommerce_process_product_meta', 'sc_save_product_custom_fields', 10, 3 );
+//        add_action( 'woocommerce_process_product_meta', 'sc_save_product_custom_fields', 10, 3 );
 	}
 	
 	// change Thank-you page title and text
@@ -161,6 +161,16 @@ function nuvei_init() {
 	if (!empty($_GET['sc_msg'])) {
 		add_filter('woocommerce_before_cart', 'nuvei_show_message_on_cart', 10, 2);
 	}
+    
+    // add the Taxonomies for Subscriptions
+    //add_action( 'woocommerce_after_register_taxonomy', array($wc_sc, 'create_global_attributes') );
+    
+    // extend Term form to add meta data
+    add_action( 'pa_' . $wc_sc->get_slug($wc_sc->get_nuvei_glob_attr_name()) . '_add_form_fields', 'nuvei_add_term_fields', 10, 2 );
+    // update Terms' meta data form
+    add_action( 'pa_' . $wc_sc->get_slug($wc_sc->get_nuvei_glob_attr_name()) . '_edit_form_fields', 'nuvei_edit_term_meta', 10, 2 );
+    // hook to catch our meta data and save it
+    add_action( 'created_' . 'pa_' . $wc_sc->get_slug($wc_sc->get_nuvei_glob_attr_name()), 'nuvei_save_term_meta', 10, 2 );
 }
 
 /**
@@ -397,7 +407,7 @@ function sc_enqueue( $hook) {
 		$sc_plans_last_mod_time = '';
         $plans_list             = array();
         
-		if (is_readable($nuvei_plans_path)) {
+		if (is_readable($nuvei_plans_path)) { 
 			$sc_plans_last_mod_time = gmdate('Y-m-d H:i:s', filemtime($nuvei_plans_path));
             $plans_list             = file_get_contents($nuvei_plans_path);
 		}
@@ -738,16 +748,6 @@ function sc_add_product_subscr_data_fields() {
 		$sc_subscr_enabled = $tmp[0];
 	}
 		
-	//      woocommerce_wp_checkbox(array( 
-	//          'id'            => '_sc_subscr_enabled', 
-	////            'wrapper_class' => 'show_if_simple', 
-	//          'label'         => __( 'Enable Subscription', 'nuvei_woocommerce' ),
-	////            'description'   => __( 'My Custom Field Description', 'my_text_domain' ),
-	////            'default'       => 'no',
-	//          'value'         => $sc_subscr_enabled,
-	////            'desc_tip'      => false,
-	//      ));
-		
 	woocommerce_wp_select(array(
 		'id'		=> '_sc_subscr_enabled', 
 		'label'		=> __( 'Enable Subscription', 'nuvei_woocommerce' ),
@@ -787,26 +787,8 @@ function sc_add_product_subscr_data_fields() {
 	));
 	# _sc_subscr_plan_id END
 		
-	# _sc_subscr_initial_amount
-    /**
-	$sc_subscr_initial_amount = '';
-	$tmp                      = get_post_meta($post, '_sc_subscr_initial_amount');
-	
-	if (!empty($tmp)) {
-		$sc_subscr_initial_amount = $tmp[0];
-	}
-		
-		woocommerce_wp_text_input(array(
-			'id'	=> '_sc_subscr_initial_amount', 
-			'label'	=> __( 'Initial Amount', 'nuvei_woocommerce' ) . ' (' . $currency . ')',
-			'value'	=> $sc_subscr_initial_amount,
-			'class'	=> 'wc_input_price'
-		));
-     */
-	# _sc_subscr_initial_amount END
-
 	# _sc_subscr_recurr_amount
-	$sc_subscr_recurr_amount =0;
+	$sc_subscr_recurr_amount = 0;
 	$tmp                     = get_post_meta($post, '_sc_subscr_recurr_amount');
 	
 	if (!empty($tmp)) {
@@ -818,7 +800,7 @@ function sc_add_product_subscr_data_fields() {
 		'label'	=> __( 'Recurring Amount', 'nuvei_woocommerce' ) . ' (' . $currency . ')',
 		'value'	=> $sc_subscr_recurr_amount,
 		'class'	=> 'wc_input_price',
-        'type'  => 'number',
+        //'type'  => 'number',
         'custom_attributes' => array('min' => 0),
 	));
 	# _sc_subscr_recurr_amount END
@@ -908,7 +890,7 @@ function sc_add_product_subscr_data_fields() {
 	# _sc_subscr_end_after_period
 	$sc_subscr_end_after_period = '1';
 	$tmp						= get_post_meta($post, '_sc_subscr_end_after_period');
-		
+	
 	if (!empty($tmp)) {
 		$sc_subscr_end_after_period = $tmp[0];
 	}
@@ -941,3 +923,71 @@ function sc_save_product_custom_fields($post_id) {
 		}
 	}
 }
+
+// Attributes, Terms and Meta functions
+function nuvei_add_term_fields($taxonomy) {
+    $nuvei_plans_path = plugin_dir_path(__FILE__) . '/tmp/sc_plans.json';
+    
+    ob_start();
+    $plans_list = array();
+    $plans_json = '';
+    
+    if (is_readable($nuvei_plans_path)) {
+        $plans_json = file_get_contents($nuvei_plans_path);
+        $plans_list = json_decode($plans_json, true);
+    }
+    
+    require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'templates/admin/add_terms_form.php';
+    ob_end_flush();
+}
+
+function nuvei_edit_term_meta($term, $taxonomy) {
+    /** TODO populate planId with available plan IDs */
+    
+    $nuvei_plans_path = plugin_dir_path(__FILE__) . '/tmp/sc_plans.json';
+
+    ob_start();
+    $term_meta  = get_term_meta($term->term_id);
+    $plans_list = array();
+    $plans_json = '';
+    
+    if (is_readable($nuvei_plans_path)) {
+        $plans_json = file_get_contents($nuvei_plans_path);
+        $plans_list = json_decode($plans_json, true);
+    }
+    
+    // clean unused elements
+    foreach ($term_meta as $key => $data) {
+        if(strpos($key, '_') !== false) {
+            unset($term_meta[$key]);
+            break;
+        }
+    }
+    
+    require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'templates/admin/edit_term_form.php';
+    ob_end_flush();
+}
+
+function nuvei_save_term_meta($term_id, $tt_id) {
+    global $wc_sc;
+    
+    $taxonomy       = 'pa_' . $wc_sc->get_slug($wc_sc->get_nuvei_glob_attr_name());
+    $post_taxonomy  = $wc_sc->get_param('taxonomy', 'string');
+    
+    if($post_taxonomy != $taxonomy) {
+        return;
+    }
+    
+    add_term_meta( $term_id, 'planId', $wc_sc->get_param('planId', 'int') );
+    add_term_meta( $term_id, 'recurringAmount', $wc_sc->get_param('recurringAmount', 'float') );
+
+    add_term_meta( $term_id, 'startAfterUnit', $wc_sc->get_param('startAfterUnit', 'string') );
+    add_term_meta( $term_id, 'startAfterPeriod', $wc_sc->get_param('startAfterPeriod', 'int') );
+
+    add_term_meta( $term_id, 'recurringPeriodUnit', $wc_sc->get_param('recurringPeriodUnit', 'string') );
+    add_term_meta( $term_id, 'recurringPeriodPeriod', $wc_sc->get_param('recurringPeriodPeriod', 'int') );
+
+    add_term_meta( $term_id, 'endAfterUnit', $wc_sc->get_param('endAfterUnit', 'string') );
+    add_term_meta( $term_id, 'endAfterPeriod', $wc_sc->get_param('endAfterPeriod', 'int') );
+}
+// Attributes, Terms and Meta functions END

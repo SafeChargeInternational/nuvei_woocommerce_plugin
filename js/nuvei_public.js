@@ -579,9 +579,6 @@ function scPrintApms(data) {
 					'</li>';
 		}
 		
-		console.log(scTrans.isUserLogged)
-		console.log(scTrans.useUpos)
-		
 		if(1 == scTrans.useUpos && 1 == scTrans.isUserLogged) {
 			apmHmtl +=
 					'<li class="apm_container" id="nuvei_save_upo_li">'
