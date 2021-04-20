@@ -16,11 +16,6 @@ class WC_SC extends WC_Payment_Gateway {
     private $plugin_data            = array();
 	private $sc_order;
         
-	// the fields for the subscription
-	private $subscr_fields = array('_sc_subscr_enabled', '_sc_subscr_plan_id', '_sc_subscr_initial_amount', '_sc_subscr_recurr_amount', '_sc_subscr_recurr_units', '_sc_subscr_recurr_period', '_sc_subscr_trial_units', '_sc_subscr_trial_period', '_sc_subscr_end_after_units', '_sc_subscr_end_after_period');
-    
-    //'_sc_subscr_trial_units', '_sc_subscr_trial_period', '_sc_subscr_end_after_units', '_sc_subscr_end_after_period');
-	
 	public function __construct() {
 		# settings to get/save options
 		$this->id                 = 'sc';
@@ -1496,16 +1491,6 @@ class WC_SC extends WC_Payment_Gateway {
      * @param int $recursions
 	 */
 	public function download_subscr_pans($recursions = 0) {
-        $this->create_nuvei_global_attribute();
-        wp_send_json(array(
-            'status' => 1,
-            'time' => gmdate('Y-m-d H:i:s')
-        ));
-        exit;
-            
-            
-            
-        
         if($recursions > 1) {
             wp_send_json(array('status' => 0));
             exit;
@@ -1958,116 +1943,45 @@ class WC_SC extends WC_Payment_Gateway {
         // check if Taxonomy exists
         if (taxonomy_exists($taxonomy_name)) {
             $this->create_log('$taxonomy_name exists');
-            
-            /** TODO - update data */
+            return;
         }
-        else { // create the Global Attribute
-            $args = array(
-                'name'         => $this->nuvei_glob_attr_name,
-                'slug'         => $nuvei_glob_attr_name_slug,
-                'order_by'     => 'menu_order',
-                'has_archives' => true,
-            );
+        
+        // create the Global Attribute
+        $args = array(
+            'name'         => $this->nuvei_glob_attr_name,
+            'slug'         => $nuvei_glob_attr_name_slug,
+            'order_by'     => 'menu_order',
+            'has_archives' => true,
+        );
 
-            // create the attribute and check for errors
-            $attribute_id = wc_create_attribute($args);
+        // create the attribute and check for errors
+        $attribute_id = wc_create_attribute($args);
 
-            if(is_wp_error($attribute_id)) {
-                $this->create_log(
-                    array(
-                        '$data'     => $data,
-                        '$args'     => $args,
-                        'message'   => $attribute_id->get_error_message(), 
-                    ),
-                    'Error when try to add Global Attribute with arguments'
-                );
-
-                wp_send_json(array(
-                    'status'    => 0,
-                    'msg'       => $attribute_id->get_error_message()
-                ));
-                exit;
-            }
-            
-            register_taxonomy(
-                $taxonomy_name, 
-                array('product'), 
+        if(is_wp_error($attribute_id)) {
+            $this->create_log(
                 array(
-                    'public' => false,
-                )
-            );
-        }
-        
-        $this->create_log('create_nuvei_global_attribute() 2');
-        
-        // try to create the Plans Terms
-        foreach($plans as $plan) {
-            $term_slug  = $this->get_slug($plan['name']);
-
-            $term       = wp_insert_term(
-                $plan['name'], 
-                $taxonomy_name,
-                array('slug' => $term_slug)
+                    '$data'     => $data,
+                    '$args'     => $args,
+                    'message'   => $attribute_id->get_error_message(), 
+                ),
+                'Error when try to add Global Attribute with arguments'
             );
 
-            $this->create_log($term, 'resp term data after insert');
-
-            if(is_wp_error($term)) {
-                $this->create_log(
-                    array(
-                        '$taxonomy_name'    => $taxonomy_name,
-                        'term name'         => $plan['name'],
-                        'message'           => $term->get_error_message(),
-                    ),
-                    'Error when try to add a term to the Nuvei Global Attribute'
-                );
-
-                break;
-            }
-
-            // fill the plan data as Meta for the Term
-            add_term_meta( $term['term_id'], 'planId', $plan['planId'] );
-            add_term_meta( $term['term_id'], 'recurringAmount', $plan['recurringAmount'] );
-                
-            if($plan['startAfter']['year'] > 0) {
-                add_term_meta( $term['term_id'], 'startAfterUnit', 'year' );
-                add_term_meta( $term['term_id'], 'startAfterPeriod', $plan['startAfter']['year'] );
-            }
-            elseif($plan['startAfter']['month'] > 0) {
-                add_term_meta( $term['term_id'], 'startAfterUnit', 'month' );
-                add_term_meta( $term['term_id'], 'startAfterPeriod', $plan['startAfter']['month'] );
-            }
-            else {
-                add_term_meta( $term['term_id'], 'startAfterUnit', 'day' );
-                add_term_meta( $term['term_id'], 'startAfterPeriod', $plan['startAfter']['day'] );
-            }
-                
-            if($plan['recurringPeriod']['year'] > 0) {
-                add_term_meta( $term['term_id'], 'recurringPeriodUnit', 'year' );
-                add_term_meta( $term['term_id'], 'recurringPeriodPeriod', $plan['recurringPeriod']['year'] );
-            }
-            elseif($plan['recurringPeriod']['month'] > 0) {
-                add_term_meta( $term['term_id'], 'recurringPeriodUnit', 'month' );
-                add_term_meta( $term['term_id'], 'recurringPeriodPeriod', $plan['recurringPeriod']['month'] );
-            }
-            else {
-                add_term_meta( $term['term_id'], 'recurringPeriodUnit', 'day' );
-                add_term_meta( $term['term_id'], 'recurringPeriodPeriod', $plan['recurringPeriod']['day'] );
-            }
-
-            if($plan['endAfter']['year'] > 0) {
-                add_term_meta( $term['term_id'], 'endAfterUnit', 'year' );
-                add_term_meta( $term['term_id'], 'endAfterPeriod', $plan['endAfter']['year'] );
-            }
-            elseif($plan['endAfter']['month'] > 0) {
-                add_term_meta( $term['term_id'], 'endAfterUnit', 'month' );
-                add_term_meta( $term['term_id'], 'endAfterPeriod', $plan['endAfter']['month'] );
-            }
-            else {
-                add_term_meta( $term['term_id'], 'endAfterUnit', 'day' );
-                add_term_meta( $term['term_id'], 'endAfterPeriod', $plan['endAfter']['day'] );
-            }
+            wp_send_json(array(
+                'status'    => 0,
+                'msg'       => $attribute_id->get_error_message()
+            ));
+            exit;
         }
+
+        // craete WP taxonomy based on the WC attribute
+        register_taxonomy(
+            $taxonomy_name, 
+            array('product'), 
+            array(
+                'public' => false,
+            )
+        );
     }
     
     /**
