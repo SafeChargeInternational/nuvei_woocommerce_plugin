@@ -35,7 +35,7 @@
 <tr class="nuvei_meta_fileds">
     <th><?= __('Recurring Amount', 'nuvei_woocommerce'); ?></th>
     <td>
-        <input type="number" step="1" min="0.01" name="recurringAmount" value="<?= current($term_meta['recurringAmount']); ?>" required="" />
+        <input type="number" min="0" step=".01" name="recurringAmount" value="<?= current($term_meta['recurringAmount']); ?>" required="" />
     </td>
 </tr>
 
@@ -48,7 +48,7 @@
             <option value="year"  <?= (current($term_meta['recurringPeriodUnit']) == 'year' ? 'selected=""' : ''); ?>><?= __('Years', 'nuvei_woocommerce'); ?></option>
         </select>
         
-        <input type="number" step="1" min="1" name="recurringPeriodPeriod" id="recurringPeriodPeriod" value="<?= current($term_meta['recurringPeriodPeriod']); ?>" required="" />
+        <input type="number" min="1" step="1" name="recurringPeriodPeriod" id="recurringPeriodPeriod" value="<?= current($term_meta['recurringPeriodPeriod']); ?>" required="" />
     </td>
 </tr>
 
@@ -61,7 +61,7 @@
             <option value="year" <?= (current($term_meta['endAfterUnit']) == 'year' ? 'selected=""' : ''); ?>><?= __('Years', 'nuvei_woocommerce'); ?></option>
         </select>
         
-        <input type="number" step="1" min="1" name="endAfterPeriod" id="endAfterPeriod" value="<?= current($term_meta['endAfterPeriod']); ?>" required="" />
+        <input type="number" min="1" step="1" name="endAfterPeriod" id="endAfterPeriod" value="<?= current($term_meta['endAfterPeriod']); ?>" required="" />
     </td>
 </tr>
 
@@ -74,7 +74,7 @@
             <option value="year" <?= (current($term_meta['startAfterUnit']) == 'year' ? 'selected=""' : ''); ?>><?= __('Years', 'nuvei_woocommerce'); ?></option>
         </select>
         
-        <input type="number" step="1" min="1" name="startAfterPeriod" id="startAfterPeriod" value="<?= current($term_meta['startAfterPeriod']); ?>" required="" />
+        <input type="number" min="0" step="1" name="startAfterPeriod" id="startAfterPeriod" value="<?= current($term_meta['startAfterPeriod']); ?>" required="" />
     </td>
 </tr>
 

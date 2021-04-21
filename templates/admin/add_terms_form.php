@@ -37,7 +37,7 @@
     
     <div class="form-field term-group">
         <label for=""><?php _e('Recurring Amount', 'nuvei_woocommerce'); ?></label>
-        <input type="number" name="recurringAmount" id="recurringAmount" min="0.01" step="1" required="" />
+        <input type="number" step=".01" min="0" name="recurringAmount" id="recurringAmount" min="0" required="" />
     </div>
     
     <div class="form-field term-group">
@@ -49,7 +49,7 @@
             <option value="year"><?= __('Years', 'nuvei_woocommerce'); ?></option>
         </select>
         
-        <input type="number" step="1" min="1" name="recurringPeriodPeriod" id="recurringPeriodPeriod" class="nuvei_periods" required="" />
+        <input type="number" min="1" step="1" name="recurringPeriodPeriod" id="recurringPeriodPeriod" class="nuvei_periods" required="" />
     </div>
     
     <div class="form-field term-group">
@@ -61,7 +61,7 @@
             <option value="year"><?= __('Years', 'nuvei_woocommerce'); ?></option>
         </select>
         
-        <input type="number" step="1" min="1" name="endAfterPeriod" id="endAfterPeriod" class="nuvei_periods" required="" />
+        <input type="number" min="1" step="1" name="endAfterPeriod" id="endAfterPeriod" class="nuvei_periods" required="" />
     </div>
     
     <div class="form-field term-group">
@@ -73,7 +73,7 @@
             <option value="year"><?= __('Years', 'nuvei_woocommerce'); ?></option>
         </select>
         
-        <input type="number" step="1" min="1" name="startAfterPeriod" id="startAfterPeriod" class="nuvei_periods" required="" />
+        <input type="number" min="0" step="1" name="startAfterPeriod" id="startAfterPeriod" class="nuvei_periods" required="" />
     </div>
 </div>
 

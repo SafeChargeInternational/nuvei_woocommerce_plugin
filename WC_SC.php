@@ -760,17 +760,24 @@ class WC_SC extends WC_Payment_Gateway {
 		}
 		
 		// santitized get variables
-		$invoice_id           = $this->get_param('invoice_id');
-		$clientUniqueId       = $this->get_cuid();
-		$transactionType      = $this->get_param('transactionType');
-		$Reason               = $this->get_param('Reason');
-		$action               = $this->get_param('action');
-		$order_id             = $this->get_param('order_id', 'int');
-		$gwErrorReason        = $this->get_param('gwErrorReason');
-		$AuthCode             = $this->get_param('AuthCode', 'int');
-		$TransactionID        = $this->get_param('TransactionID', 'int');
-		$relatedTransactionId = $this->get_param('relatedTransactionId', 'int');
+		$invoice_id             = $this->get_param('invoice_id');
+		$clientUniqueId         = $this->get_cuid();
+		$transactionType        = $this->get_param('transactionType');
+		$Reason                 = $this->get_param('Reason');
+		$action                 = $this->get_param('action');
+		$order_id               = $this->get_param('order_id', 'int');
+		$gwErrorReason          = $this->get_param('gwErrorReason');
+		$AuthCode               = $this->get_param('AuthCode', 'int');
+		$TransactionID          = $this->get_param('TransactionID', 'int');
+		$relatedTransactionId   = $this->get_param('relatedTransactionId', 'int');
+		$dmnType                = $this->get_param('dmnType');
 		
+        # Subscription State DMN
+        if('subscription' == $dmnType) {
+            /** TODO - add comment, set Subscription Order flag and exit */
+        }
+        # Subscription State DMN END
+        
 		if (empty($TransactionID)) {
 			$this->create_log($_REQUEST, 'DMN error - The TransactionID is empty!');
 			
@@ -781,9 +788,15 @@ class WC_SC extends WC_Payment_Gateway {
 		if (!$this->checkAdvancedCheckSum()) {
 			$this->create_log($_REQUEST, 'DMN Error - AdvancedCheckSum problem!');
 			
-			echo wp_json_encode('DMN Error - AdvancedCheckSum problem!');
+			echo wp_json_encode('DMN Error - Checksum validation problem!');
 			exit;
 		}
+        
+        # Subscription Payment DMN
+        if('subscriptionPayment' == $dmnType) {
+            /** TODO - add comment and exit */
+        }
+        # Subscription Payment DMN END
 		
 		# Sale and Auth
 		if (in_array($transactionType, array('Sale', 'Auth'), true)) {
@@ -897,35 +910,6 @@ class WC_SC extends WC_Payment_Gateway {
 		return '<div class="box ' . $this->msg['class'] . '-box">' . $this->msg['message'] . '</div>' . $content;
 	}
 
-	/**
-	 * Function checkAdvancedCheckSum
-	 * Checks the Advanced Checsum
-	 *
-	 * @return boolean
-	 */
-	public function checkAdvancedCheckSum() {
-		$str = hash(
-			$this->sc_get_setting('hash_type'),
-			$this->sc_get_setting('secret') . $this->get_param('totalAmount')
-				. $this->get_param('currency') . $this->get_param('responseTimeStamp')
-				. $this->get_param('PPP_TransactionID') . $this->get_request_status()
-				. $this->get_param('productId')
-		);
-		
-		//      var_dump($this->sc_get_setting('secret') . $this->get_param('totalAmount')
-		//          . $this->get_param('currency') . $this->get_param('responseTimeStamp')
-		//          . $this->get_param('PPP_TransactionID') . $this->get_request_status()
-		//          . $this->get_param('productId'));
-		
-		//      var_dump($this->get_param('totalAmount', 'float'));
-		
-		if (strval($str) == $this->get_param('advanceResponseChecksum')) {
-			return true;
-		}
-		
-		return false;
-	}
-	
 	public function set_notify_url() {
 		$url_part = get_site_url();
 			
@@ -1756,12 +1740,13 @@ class WC_SC extends WC_Payment_Gateway {
 	public function open_order( $is_ajax = false ) {
 		global $woocommerce;
 		
-		$cart          = $woocommerce->cart;
-		$time          = gmdate('YmdHis');
-		$uniq_str      = $time . '_' . uniqid();
-		$ajax_params   = array();
-		$subscr_data   = array();
-		$products_data = array();
+		$cart           = $woocommerce->cart;
+		$time           = gmdate('YmdHis');
+		$uniq_str       = $time . '_' . uniqid();
+        $items          = $cart->get_cart();  
+		$ajax_params    = array();
+		$subscr_data    = array();
+		$products_data  = array();
 		
 		# try to update Order
 		$resp = $this->update_order();
@@ -1783,40 +1768,10 @@ class WC_SC extends WC_Payment_Gateway {
 			parse_str($this->get_param('scFormData'), $ajax_params); 
 		}
 		
-		// check for product with subscription
-		foreach ($cart->get_cart() as $item_id => $item) {
-			// check for enabled subscription
-			if (current(get_post_meta($item['product_id'], '_sc_subscr_enabled')) == '1') {
-				// mandatory data
-				$subscr_data[$item['product_id']] = array(
-					'planId' => current(get_post_meta($item['product_id'], '_sc_subscr_plan_id')),
-					'initialAmount' => number_format(current(get_post_meta(
-						$item['product_id'], '_sc_subscr_initial_amount')), 2, '.', ''),
-					'recurringAmount' => number_format(current(get_post_meta(
-						$item['product_id'], '_sc_subscr_recurr_amount')), 2, '.', ''),
-				);
-				
-				# optional data
-				$recurr_unit   = current(get_post_meta($item['product_id'], '_sc_subscr_recurr_units'));
-				$recurr_period = current(get_post_meta($item['product_id'], '_sc_subscr_recurr_period'));
-				$subscr_data[$item['product_id']]['recurringPeriod'][$recurr_unit] = $recurr_period;
-
-				$trial_unit   = current(get_post_meta($item['product_id'], '_sc_subscr_trial_units'));
-				$trial_period = current(get_post_meta($item['product_id'], '_sc_subscr_trial_period'));
-				$subscr_data[$item['product_id']]['startAfter'][$trial_unit] = $trial_period;
-
-				$end_after_unit   = current(get_post_meta($item['product_id'], '_sc_subscr_end_after_units'));
-				$end_after_period = current(get_post_meta($item['product_id'], '_sc_subscr_end_after_period'));
-				$subscr_data[$item['product_id']]['endAfter'][$end_after_unit] = $end_after_period;
-				# optional data END
-			}
-			
-			$products_data[$item['product_id']] = array(
-				'quantity'	=> $item['quantity'],
-				'price'		=> get_post_meta($item['product_id'] , '_price', true),
-			);
-		}
-		// check for product with subscription END
+		// check for a Product with Payment Plan
+		$all_prod_data  = $this->get_products_data($items);
+        $products_data  = $all_prod_data['products_data'];
+        $subscr_data    = $all_prod_data['subscr_data'];
 		
 		$addresses = $this->get_order_addresses();
 		
@@ -1994,6 +1949,178 @@ class WC_SC extends WC_Payment_Gateway {
         return $this->nuvei_glob_attr_name;
     }
     
+    /**
+     * Function add_to_cart_validation
+     * 
+     * Decide to add or not a product to the card.
+     * 
+     * @param bool $true
+     * @param int $product_id
+     * @param int $quantity
+     * 
+     * @return bool
+     */
+    public function add_to_cart_validation($true, $product_id, $quantity) {
+        global $woocommerce;
+		
+		$cart       = $woocommerce->cart;
+        $product    = wc_get_product( $product_id );
+        $attributes = $product->get_attributes();
+        $cart_items = $cart->get_cart();
+        
+        // 1 - incoming Product with plan
+        if(!empty($attributes['pa_' . $this->get_slug($this->nuvei_glob_attr_name)])) {
+            // 1.1 if there are Products in the cart, stop the process
+            if(count($cart_items) > 0) {
+                wc_print_notice(__('You can not add a Product with Payment Plan to another Product.', 'nuvei_woocommerce'), 'error');
+                return false;
+            }
+            
+            return true;
+        }
+        
+        // 2 - incoming Product without plan
+        // 2.1 - the cart is not empty
+        if(count($cart_items) > 0) {
+            foreach ($cart_items as $item_id => $item) {
+                $cart_product   = wc_get_product( $item['product_id'] );
+                $cart_prod_attr = $cart_product->get_attributes();
+
+                // 2.1.1 in case there is Product with plan in the Cart
+                if(!empty($cart_prod_attr['pa_' . $this->get_slug($this->nuvei_glob_attr_name)])) {
+                    wc_print_notice(__('You can not add Product to a Product with Payment Plan.', 'nuvei_woocommerce'), 'error');
+                    return false;
+                }
+            }
+        }
+        
+        return true;
+    }
+    
+    /**
+     * function get_products_data
+     * 
+     * A help function to get Products data from the Cart and pass it to the
+     * OpenOrder or UpdateOrder.
+     * 
+     * @param   array $items
+     * 
+     * @return  array $data
+     */
+    private function get_products_data($items) {
+        $data = array(
+            'subscr_data'	=> array(),
+            'products_data'	=> array(),
+        );
+
+        foreach ($items as $item_id => $item) {
+            $cart_product   = wc_get_product( $item['product_id'] );
+            $cart_prod_attr = $cart_product->get_attributes();
+
+            // get short items data
+            $data['products_data'][$item['product_id']] = array(
+                'quantity'	=> $item['quantity'],
+                'price'		=> get_post_meta($item['product_id'] , '_price', true),
+            );
+
+            // check for variations
+            if(empty($cart_prod_attr['pa_' . $this->get_slug($this->nuvei_glob_attr_name)])) {
+                continue;
+            }
+
+            $this->create_log($item['variation_id'], 'item variation id');
+            $this->create_log($item['variation'], 'item variation');
+            
+            $taxonomy_name  = wc_attribute_taxonomy_name($this->get_slug($this->nuvei_glob_attr_name));
+            $term           = get_term_by('slug', current($item['variation']), $taxonomy_name);
+
+            if(is_wp_error($term) || empty($term->term_id)) {
+                $this->create_log($item['variation'], 'Error when try to get Term by Slug:');
+                continue;
+            }
+            
+            $term_meta = get_term_meta($term->term_id);
+            
+            $data['subscr_data'][$item['product_id']] = array(
+                'planId'			=> $term_meta['planId'][0],
+                'recurringAmount'	=> number_format($term_meta['recurringAmount'][0], 2, '.', ''),
+            );
+
+            $data['subscr_data'][$item['product_id']]['recurringPeriod']
+                [$term_meta['recurringPeriodUnit'][0]] = $term_meta['recurringPeriodPeriod'][0];
+            
+            $data['subscr_data'][$item['product_id']]['startAfter']
+                [$term_meta['startAfterUnit'][0]] = $term_meta['startAfterPeriod'][0];
+            
+            $data['subscr_data'][$item['product_id']]['endAfter']
+                [$term_meta['endAfterUnit'][0]] = $term_meta['endAfterPeriod'][0];
+            # optional data END
+        }
+
+        return $data;
+    }
+    
+    /**
+     * Function subscription_start
+     */
+    private function subscription_start() {
+        
+    }
+    
+    /**
+	 * Function checkAdvancedCheckSum
+	 * Validate advanceResponseChecksum and/or responsechecksum parameters
+	 *
+	 * @return boolean
+	 */
+	private function checkAdvancedCheckSum() {
+        $advanceResponseChecksum    = $this->get_param("advanceResponseChecksum");
+        $responsechecksum           = $this->get_param("responsechecksum");
+        
+        if (empty($advanceResponseChecksum) && empty($responsechecksum)) {
+            return false;
+        }
+        
+        // advanceResponseChecksum case
+        if(!empty($advanceResponseChecksum)) {
+            $concat = $this->sc_get_setting('secret') 
+                . $this->get_param('totalAmount')
+                . $this->get_param('currency') 
+                . $this->get_param('responseTimeStamp')
+                . $this->get_param('PPP_TransactionID') 
+                . $this->get_request_status()
+                . $this->get_param('productId');
+            
+            $str = hash($this->sc_get_setting('hash_type'), $concat);
+
+            if (strval($str) == $advanceResponseChecksum) {
+                return true;
+            }
+
+            return false;
+        }
+        
+        // subscription DMN with responsechecksum case
+        $concat = '';
+        
+        foreach ($_POST as $name => $value) {
+            if ('responsechecksum' == $name) {
+                continue;
+            }
+            
+            $concat .= $value;
+        }
+        
+        $concat_final   = $concat . $this->sc_get_setting('secret');
+        $checksum       = hash($this->sc_get_setting('hash_type'), utf8_encode($concat_final));
+        
+        if ($responsechecksum !== $checksum) {
+            return false;
+        }
+        
+        return true;
+	}
+    
 	/**
 	 * Function update_order
 	 * 
@@ -2022,20 +2149,20 @@ class WC_SC extends WC_Payment_Gateway {
 		
 		global $woocommerce;
 		
-		$cart        = $woocommerce->cart;
-		$time        = gmdate('YmdHis');
-		$cart_amount = (string) number_format((float) $cart->total, 2, '.', '');
-		$cart_items  = array();
-		$addresses   = $this->get_order_addresses();
+		$cart               = $woocommerce->cart;
+		$time               = gmdate('YmdHis');
+		$cart_amount        = (string) number_format((float) $cart->total, 2, '.', '');
+		$addresses          = $this->get_order_addresses();
+        $items              = $cart->get_cart();
+        $products_data      = array();
+        $subscr_data        = array();
 
 		// get items
-		foreach ($cart->get_cart() as $item_id => $item) {
-			$cart_items[$item['product_id']] = array(
-				'quantity'  => $item['quantity'],
-				'price'     => get_post_meta($item['product_id'] , '_price', true),
-			);
-		}
-
+        // check for a Product with Payment Plan
+		$all_prod_data  = $this->get_products_data($items);
+        $products_data  = $all_prod_data['products_data'];
+        $subscr_data    = $all_prod_data['subscr_data'];
+        
 		// create Order upgrade
 		$params = array(
 			'sessionToken'		=> $_SESSION['nuvei_last_open_order_details']['sessionToken'],
@@ -2060,7 +2187,8 @@ class WC_SC extends WC_Payment_Gateway {
 			),
 			
 			'merchantDetails'   => array(
-				'customField2' => json_encode($cart_items), // items
+                'customField1' => json_encode($subscr_data), // put subscr data here
+				'customField2' => json_encode($products_data), // items
 				'customField3' => time(), // update time
 			),
 		);
