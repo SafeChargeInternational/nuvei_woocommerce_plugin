@@ -16,6 +16,10 @@
 
 defined('ABSPATH') || die('die');
 
+if ( ! defined( 'NUVEI_PLUGIN_FILE' ) ) {
+	define( 'NUVEI_PLUGIN_FILE', __FILE__ );
+}
+
 // check if there is the version with "nuvei" in the name of directory, in this case deactivate the current plugin
 add_action('admin_init', function() {
 	$path_to_nuvei_plugin = dirname(plugin_dir_path(__FILE__)) . DIRECTORY_SEPARATOR
@@ -28,6 +32,7 @@ add_action('admin_init', function() {
 
 require_once 'sc_config.php';
 require_once 'SC_CLASS.php';
+require_once 'includes' . DIRECTORY_SEPARATOR . 'class-nuvei-autoloader.php';
 
 $wc_sc = null;
 
@@ -83,7 +88,7 @@ function nuvei_init() {
 	// if validation success get order details
 	add_action('woocommerce_after_checkout_validation', function( $data, $errors) {
 		global $wc_sc;
-		//      $wc_sc->create_log($errors->errors, 'woocommerce_after_checkout_validation errors');
+		//      Nuvei_Logger::write($errors->errors, 'woocommerce_after_checkout_validation errors');
 		
 		if ( empty( $errors->errors ) && 'sc' == $data['payment_method'] ) {
 			if (empty($wc_sc->get_param('sc_payment_method'))) {
@@ -157,13 +162,13 @@ function nuvei_init() {
     
     # Payment Plans taxonomies
     // extend Term form to add meta data
-    add_action('pa_' . $wc_sc->get_slug($wc_sc->get_nuvei_glob_attr_name()) . '_add_form_fields', 'nuvei_add_term_fields_form', 10, 2);
+    add_action('pa_' . $wc_sc->get_slug(NUVEI_GLOB_ATTR_NAME) . '_add_form_fields', 'nuvei_add_term_fields_form', 10, 2);
     // update Terms' meta data form
-    add_action('pa_' . $wc_sc->get_slug($wc_sc->get_nuvei_glob_attr_name()) . '_edit_form_fields', 'nuvei_edit_term_meta_form', 10, 2);
+    add_action('pa_' . $wc_sc->get_slug(NUVEI_GLOB_ATTR_NAME) . '_edit_form_fields', 'nuvei_edit_term_meta_form', 10, 2);
     // hook to catch our meta data and save it
-    add_action( 'created_' . 'pa_' . $wc_sc->get_slug($wc_sc->get_nuvei_glob_attr_name()), 'nuvei_save_term_meta', 10, 2 );
+    add_action( 'created_' . 'pa_' . $wc_sc->get_slug(NUVEI_GLOB_ATTR_NAME), 'nuvei_save_term_meta', 10, 2 );
     // eit Term meta data
-    add_action( 'edited_' . 'pa_' . $wc_sc->get_slug($wc_sc->get_nuvei_glob_attr_name()), 'nuvei_edit_term_meta', 10, 2 );
+    add_action( 'edited_' . 'pa_' . $wc_sc->get_slug(NUVEI_GLOB_ATTR_NAME), 'nuvei_edit_term_meta', 10, 2 );
     
     // before add a product to the cart
     add_filter( 'woocommerce_add_to_cart_validation', array($wc_sc, 'add_to_cart_validation'), 10, 3 ); 
@@ -323,7 +328,7 @@ function sc_enqueue_wo_files( $styles) {
 			'ajaxurl'           => admin_url('admin-ajax.php'),
 			'security'          => wp_create_nonce('sc-security-nonce'),
 			'webMasterId'       => 'WooCommerce ' . WOOCOMMERCE_VERSION,
-			'sourceApplication'	=> SC_SOURCE_APPLICATION,
+			'sourceApplication'	=> NUVEI_SOURCE_APPLICATION,
 			'plugin_dir_url'    => plugin_dir_url(__FILE__),
 			'wcThSep'           => $wcThSep,
 			'wcDecSep'          => $wcDecSep,
@@ -467,14 +472,14 @@ function sc_add_buttons() {
 		$order = $wc_sc->is_order_valid($order_id, true);
 		
 		if (!$order) {
-			$wc_sc->create_log('sc_add_buttons() - hook activated for not valid Order. Probably an Order created form the Admin.');
+			Nuvei_Logger::write('sc_add_buttons() - hook activated for not valid Order. Probably an Order created form the Admin.');
 			
 			return;
 		}
 		
 		$order_status         = strtolower($order->get_status());
 		$order_payment_method = $order->get_meta('_paymentMethod');
-		$order_refunds        = json_decode($order->get_meta('_sc_refunds'), true);
+		$order_refunds        = json_decode($order->get_meta(NUVEI_REFUNDS), true);
 		$refunds_exists       = false;
 		
 		if (!empty($order_refunds) && is_array($order_refunds)) {
@@ -620,7 +625,7 @@ function sc_wpml_thank_you_page( $order_received_url, $order) {
 	$lang_code          = get_post_meta($order->id, 'wpml_language', true);
 	$order_received_url = apply_filters('wpml_permalink', $order_received_url, $lang_code);
 	
-	$wc_sc->create_log($order_received_url, 'sc_wpml_thank_you_page: ');
+	Nuvei_Logger::write($order_received_url, 'sc_wpml_thank_you_page: ');
  
 	return $order_received_url;
 }
@@ -748,7 +753,7 @@ function nuvei_edit_term_meta_form($term, $taxonomy) {
 function nuvei_save_term_meta($term_id, $tt_id) {
     global $wc_sc;
     
-    $taxonomy       = 'pa_' . $wc_sc->get_slug($wc_sc->get_nuvei_glob_attr_name());
+    $taxonomy       = 'pa_' . $wc_sc->get_slug(NUVEI_GLOB_ATTR_NAME);
     $post_taxonomy  = $wc_sc->get_param('taxonomy', 'string');
     
     if($post_taxonomy != $taxonomy) {
@@ -771,7 +776,7 @@ function nuvei_save_term_meta($term_id, $tt_id) {
 function nuvei_edit_term_meta($term_id, $tt_id) {
     global $wc_sc;
     
-    $taxonomy       = 'pa_' . $wc_sc->get_slug($wc_sc->get_nuvei_glob_attr_name());
+    $taxonomy       = 'pa_' . $wc_sc->get_slug(NUVEI_GLOB_ATTR_NAME);
     $post_taxonomy  = $wc_sc->get_param('taxonomy', 'string');
     
     if($post_taxonomy != $taxonomy) {

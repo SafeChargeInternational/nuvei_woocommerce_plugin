@@ -1,19 +1,16 @@
 'use strict';
 
-var isAjaxCalled              = false;
-var manualChangedCountry      = false;
-var selectedPM                = '';
-var billing_country_first_val = '';
-// for the fields
-var sfc				= null;
-var scFields		= null;
-var sfcFirstField	= null;
-var scCard			= null;
-var cardNumber		= null;
-var cardExpiry		= null;
-var cardCvc			= null;
-var scData			= {};
-var lastCvcHolder	= '';
+var forceUserTokenId	= 0;
+var sfc					= null;
+var scFields			= null;
+var sfcFirstField		= null;
+var scCard				= null;
+var cardNumber			= null;
+var cardExpiry			= null;
+var cardCvc				= null;
+var scData				= {};
+var lastCvcHolder		= '';
+var selectedPM			= '';
 
 // set some classes for the Fields
 var elementClasses = {
@@ -105,9 +102,9 @@ function scValidateAPMFields() {
 		webMasterId		: scTrans.webMasterId,
 	};
 	
-	if (
-		jQuery('body').find('#nuvei_save_upo').is(':checked')
-		|| typeof jQuery('input[name="sc_payment_method"]:checked').attr('data-upo-name') != 'undefined'
+	if ( (jQuery('body').find('#nuvei_save_upo').is(':checked')
+			|| typeof jQuery('input[name="sc_payment_method"]:checked').attr('data-upo-name') != 'undefined')
+		|| 1 == forceUserTokenId
 	) {
 		nuveiPaymentParams.userTokenId = scUserTokenId;
 	}

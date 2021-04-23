@@ -8,7 +8,7 @@
  * Nuvei
  */
 
-define('SC_GATEWAY_TITLE', 'Nuvei');
+define('NUVEI_GATEWAY_TITLE', 'Nuvei');
 
 // user CPanel URLs
 define('SC_LIVE_CPANEL_URL', 'cpanel.safecharge.com');
@@ -30,9 +30,13 @@ define('SC_DEVICES_TYPES', json_encode(array('macintosh', 'tablet', 'mobile', 't
 define('SC_DEVICES_OS', json_encode(array('android', 'windows', 'linux', 'mac os')));
 
 // some keys for order metadata, we make them hiden when starts with underscore
-define('SC_AUTH_CODE_KEY', '_authCode');
-define('SC_TRANS_ID', '_transactionId');
-define('SC_RESP_TRANS_TYPE', '_transactionType');
-define('SC_PAYMENT_METHOD', '_paymentMethod');
-define('SC_ORDER_HAS_REFUND', '_scHasRefund');
-define('SC_SOURCE_APPLICATION', 'WOOCOMMERCE_PLUGIN');
+define('SC_AUTH_CODE_KEY',          '_authCode');
+define('SC_TRANS_ID',               '_transactionId');
+define('SC_RESP_TRANS_TYPE',        '_transactionType');
+define('SC_PAYMENT_METHOD',         '_paymentMethod');
+define('SC_ORDER_HAS_REFUND',       '_scHasRefund');
+define('NUVEI_REFUNDS',             '_sc_refunds');
+define('NUVEI_SOURCE_APPLICATION',  'WOOCOMMERCE_PLUGIN');
+define('NUVEI_GLOB_ATTR_NAME',      'Nuvei Payment Plan'); // the name of the Nuvei Global Product Attribute name
+define('NUVEI_STOP_DMN',            0); // manually stop DMN process
+define('NUVEI_CUID_POSTFIX',        '_sandbox_apm'); // postfix for Sandbox APM payments

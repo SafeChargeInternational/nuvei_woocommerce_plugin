@@ -6,8 +6,6 @@
  * @year 2020
  */
 class SC_CLASS {
-
-	
 	// array details to validate request parameters
 	private static $params_validation = array(
 		// deviceDetails

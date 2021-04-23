@@ -35,13 +35,10 @@
 		var locale			= "<?php echo esc_js($this->formatLocation(get_locale())); ?>";
 		scMerchantId		= scData.merchantId = "<?php echo esc_js($this->sc_get_setting('merchantId')); ?>";
 		scMerchantSiteId	= scData.merchantSiteId = "<?php echo esc_js($this->sc_get_setting('merchantSiteId')); ?>";
-
-		<?php if ($this->sc_get_setting('test') == 'yes') : ?>
-			scData.env = "test";
-		<?php endif; ?>
-		
-		sfc = SafeCharge(scData);
-		scFields = sfc.fields({ locale: locale });
+        scData.env          = '<?= ('yes' == $this->sc_get_setting('test') ? 'int' : 'prod'); ?>';
+		sfc                 = SafeCharge(scData);
+		scFields            = sfc.fields({ locale: locale });
+        forceUserTokenId    = <?= $force_user_token_id ? 1 : 0; ?>
 	</script>
 </div>
 
