@@ -1,6 +1,8 @@
 *** WooCommerce Extension Template Changelog ***
 
-version 3.8.0
+version 4.0.0
+	* Removed SC_CLASS class and WC_SC class.
+	* Changes in files structure.
 	* Added Rebilling.
 
 version 3.7.4

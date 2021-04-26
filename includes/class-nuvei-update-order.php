@@ -13,10 +13,10 @@ class Nuvei_Update_Order extends Nuvei_Request
     
     /**
      * @global Woocommerce $woocommerce
-     * 
+     * @params array $args - default empty parameter
      * @return array
      */
-    public function process() {
+    public function process($args = array()) {
         if (!session_id()) {
 			session_start();
 		}
@@ -46,7 +46,7 @@ class Nuvei_Update_Order extends Nuvei_Request
 		$params = array(
 			'sessionToken'		=> $_SESSION['nuvei_last_open_order_details']['sessionToken'],
 			'orderId'			=> $_SESSION['nuvei_last_open_order_details']['orderId'],
-			'clientRequestId'	=> $cart->nuvei_last_open_order_details['clientRequestId'],
+			'clientRequestId'	=> $_SESSION['nuvei_last_open_order_details']['clientRequestId'],
 			'currency'			=> get_woocommerce_currency(),
 			'amount'			=> $cart_amount,
             'billingAddress'	=> $addresses['billingAddress'],
@@ -66,13 +66,13 @@ class Nuvei_Update_Order extends Nuvei_Request
 		# Success
 		if (!empty($resp['status']) && 'SUCCESS' == $resp['status']) {
 			$_SESSION['nuvei_last_open_order_details']['amount']					= $cart_amount;
-			$_SESSION['nuvei_last_open_order_details']['merchantDetails']			= $params['merchantDetails'];
+			$_SESSION['nuvei_last_open_order_details']['merchantDetails']			= $resp['request_base_params']['merchantDetails'];
 			$_SESSION['nuvei_last_open_order_details']['billingAddress']['country']	= $params['billingAddress']['country'];
 			
 			return array_merge($resp, $params);
 		}
 		
-		Nuvei_Logger::write('update_order() - Order update was not successful.');
+		Nuvei_Logger::write('Nuvei_Update_Order - Order update was not successful.');
 
 		return array('status' => 'ERROR');
     }

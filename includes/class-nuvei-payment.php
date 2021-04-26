@@ -8,12 +8,20 @@ defined( 'ABSPATH' ) || exit;
 class Nuvei_Payment extends Nuvei_Request
 {
     /**
-     * @param int       $order_id
-     * @param string    $return_success_url
-     * @param string    $return_error_url
+     * @param array $data
+     * @return array|false
      */
-    public function process($order_id, $return_success_url, $return_error_url) {
-        $order      = wc_get_order($order_id);
+    public function process(array $data) {
+        if(empty($data['order_id']) 
+            || empty($data['return_success_url'])
+            || empty($data['return_error_url'])
+        ) {
+            Nuvei_Logger::write($data, 'Nuvei_Payment error missing mandatoriy parameters.');
+            return false;
+        }
+        
+        
+        $order      = wc_get_order($data['order_id']);
         $addresses  = $this->get_order_addresses();
         
         // complicated way to filter all $_POST input, but WP will be happy
@@ -26,7 +34,7 @@ class Nuvei_Payment extends Nuvei_Request
 		// complicated way to filter all $_POST input, but WP will be happy END
         
 		$params = array(
-            'clientUniqueId'    => $this->set_cuid($order_id),
+            'clientUniqueId'    => $this->set_cuid($data['order_id']),
             'currency'          => $order->get_currency(),
             'amount'            => (string) $order->get_total(),
             'billingAddress'	=> $addresses['billingAddress'],
@@ -35,8 +43,8 @@ class Nuvei_Payment extends Nuvei_Request
             'sessionToken'      => $post_array['lst'],
             
             'items'             => array(array(
-                'name'      => $order_id,
-                'price'     => $params['amount'],
+                'name'      => $data['order_id'],
+                'price'     => (string) $order->get_total(),
                 'quantity'  => 1,
             )),
 
@@ -48,10 +56,10 @@ class Nuvei_Payment extends Nuvei_Request
             ),
 
             'urlDetails'        => array(
-                'successUrl'        => $return_success_url,
-                'failureUrl'        => $return_error_url,
-                'pendingUrl'        => $return_success_url,
-                'notificationUrl'   => $this->set_notify_url(),
+                'successUrl'        => $data['return_success_url'],
+                'failureUrl'        => $data['return_error_url'],
+                'pendingUrl'        => $data['return_success_url'],
+                'notificationUrl'   => Nuvei_String::get_notify_url($this->plugin_settings),
             ),
         );
 		
@@ -70,7 +78,7 @@ class Nuvei_Payment extends Nuvei_Request
 				$params['userAccountDetails'] = $post_array[$sc_payment_method];
 			}
 			
-			if ($this->get_param('nuvei_save_upo') == 1) {
+			if (Nuvei_Http::get_param('nuvei_save_upo') == 1) {
 				$params['userTokenId'] = $order->get_billing_email();
 			}
 		}

@@ -2,8 +2,8 @@
 /*
  * Plugin Name: Nuvei Payments
  * Plugin URI: https://github.com/SafeChargeInternational/safecharge_woocommerce_plugin
- * Description: Nuvei gateway for WooCommerce
- * Version: 3.8.0
+ * Description: Nuvei Gateway for WooCommerce
+ * Version: 4.0.0
  * Author: Nuvei
  * Author URI: https://nuvei.com
  * Text Domain: nuvei_woocommerce
@@ -30,11 +30,11 @@ add_action('admin_init', function() {
 	}
 });
 
-require_once 'sc_config.php';
-require_once 'SC_CLASS.php';
+require_once 'config.php';
+//require_once 'SC_CLASS.php';
 require_once 'includes' . DIRECTORY_SEPARATOR . 'class-nuvei-autoloader.php';
 
-$wc_sc = null;
+$wc_nuvei = null;
 
 add_filter('woocommerce_payment_gateways', 'nuvei_add_gateway');
 add_action('plugins_loaded', 'nuvei_init', 0);
@@ -45,10 +45,12 @@ function nuvei_init() {
 	}
 	
 	require_once ABSPATH . 'wp-admin/includes/plugin.php';
-	require_once 'WC_SC.php';
+//	require_once 'WC_SC.php';
 	
-	global $wc_sc;
-	$wc_sc = new WC_SC();
+//	global $wc_nuvei;
+//	$wc_nuvei = new WC_SC();
+	global $wc_nuvei;
+	$wc_nuvei = new Nuvei_Gateway();
 	
 	load_plugin_textdomain(
 		'nuvei_woocommerce',
@@ -67,7 +69,7 @@ function nuvei_init() {
 		
 		wp_register_style(
 			'nuvei_admin_style',
-			plugins_url('/css/nuvei_admin_style.css',
+			plugins_url('/assets/css/nuvei_admin_style.css',
 			__FILE__),
 			'',
 			1.1,
@@ -83,16 +85,16 @@ function nuvei_init() {
 	add_action('wp_ajax_nopriv_sc-ajax-action', 'sc_ajax_action');
 	
 	// add the APMs step with the custom merchant style, if any
-	add_action( 'woocommerce_checkout_after_order_review', array($wc_sc, 'add_apms_step'), 10, 1 );
+	add_action( 'woocommerce_checkout_after_order_review', array($wc_nuvei, 'add_apms_step'), 10, 1 );
 	
 	// if validation success get order details
 	add_action('woocommerce_after_checkout_validation', function( $data, $errors) {
-		global $wc_sc;
+		global $wc_nuvei;
 		//      Nuvei_Logger::write($errors->errors, 'woocommerce_after_checkout_validation errors');
 		
 		if ( empty( $errors->errors ) && 'sc' == $data['payment_method'] ) {
-			if (empty($wc_sc->get_param('sc_payment_method'))) {
-				$content = $wc_sc->get_payment_methods();
+			if (empty(Nuvei_Http::get_param('sc_payment_method'))) {
+				$content = $wc_nuvei->get_payment_methods();
 			} 
 		}
 	}, 9999, 2);
@@ -101,23 +103,23 @@ function nuvei_init() {
 	add_filter('woocommerce_order_button_text', 'sc_edit_order_buttons');
 	
 	// those actions are valid only when the plugin is enabled
-	if ('yes' == $wc_sc->settings['enabled']) {
+	if ('yes' == $wc_nuvei->settings['enabled']) {
 		// for WPML plugin
 		if (
 			is_plugin_active('sitepress-multilingual-cms' . DIRECTORY_SEPARATOR . 'sitepress.php')
-			&& 'yes' == $wc_sc->settings['use_wpml_thanks_page']
+			&& 'yes' == $wc_nuvei->settings['use_wpml_thanks_page']
 		) {
 			add_filter('woocommerce_get_checkout_order_received_url', 'sc_wpml_thank_you_page', 10, 2);
 		}
 
 		// if the merchant needs to rewrite the DMN URL
-		if (isset($wc_sc->settings['rewrite_dmn']) && 'yes' == $wc_sc->settings['rewrite_dmn']) {
+		if (isset($wc_nuvei->settings['rewrite_dmn']) && 'yes' == $wc_nuvei->settings['rewrite_dmn']) {
 			add_action('template_redirect', 'sc_rewrite_return_url'); // need WC_SC
 		}
 	}
 	
 	// change Thank-you page title and text
-	if ('error' === strtolower($wc_sc->get_request_status())) {
+	if ('error' === strtolower($wc_nuvei->get_request_status())) {
 		add_filter('the_title', function ( $title, $id) {
 			if (
 				function_exists('is_order_received_page')
@@ -136,7 +138,7 @@ function nuvei_init() {
 			function ( $str, $order) {
 				return esc_html__(' There is an error with your order. Please check your Order status for more information.', 'nuvei_woocommerce');
 			}, 10, 2);
-	} elseif ('canceled' === strtolower($wc_sc->get_request_status())) {
+	} elseif ('canceled' === strtolower($wc_nuvei->get_request_status())) {
 		add_filter('the_title', function ( $title, $id) {
 			if (
 				function_exists('is_order_received_page')
@@ -162,16 +164,16 @@ function nuvei_init() {
     
     # Payment Plans taxonomies
     // extend Term form to add meta data
-    add_action('pa_' . $wc_sc->get_slug(NUVEI_GLOB_ATTR_NAME) . '_add_form_fields', 'nuvei_add_term_fields_form', 10, 2);
+    add_action('pa_' . Nuvei_String::get_slug(NUVEI_GLOB_ATTR_NAME) . '_add_form_fields', 'nuvei_add_term_fields_form', 10, 2);
     // update Terms' meta data form
-    add_action('pa_' . $wc_sc->get_slug(NUVEI_GLOB_ATTR_NAME) . '_edit_form_fields', 'nuvei_edit_term_meta_form', 10, 2);
+    add_action('pa_' . Nuvei_String::get_slug(NUVEI_GLOB_ATTR_NAME) . '_edit_form_fields', 'nuvei_edit_term_meta_form', 10, 2);
     // hook to catch our meta data and save it
-    add_action( 'created_' . 'pa_' . $wc_sc->get_slug(NUVEI_GLOB_ATTR_NAME), 'nuvei_save_term_meta', 10, 2 );
+    add_action( 'created_' . 'pa_' . Nuvei_String::get_slug(NUVEI_GLOB_ATTR_NAME), 'nuvei_save_term_meta', 10, 2 );
     // eit Term meta data
-    add_action( 'edited_' . 'pa_' . $wc_sc->get_slug(NUVEI_GLOB_ATTR_NAME), 'nuvei_edit_term_meta', 10, 2 );
+    add_action( 'edited_' . 'pa_' . Nuvei_String::get_slug(NUVEI_GLOB_ATTR_NAME), 'nuvei_edit_term_meta', 10, 2 );
     
     // before add a product to the cart
-    add_filter( 'woocommerce_add_to_cart_validation', array($wc_sc, 'add_to_cart_validation'), 10, 3 ); 
+    add_filter( 'woocommerce_add_to_cart_validation', array($wc_nuvei, 'add_to_cart_validation'), 10, 3 );
 }
 
 /**
@@ -184,54 +186,54 @@ function sc_ajax_action() {
 		wp_die('Invalid security token sent');
 	}
 	
-	global $wc_sc;
+	global $wc_nuvei;
 	
-	if (empty($wc_sc->test)) {
+	if (empty($wc_nuvei->test)) {
 		wp_send_json_error(__('Invalid site mode.'));
 		wp_die('Invalid site mode.');
 	}
 	
-	$order_id = $wc_sc->get_param('orderId', 'int');
+	$order_id = Nuvei_Http::get_param('orderId', 'int');
 	
 	$payment_method_sc = '';
-	if (!empty($wc_sc->get_param('payment_method_sc'))) {
-		$payment_method_sc = sanitize_text_field($wc_sc->get_param('payment_method_sc'));
+	if (!empty(Nuvei_Http::get_param('payment_method_sc'))) {
+		$payment_method_sc = sanitize_text_field(Nuvei_Http::get_param('payment_method_sc'));
 	}
 
 	# recognize the action:
 	// Void (Cancel)
-	if ($wc_sc->get_param('cancelOrder', 'int') == 1 && $order_id > 0) {
-		$wc_sc->create_settle_void(sanitize_text_field($order_id), 'void');
+	if (Nuvei_Http::get_param('cancelOrder', 'int') == 1 && $order_id > 0) {
+		$wc_nuvei->create_settle_void(sanitize_text_field($order_id), 'void');
 	}
 
 	// Settle
-	if ($wc_sc->get_param('settleOrder', 'int') == 1 && $order_id > 0) {
-		$wc_sc->create_settle_void(sanitize_text_field($order_id), 'settle');
+	if (Nuvei_Http::get_param('settleOrder', 'int') == 1 && $order_id > 0) {
+		$wc_nuvei->create_settle_void(sanitize_text_field($order_id), 'settle');
 	}
 	
 	// Refund
 	if ( isset($_POST['refAmount']) ) {
-		$wc_sc->create_refund_request($wc_sc->get_param('postId', 'int'), $wc_sc->get_param('refAmount', 'float'));
+		$wc_nuvei->create_refund_request(Nuvei_Http::get_param('postId', 'int'), Nuvei_Http::get_param('refAmount', 'float'));
 	}
 	
 	// when we use the REST - Open order and get APMs
-	if (in_array($wc_sc->get_param('sc_request'), array('OpenOrder', 'updateOrder'))) {
-		$wc_sc->open_order(true);
+	if (in_array(Nuvei_Http::get_param('sc_request'), array('OpenOrder', 'updateOrder'))) {
+		$wc_nuvei->open_order(true);
 	}
 	
 	// delete UPO
-	if ($wc_sc->get_param('scUpoId', 'int') > 0) {
-		$wc_sc->delete_user_upo();
+	if (Nuvei_Http::get_param('scUpoId', 'int') > 0) {
+		$wc_nuvei->delete_user_upo();
 	}
 	
 	// when Reorder
-	if ($wc_sc->get_param('sc_request') == 'scReorder') {
-		$wc_sc->sc_reorder();
+	if (Nuvei_Http::get_param('sc_request') == 'scReorder') {
+		$wc_nuvei->sc_reorder();
 	}
 	
 	// download Subscriptions Plans
-	if ($wc_sc->get_param('downloadPlans', 'int') == 1) {
-		$wc_sc->download_subscr_pans();
+	if (Nuvei_Http::get_param('downloadPlans', 'int') == 1) {
+		$wc_nuvei->download_subscr_pans();
 	}
 	
 	wp_send_json_error(__('Not recognized Ajax call.', 'nuvei_woocommerce'));
@@ -242,12 +244,12 @@ function sc_ajax_action() {
 * Add the Gateway to WooCommerce
 **/
 function nuvei_add_gateway( $methods) {
-	$methods[] = 'WC_SC';
+	$methods[] = 'Nuvei_Gateway'; // get the name of the Gateway Class
 	return $methods;
 }
 
 function sc_enqueue_wo_files( $styles) {
-	global $wc_sc;
+	global $wc_nuvei;
 	global $wpdb;
 	
 	$plugin_url = plugin_dir_url(__FILE__);
@@ -264,7 +266,7 @@ function sc_enqueue_wo_files( $styles) {
 	// novo style
 	wp_register_style(
 		'nuvei_style',
-		$plugin_url . 'css/nuvei_style.css',
+		$plugin_url . 'assets/css/nuvei_style.css',
 		'',
 		'2.2',
 		'all'
@@ -283,7 +285,7 @@ function sc_enqueue_wo_files( $styles) {
 	// main JS
 	wp_register_script(
 		'nuvei_js_public',
-		$plugin_url . 'js/nuvei_public.js',
+		$plugin_url . 'assets/js/nuvei_public.js',
 		array('jquery'),
 		'1.3'
 	);
@@ -291,7 +293,7 @@ function sc_enqueue_wo_files( $styles) {
 	// reorder js
 	wp_register_script(
 		'nuvei_js_reorder',
-		$plugin_url . 'js/nuvei_reorder.js',
+		$plugin_url . 'assets/js/nuvei_reorder.js',
 		array('jquery'),
 		'1'
 	);
@@ -332,7 +334,7 @@ function sc_enqueue_wo_files( $styles) {
 			'plugin_dir_url'    => plugin_dir_url(__FILE__),
 			'wcThSep'           => $wcThSep,
 			'wcDecSep'          => $wcDecSep,
-			'useUpos'			=> $wc_sc->can_use_upos(),
+			'useUpos'			=> $wc_nuvei->can_use_upos(),
 			'isUserLogged'		=> is_user_logged_in() ? 1 : 0,
 			
 			// translations
@@ -366,11 +368,11 @@ function sc_enqueue_wo_files( $styles) {
 
 // first method we come in
 function sc_enqueue( $hook) {
-	global $wc_sc;
+	global $wc_nuvei;
 		
 	# DMNs catch
 	if (isset($_REQUEST['wc-api']) && 'sc_listener' == $_REQUEST['wc-api']) {
-		$wc_sc->process_dmns();
+		$wc_nuvei->process_dmns();
 	}
 	
 	// second checkout step process order
@@ -379,7 +381,7 @@ function sc_enqueue( $hook) {
 		&& 'process-order' == $_REQUEST['wc-api']
 		&& !empty($_REQUEST['order_id'])
 	) {
-		$wc_sc->process_payment($wc_sc->get_param('order_id', 'int', 0));
+		$wc_nuvei->process_payment(Nuvei_Http::get_param('order_id', 'int', 0));
 	}
 	
 	# load external files
@@ -399,7 +401,7 @@ function sc_enqueue( $hook) {
 		// main JS
 		wp_register_script(
 			'nuvei_js_admin',
-			$plugin_url . 'js/nuvei_admin.js',
+			$plugin_url . 'assets/js/nuvei_admin.js',
 			array('jquery'),
 			'1'
 		);
@@ -437,7 +439,7 @@ function sc_enqueue( $hook) {
 // show final payment text
 function sc_show_final_text() {
 	global $woocommerce;
-	global $wc_sc;
+	global $wc_nuvei;
 	
 	$msg = __('Your payment is being processed. Your order status will be updated soon.', 'nuvei_woocommerce');
    
@@ -459,7 +461,7 @@ function sc_show_final_text() {
 }
 
 function sc_add_buttons() {
-	global $wc_sc;
+	global $wc_nuvei;
 	
 	$order_id = false;
 	
@@ -469,7 +471,7 @@ function sc_add_buttons() {
 	
 	try {
 		//      $order                = wc_get_order($order_id);
-		$order = $wc_sc->is_order_valid($order_id, true);
+		$order = $wc_nuvei->is_order_valid($order_id, true);
 		
 		if (!$order) {
 			Nuvei_Logger::write('sc_add_buttons() - hook activated for not valid Order. Probably an Order created form the Admin.');
@@ -507,18 +509,18 @@ function sc_add_buttons() {
 	}
 	
 	// to show SC buttons we must be sure the order is paid via SC Paygate
-	if (!$order->get_meta(SC_AUTH_CODE_KEY) || !$order->get_meta(SC_TRANS_ID)) {
+	if (!$order->get_meta(NUVEI_AUTH_CODE_KEY) || !$order->get_meta(NUVEI_TRANS_ID)) {
 		return;
 	}
 	
 	if (in_array($order_status, array('completed', 'pending', 'failed'))) {
-		global $wc_sc;
+		global $wc_nuvei;
 
 		$time        = gmdate('YmdHis', time());
-		$order_tr_id = $order->get_meta(SC_TRANS_ID);
+		$order_tr_id = $order->get_meta(NUVEI_TRANS_ID);
 		// we do not set this meta anymore, keep it only because of the orders made before v3.5 of the plugin
-		$order_has_refund = $order->get_meta(SC_ORDER_HAS_REFUND);
-		$notify_url       = $wc_sc->set_notify_url();
+		$order_has_refund = $order->get_meta(NUVEI_ORDER_HAS_REFUND);
+		$notify_url       = Nuvei_String::get_notify_url($wc_nuvei->settings);
 		
 		// Show VOID button
 		if (
@@ -544,7 +546,7 @@ function sc_add_buttons() {
 		}
 		
 		// show SETTLE button ONLY if P3D resonse transaction_type IS Auth
-		if ('pending' == $order_status && 'Auth' == $order->get_meta(SC_RESP_TRANS_TYPE)) {
+		if ('pending' == $order_status && 'Auth' == $order->get_meta(NUVEI_RESP_TRANS_TYPE)) {
 			$question = sprintf(
 				/* translators: %d is replaced with "decimal" */
 				__('Are you sure, you want to Settle Order #%d?', 'nuvei_woocommerce'),
@@ -568,7 +570,7 @@ function sc_add_buttons() {
  * When user have problem with white spaces in the URL, it have option to
  * rewrite the return URL and redirect to new one.
  *
- * @global WC_SC $wc_sc
+ * @global WC_SC $wc_nuvei
  */
 function sc_rewrite_return_url() {
 	if (
@@ -620,7 +622,7 @@ function sc_rewrite_return_url() {
  * @return string $order_received_url
  */
 function sc_wpml_thank_you_page( $order_received_url, $order) {
-	global $wc_sc;
+	global $wc_nuvei;
 	
 	$lang_code          = get_post_meta($order->id, 'wpml_language', true);
 	$order_received_url = apply_filters('wpml_permalink', $order_received_url, $lang_code);
@@ -668,13 +670,13 @@ function nuvei_change_title_order_received( $title, $id) {
  * Call this on Store when the logged user is in My Account section
  * 
  * @global type $wp
- * @global WC_SC $wc_sc
+ * @global WC_SC $wc_nuvei
  * @global type $woocommerce
  */
 function nuvei_user_orders() {
-	global $wp, $wc_sc, $woocommerce;
+	global $wp, $wc_nuvei, $woocommerce;
 	
-	$url_key              = $wc_sc->get_param('key');
+	$url_key              = Nuvei_Http::get_param('key');
 	$order                = wc_get_order($wp->query_vars['order-pay']);
 	$order_status         = strtolower($order->get_status());
 	$order_payment_method = $order->get_meta('_paymentMethod');
@@ -684,7 +686,7 @@ function nuvei_user_orders() {
 		return;
 	}
 	
-	if ($wc_sc->get_param('key') != $order_key) {
+	if (Nuvei_Http::get_param('key') != $order_key) {
 		return;
 	}
 	
@@ -702,10 +704,10 @@ function nuvei_user_orders() {
 
 // on reorder, show warning message to the cart if need to
 function nuvei_show_message_on_cart( $data) {
-	global $wc_sc;
+	global $wc_nuvei;
 	
 	echo '<script>jQuery("#content .woocommerce:first").append("<div class=\'woocommerce-warning\'>'
-		. wp_kses_post($wc_sc->get_param('sc_msg')) . '</div>");</script>';
+		. wp_kses_post(Nuvei_Http::get_param('sc_msg')) . '</div>");</script>';
 }
 
 // Attributes, Terms and Meta functions
@@ -751,48 +753,48 @@ function nuvei_edit_term_meta_form($term, $taxonomy) {
 }
 
 function nuvei_save_term_meta($term_id, $tt_id) {
-    global $wc_sc;
+    global $wc_nuvei;
     
-    $taxonomy       = 'pa_' . $wc_sc->get_slug(NUVEI_GLOB_ATTR_NAME);
-    $post_taxonomy  = $wc_sc->get_param('taxonomy', 'string');
+    $taxonomy       = 'pa_' . Nuvei_String::get_slug(NUVEI_GLOB_ATTR_NAME);
+    $post_taxonomy  = Nuvei_Http::get_param('taxonomy', 'string');
     
     if($post_taxonomy != $taxonomy) {
         return;
     }
     
-    add_term_meta( $term_id, 'planId', $wc_sc->get_param('planId', 'int') );
-    add_term_meta( $term_id, 'recurringAmount', $wc_sc->get_param('recurringAmount', 'float') );
+    add_term_meta( $term_id, 'planId', Nuvei_Http::get_param('planId', 'int') );
+    add_term_meta( $term_id, 'recurringAmount', Nuvei_Http::get_param('recurringAmount', 'float') );
 
-    add_term_meta( $term_id, 'startAfterUnit', $wc_sc->get_param('startAfterUnit', 'string') );
-    add_term_meta( $term_id, 'startAfterPeriod', $wc_sc->get_param('startAfterPeriod', 'int') );
+    add_term_meta( $term_id, 'startAfterUnit', Nuvei_Http::get_param('startAfterUnit', 'string') );
+    add_term_meta( $term_id, 'startAfterPeriod', Nuvei_Http::get_param('startAfterPeriod', 'int') );
 
-    add_term_meta( $term_id, 'recurringPeriodUnit', $wc_sc->get_param('recurringPeriodUnit', 'string') );
-    add_term_meta( $term_id, 'recurringPeriodPeriod', $wc_sc->get_param('recurringPeriodPeriod', 'int') );
+    add_term_meta( $term_id, 'recurringPeriodUnit', Nuvei_Http::get_param('recurringPeriodUnit', 'string') );
+    add_term_meta( $term_id, 'recurringPeriodPeriod', Nuvei_Http::get_param('recurringPeriodPeriod', 'int') );
 
-    add_term_meta( $term_id, 'endAfterUnit', $wc_sc->get_param('endAfterUnit', 'string') );
-    add_term_meta( $term_id, 'endAfterPeriod', $wc_sc->get_param('endAfterPeriod', 'int') );
+    add_term_meta( $term_id, 'endAfterUnit', Nuvei_Http::get_param('endAfterUnit', 'string') );
+    add_term_meta( $term_id, 'endAfterPeriod', Nuvei_Http::get_param('endAfterPeriod', 'int') );
 }
 
 function nuvei_edit_term_meta($term_id, $tt_id) {
-    global $wc_sc;
+    global $wc_nuvei;
     
-    $taxonomy       = 'pa_' . $wc_sc->get_slug(NUVEI_GLOB_ATTR_NAME);
-    $post_taxonomy  = $wc_sc->get_param('taxonomy', 'string');
+    $taxonomy       = 'pa_' . Nuvei_String::get_slug(NUVEI_GLOB_ATTR_NAME);
+    $post_taxonomy  = Nuvei_Http::get_param('taxonomy', 'string');
     
     if($post_taxonomy != $taxonomy) {
         return;
     }
     
-    update_term_meta( $term_id, 'planId', $wc_sc->get_param('planId', 'int') );
-    update_term_meta( $term_id, 'recurringAmount', $wc_sc->get_param('recurringAmount', 'float') );
+    update_term_meta( $term_id, 'planId', Nuvei_Http::get_param('planId', 'int') );
+    update_term_meta( $term_id, 'recurringAmount', Nuvei_Http::get_param('recurringAmount', 'float') );
 
-    update_term_meta( $term_id, 'startAfterUnit', $wc_sc->get_param('startAfterUnit', 'string') );
-    update_term_meta( $term_id, 'startAfterPeriod', $wc_sc->get_param('startAfterPeriod', 'int') );
+    update_term_meta( $term_id, 'startAfterUnit', Nuvei_Http::get_param('startAfterUnit', 'string') );
+    update_term_meta( $term_id, 'startAfterPeriod', Nuvei_Http::get_param('startAfterPeriod', 'int') );
 
-    update_term_meta( $term_id, 'recurringPeriodUnit', $wc_sc->get_param('recurringPeriodUnit', 'string') );
-    update_term_meta( $term_id, 'recurringPeriodPeriod', $wc_sc->get_param('recurringPeriodPeriod', 'int') );
+    update_term_meta( $term_id, 'recurringPeriodUnit', Nuvei_Http::get_param('recurringPeriodUnit', 'string') );
+    update_term_meta( $term_id, 'recurringPeriodPeriod', Nuvei_Http::get_param('recurringPeriodPeriod', 'int') );
 
-    update_term_meta( $term_id, 'endAfterUnit', $wc_sc->get_param('endAfterUnit', 'string') );
-    update_term_meta( $term_id, 'endAfterPeriod', $wc_sc->get_param('endAfterPeriod', 'int') );
+    update_term_meta( $term_id, 'endAfterUnit', Nuvei_Http::get_param('endAfterUnit', 'string') );
+    update_term_meta( $term_id, 'endAfterPeriod', Nuvei_Http::get_param('endAfterPeriod', 'int') );
 }
 // Attributes, Terms and Meta functions END

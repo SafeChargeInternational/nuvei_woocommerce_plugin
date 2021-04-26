@@ -115,7 +115,11 @@ abstract class Nuvei_Request
 		'flag'        => FILTER_VALIDATE_EMAIL
 	);
     
-    public abstract function process();
+    private $devices_os     = array('iphone', 'ipad', 'android', 'silk', 'blackberry', 'touch', 'linux', 'windows', 'mac');
+    private $browsers       = array('ucbrowser', 'firefox', 'chrome', 'opera', 'msie', 'edge', 'safari', 'blackberry', 'trident');
+    private $device_types   = array('macintosh', 'tablet', 'mobile', 'tv', 'windows', 'linux', 'tv', 'smarttv', 'googletv', 'appletv', 'hbbtv', 'pov_tv', 'netcast.tv', 'bluray');
+    
+    public abstract function process(array $args = array());
     protected abstract function get_checksum_params();
 
     public function __construct(array $plugin_settings) {
@@ -141,79 +145,6 @@ abstract class Nuvei_Request
     }
     
     /**
-	 * Get request parameter by key
-	 *
-	 * @param string    $key - request key
-	 * @param string    $type - possible vaues: string, float, int, array, mail/email, other
-	 * @param mixed     $default - return value if fail
-	 * @param array     $parent - optional list with parameters
-	 *
-	 * @return mixed
-	 */
-	public function get_param( $key, $type = 'string', $default = '', $parent = array()) {
-		$arr = $_REQUEST;
-        
-		if (!empty($parent) && is_array($parent)) {
-			$arr = $parent;
-		}
-		
-		switch ($type) {
-			case 'mail':
-			case 'email':
-				return !empty($arr[$key])
-					? filter_var($arr[$key], FILTER_VALIDATE_EMAIL) : $default;
-				
-			case 'float':
-				if (empty($default)) {
-					$default = 0;
-				}
-				
-				return ( !empty($arr[$key]) && is_numeric($arr[$key]) )
-					? (float) filter_var($arr[$key], FILTER_DEFAULT) : $default;
-				
-			case 'int':
-				if (empty($default)) {
-					$default = 0;
-				}
-				
-				return ( !empty($arr[$key]) && is_numeric($arr[$key]) )
-					? (int) filter_var($arr[$key], FILTER_DEFAULT) : $default;
-				
-			case 'array':
-				if (empty($default)) {
-					$default = array();
-				}
-				
-				return !empty($arr[$key])
-					? filter_var($arr[$key], FILTER_REQUIRE_ARRAY) : $default;
-				
-			case 'string':
-				return !empty($arr[$key])
-					? filter_var($arr[$key], FILTER_SANITIZE_STRING) : $default;
-				
-			default:
-				return !empty($arr[$key])
-					? filter_var($arr[$key], FILTER_DEFAULT) : $default;
-		}
-	}
-    
-    /**
-	 * Set client unique id.
-	 * We change it only for Sandbox (test) mode.
-	 * 
-	 * @param int $order_id
-     * 
-	 * @return int|string
-	 */
-	private function set_cuid( $order_id) {
-		if ('yes' != $this->plugin_settings['test']) {
-			return (int) $order_id;
-		}
-		
-		return $order_id . '_' . time() . NUVEI_CUID_POSTFIX;
-	}
-    
-    /**
 	 * Help function to generate Billing and Shipping details.
 	 * 
 	 * @global Woocommerce $woocommerce
@@ -226,83 +157,83 @@ abstract class Nuvei_Request
 		$addresses   = array();
 		$cart        = $woocommerce->cart;
 		
-		if (!empty($this->get_param('scFormData'))) {
-			parse_str($this->get_param('scFormData'), $form_params); 
+		if (!empty(Nuvei_Http::get_param('scFormData'))) {
+			parse_str(Nuvei_Http::get_param('scFormData'), $form_params); 
 		}
 		
 		# set params
 		// billing
-		$bfn = $this->get_param('billing_first_name', 'string', '', $form_params);
+		$bfn = Nuvei_Http::get_param('billing_first_name', 'string', '', $form_params);
 		if (empty($bfn)) {
 			$bfn = $cart->get_customer()->get_billing_first_name();
 		}
 		
-		$bln = $this->get_param('billing_last_name', 'string', '', $form_params);
+		$bln = Nuvei_Http::get_param('billing_last_name', 'string', '', $form_params);
 		if (empty($bln)) {
 			$bln = $cart->get_customer()->get_billing_last_name();
 		}
 		
-		$ba = $this->get_param('billing_address_1', 'string', '', $form_params)
-			. ' ' . $this->get_param('billing_address_1', 'string', '', $form_params);
+		$ba = Nuvei_Http::get_param('billing_address_1', 'string', '', $form_params)
+			. ' ' . Nuvei_Http::get_param('billing_address_1', 'string', '', $form_params);
 		if (empty($ba)) {
 			$ba = $cart->get_customer()->get_billing_address() . ' '
 				. $cart->get_customer()->get_billing_address_2();
 		}
 		
-		$bp = $this->get_param('billing_phone', 'string', '', $form_params);
+		$bp = Nuvei_Http::get_param('billing_phone', 'string', '', $form_params);
 		if (empty($bp)) {
 			$bp = $cart->get_customer()->get_billing_phone();
 		}
 		
-		$bz = $this->get_param('billing_postcode', 'int', 0, $form_params);
+		$bz = Nuvei_Http::get_param('billing_postcode', 'int', 0, $form_params);
 		if (empty($bz)) {
 			$bz = $cart->get_customer()->get_billing_postcode();
 		}
 		
-		$bc = $this->get_param('billing_city', 'string', '', $form_params);
+		$bc = Nuvei_Http::get_param('billing_city', 'string', '', $form_params);
 		if (empty($bc)) {
 			$bc = $cart->get_customer()->get_billing_city();
 		}
 		
-		$bcn = $this->get_param('billing_country', 'string', '', $form_params);
+		$bcn = Nuvei_Http::get_param('billing_country', 'string', '', $form_params);
 		if (empty($bcn)) {
 			$bcn = $cart->get_customer()->get_billing_country();
 		}
 		
-		$be = $this->get_param('billing_email', 'mail', '', $form_params);
+		$be = Nuvei_Http::get_param('billing_email', 'mail', '', $form_params);
 		if (empty($be)) {
 			$be = $cart->get_customer()->get_billing_email();
 		}
 		
 		// shipping
-		$sfn = $this->get_param('shipping_first_name', 'string', '', $form_params);
+		$sfn = Nuvei_Http::get_param('shipping_first_name', 'string', '', $form_params);
 		if (empty($sfn)) {
 			$sfn = $cart->get_customer()->get_shipping_first_name();
 		}
 		
-		$sln = $this->get_param('shipping_last_name', 'string', '', $form_params);
+		$sln = Nuvei_Http::get_param('shipping_last_name', 'string', '', $form_params);
 		if (empty($sln)) {
 			$sln = $cart->get_customer()->get_shipping_last_name();
 		}
 		
-		$sa = $this->get_param('shipping_address_1', 'string', '', $form_params)
-			. ' ' . $this->get_param('shipping_address_2', 'string', '', $form_params);
+		$sa = Nuvei_Http::get_param('shipping_address_1', 'string', '', $form_params)
+			. ' ' . Nuvei_Http::get_param('shipping_address_2', 'string', '', $form_params);
 		if (empty($sa)) {
 			$sa = $cart->get_customer()->get_shipping_address() . ' '
 				. $cart->get_customer()->get_shipping_address_2();
 		}
 		
-		$sz = $this->get_param('shipping_postcode', 'string', '', $form_params);
+		$sz = Nuvei_Http::get_param('shipping_postcode', 'string', '', $form_params);
 		if (empty($sz)) {
 			$sz = $cart->get_customer()->get_shipping_postcode();
 		}
 		
-		$sc = $this->get_param('shipping_city', 'string', '', $form_params);
+		$sc = Nuvei_Http::get_param('shipping_city', 'string', '', $form_params);
 		if (empty($sc)) {
 			$sc = $cart->get_customer()->get_shipping_city();
 		}
 		
-		$scn = $this->get_param('shipping_country', 'string', '', $form_params);
+		$scn = Nuvei_Http::get_param('shipping_country', 'string', '', $form_params);
 		if (empty($scn)) {
 			$scn = $cart->get_customer()->get_shipping_country();
 		}
@@ -407,6 +338,8 @@ abstract class Nuvei_Request
 			}
             
             $resp_array	= json_decode($resp, true);
+            // return base params to the sender
+            $resp_array['request_base_params'] = $this->request_base_params;
             
             Nuvei_Logger::write($resp_array, 'Nuvei Request response:');
 
@@ -417,29 +350,6 @@ abstract class Nuvei_Request
 				'message' => 'Exception ERROR when call REST API: ' . $e->getMessage()
 			);
 		}
-	}
-    
-    /**
-     * @return string
-     */
-	protected function set_notify_url() {
-		$url_part = get_site_url();
-			
-		$url = $url_part . ( strpos($url_part, '?') !== false ? '&' : '?' )
-			. 'wc-api=sc_listener&stopDMN=' . NUVEI_STOP_DMN;
-		
-		// some servers needs / before ?
-		if (strpos($url, '?') !== false && strpos($url, '/?') === false) {
-			$url = str_replace('?', '/?', $url);
-		}
-		
-		// force Notification URL protocol to http
-		if ('yes' === $this->plugin_settings['use_http'] && false !== strpos($url, 'https://')) {
-			$url = str_replace('https://', '', $url);
-			$url = 'http://' . $url;
-		}
-		
-		return $url;
 	}
     
     /**
@@ -475,53 +385,35 @@ abstract class Nuvei_Request
 		
 		$device_details['deviceName'] = $user_agent;
 
-		if (defined('SC_DEVICES_TYPES')) {
-			$devs_tps = json_decode(SC_DEVICES_TYPES, true);
+        foreach ($this->device_types as $d) {
+            if (strstr($user_agent, $d) !== false) {
+                if (in_array($d, array('linux', 'windows', 'macintosh'), true)) {
+                    $device_details['deviceType'] = 'DESKTOP';
+                } elseif ('mobile' === $d) {
+                    $device_details['deviceType'] = 'SMARTPHONE';
+                } elseif ('tablet' === $d) {
+                    $device_details['deviceType'] = 'TABLET';
+                } else {
+                    $device_details['deviceType'] = 'TV';
+                }
 
-			if (is_array($devs_tps) && !empty($devs_tps)) {
-				foreach ($devs_tps as $d) {
-					if (strstr($user_agent, $d) !== false) {
-						if (in_array($d, array('linux', 'windows', 'macintosh'), true)) {
-							$device_details['deviceType'] = 'DESKTOP';
-						} elseif ('mobile' === $d) {
-							$device_details['deviceType'] = 'SMARTPHONE';
-						} elseif ('tablet' === $d) {
-							$device_details['deviceType'] = 'TABLET';
-						} else {
-							$device_details['deviceType'] = 'TV';
-						}
+                break;
+            }
+        }
 
-						break;
-					}
-				}
-			}
-		}
+        foreach ($this->devices_os as $d) {
+            if (strstr($user_agent, $d) !== false) {
+                $device_details['deviceOS'] = $d;
+                break;
+            }
+        }
 
-		if (defined('SC_DEVICES')) {
-			$devs = json_decode(SC_DEVICES, true);
-
-			if (is_array($devs) && !empty($devs)) {
-				foreach ($devs as $d) {
-					if (strstr($user_agent, $d) !== false) {
-						$device_details['deviceOS'] = $d;
-						break;
-					}
-				}
-			}
-		}
-
-		if (defined('SC_BROWSERS')) {
-			$brs = json_decode(SC_BROWSERS, true);
-
-			if (is_array($brs) && !empty($brs)) {
-				foreach ($brs as $b) {
-					if (strstr($user_agent, $b) !== false) {
-						$device_details['browser'] = $b;
-						break;
-					}
-				}
-			}
-		}
+        foreach ($this->browsers as $b) {
+            if (strstr($user_agent, $b) !== false) {
+                $device_details['browser'] = $b;
+                break;
+            }
+        }
 
 		// get ip
 		if (!empty($_SERVER['REMOTE_ADDR'])) {
@@ -577,14 +469,14 @@ abstract class Nuvei_Request
             );
 
             // check for variations
-            if(empty($cart_prod_attr['pa_' . $this->get_slug(NUVEI_GLOB_ATTR_NAME)])) {
+            if(empty($cart_prod_attr['pa_' . Nuvei_String::get_slug(NUVEI_GLOB_ATTR_NAME)])) {
                 continue;
             }
 
             Nuvei_Logger::write($item['variation_id'], 'item variation id');
             Nuvei_Logger::write($item['variation'], 'item variation');
             
-            $taxonomy_name  = wc_attribute_taxonomy_name($this->get_slug(NUVEI_GLOB_ATTR_NAME));
+            $taxonomy_name  = wc_attribute_taxonomy_name(Nuvei_String::get_slug(NUVEI_GLOB_ATTR_NAME));
             $term           = get_term_by('slug', current($item['variation']), $taxonomy_name);
 
             if(is_wp_error($term) || empty($term->term_id)) {
@@ -611,14 +503,6 @@ abstract class Nuvei_Request
         }
 
         return $data;
-    }
-    
-    /**
-     * @param string $text
-     * @return string
-     */
-    public function get_slug($text = '') {
-        return str_replace(' ', '-', strtolower($text));
     }
     
     /**
@@ -702,4 +586,20 @@ abstract class Nuvei_Request
         
         return $params;
     }
+    
+    /**
+	 * Set client unique id.
+	 * We change it only for Sandbox (test) mode.
+	 * 
+	 * @param int $order_id
+     * 
+	 * @return int|string
+	 */
+	private function set_cuid( $order_id) {
+		if ('yes' != $this->plugin_settings['test']) {
+			return (int) $order_id;
+		}
+		
+		return $order_id . '_' . time() . NUVEI_CUID_POSTFIX;
+	}
 }

@@ -23,9 +23,10 @@ class Nuvei_Open_Order extends Nuvei_Request
     /**
      * @global object $woocommerce
      * 
+     * @param array $args - default empty parameter
      * @return array|boolean
      */
-    public function process() {
+    public function process($args = array()) {
         global $woocommerce;
 		
 		$cart           = $woocommerce->cart;
@@ -49,8 +50,10 @@ class Nuvei_Open_Order extends Nuvei_Request
 		}
 		# try to update Order END
 		
-		if (!empty($this->get_param('scFormData'))) {
-			parse_str($this->get_param('scFormData'), $ajax_params); 
+        $form_data = Nuvei_Http::get_param('scFormData');
+        
+		if (!empty($form_data)) {
+			parse_str($form_data, $ajax_params); 
 		}
 		
 		// check for a Product with Payment Plan
@@ -65,7 +68,7 @@ class Nuvei_Open_Order extends Nuvei_Request
             'paymentOption'     => array('card' => array('threeD' => array('isDynamic3D' => 1))),
             'transactionType'   => $this->plugin_settings['payment_action'],
             'urlDetails'        => array(
-                'notificationUrl'   => $this->set_notify_url(),
+                'notificationUrl'   => Nuvei_String::get_notify_url($this->plugin_settings),
             ),
         );
 		
@@ -89,9 +92,9 @@ class Nuvei_Open_Order extends Nuvei_Request
 		// set them to session for the check before submit the data to the webSDK
 		$_SESSION['nuvei_last_open_order_details'] = array(
 			'amount'			=> $oo_params['amount'],
-			'merchantDetails'	=> $oo_params['merchantDetails'],
+			'merchantDetails'	=> $resp['request_base_params']['merchantDetails'],
 			'sessionToken'		=> $resp['sessionToken'],
-			'clientRequestId'	=> $oo_params['clientRequestId'],
+			'clientRequestId'	=> $resp['request_base_params']['clientRequestId'],
 			'orderId'			=> $resp['orderId'],
 			'billingAddress'	=> $oo_params['billingAddress'],
 		);

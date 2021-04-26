@@ -438,7 +438,7 @@ function scPrintApms(data) {
 		
 		for(var i in data.upos) {
 			if ('cc_card' == data.upos[i]['paymentMethodName']) {
-				var img = '<img src="' + data.pluginUrl + 'icons/visa_mc_maestro.svg" alt="'
+				var img = '<img src="' + data.pluginUrl + 'assets/icons/visa_mc_maestro.svg" alt="'
 					+ data.upos[i]['name'] + '" style="height: 36px;" />';
 			} else {
 				var img = '<img src="' + data.upos[i].logoURL.replace('/svg/', '/svg/solid-white/')
@@ -504,7 +504,7 @@ function scPrintApms(data) {
 			var newImg = pmMsg;
 			
 			if ('cc_card' == data.apms[j]['paymentMethod']) {
-				newImg = '<img src="' + data.pluginUrl + 'icons/visa_mc_maestro.svg" alt="'
+				newImg = '<img src="' + data.pluginUrl + 'assets/icons/visa_mc_maestro.svg" alt="'
 					+ pmMsg + '" style="height: 36px;" />';
 			} else if (
 				data.apms[j].hasOwnProperty('logoURL')

@@ -10,7 +10,7 @@
 		<div class="sc_modal">
 			<div class="sc_content">
 				<h3>
-					<img src="<?php echo esc_attr($plugin_url); ?>icons/loader.gif" alt="loading..." />
+					<img src="<?php echo esc_attr($plugin_url); ?>assets/icons/loader.gif" alt="loading..." />
 					<?php echo esc_html_e('Processing your Payment...', 'nuvei_woocommerce'); ?>
 				</h3>
 			</div>
@@ -32,7 +32,7 @@
 	</button>
 	
 	<script>
-		var locale			= "<?php echo esc_js($this->formatLocation(get_locale())); ?>";
+		var locale			= "<?php echo esc_js(Nuvei_String::format_location(get_locale())); ?>";
 		scMerchantId		= scData.merchantId = "<?php echo esc_js($this->sc_get_setting('merchantId')); ?>";
 		scMerchantSiteId	= scData.merchantSiteId = "<?php echo esc_js($this->sc_get_setting('merchantSiteId')); ?>";
         scData.env          = '<?= ('yes' == $this->sc_get_setting('test') ? 'int' : 'prod'); ?>';
