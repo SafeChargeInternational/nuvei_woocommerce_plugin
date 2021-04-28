@@ -24,10 +24,10 @@ class Nuvei_Autoloader {
 
 		spl_autoload_register( array( $this, 'autoload' ) );
 
-        if ( ! class_exists( 'Nuvei_Request', false ) ) {
-            include_once dirname( __FILE__ ) . '/abstracts/abstract-nuvei-request.php';
-        }
-        
+		if ( ! class_exists( 'Nuvei_Request', false ) ) {
+			include_once dirname( __FILE__ ) . '/abstracts/abstract-nuvei-request.php';
+		}
+		
 		$this->include_path = untrailingslashit( plugin_dir_path( NUVEI_PLUGIN_FILE ) ) . '/includes/';
 	}
 

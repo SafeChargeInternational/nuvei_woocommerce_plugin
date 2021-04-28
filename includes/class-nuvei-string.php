@@ -3,14 +3,16 @@
 defined( 'ABSPATH' ) || exit;
 
 /**
- * @author Nuvei
+ * A class to help with some strings.
  */
-class Nuvei_String
-{
-    /**
-     * @return string
-     */
-	public static function get_notify_url($plugin_settings) {
+class Nuvei_String {
+
+	/**
+	 * Generate base of the Notify URL.
+	 * 
+	 * @return string
+	 */
+	public static function get_notify_url( $plugin_settings) {
 		$url_part = get_site_url();
 			
 		$url = $url_part . ( strpos($url_part, '?') !== false ? '&' : '?' )
@@ -29,22 +31,24 @@ class Nuvei_String
 		
 		return $url;
 	}
-    
-    /**
-     * @param string $text
-     * 
-     * @return string
-     */
-    public static function get_slug($text = '') {
-        return str_replace(' ', '-', strtolower($text));
-    }
-    
-    /**
-     * @param string $locale
-     * 
-     * @return string
-     */
-    public static function format_location($locale) {
+	
+	/**
+	 * Convert string to a URL frendly slug.
+	 * 
+	 * @param string $text
+	 * @return string
+	 */
+	public static function get_slug( $text = '') {
+		return str_replace(' ', '-', strtolower($text));
+	}
+	
+	/**
+	 * Convert 5 letter locale to 2 letter locale.
+	 * 
+	 * @param string $locale
+	 * @return string
+	 */
+	public static function format_location( $locale) {
 		switch ($locale) {
 			case 'de_DE':
 				return 'de';

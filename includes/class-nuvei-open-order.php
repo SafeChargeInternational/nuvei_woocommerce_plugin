@@ -3,38 +3,40 @@
 defined( 'ABSPATH' ) || exit;
 
 /**
- * @author Nuvei
+ * The class for openOrder request.
  */
-class Nuvei_Open_Order extends Nuvei_Request
-{
-    private $is_ajax;
-    
-    /**
-     * 
-     * @param array $plugin_settings
-     * @param bool  $is_ajax
-     */
-    public function __construct(array $plugin_settings, $is_ajax = false) {
-        parent::__construct($plugin_settings);
-        
-        $this->is_ajax = $is_ajax;
-    }
+class Nuvei_Open_Order extends Nuvei_Request {
 
-    /**
-     * @global object $woocommerce
-     * 
-     * @return array|boolean
-     */
-    public function process() {
-        global $woocommerce;
+	private $is_ajax;
+	
+	/**
+	 * Set is_ajax parameter to the Process metohd.
+	 * 
+	 * @param array $plugin_settings
+	 * @param bool  $is_ajax
+	 */
+	public function __construct( array $plugin_settings, $is_ajax = false) {
+		parent::__construct($plugin_settings);
 		
-		$cart           = $woocommerce->cart;
-		$uniq_str       = gmdate('YmdHis') . '_' . uniqid();
-		$ajax_params    = array();
+		$this->is_ajax = $is_ajax;
+	}
+
+	/**
+	 * The main method.
+	 * 
+	 * @global object $woocommerce
+	 * @return array|boolean
+	 */
+	public function process() {
+		global $woocommerce;
+		
+		$cart        = $woocommerce->cart;
+		$uniq_str    = gmdate('YmdHis') . '_' . uniqid();
+		$ajax_params = array();
 		
 		# try to update Order
 		$uo_obj = new Nuvei_Update_Order($this->plugin_settings);
-        $resp   = $uo_obj->process();
+		$resp   = $uo_obj->process();
 		
 		if (!empty($resp['status']) && 'SUCCESS' == $resp['status']) {
 			if ($this->is_ajax) {
@@ -49,27 +51,27 @@ class Nuvei_Open_Order extends Nuvei_Request
 		}
 		# try to update Order END
 		
-        $form_data = Nuvei_Http::get_param('scFormData');
-        
+		$form_data = Nuvei_Http::get_param('scFormData');
+		
 		if (!empty($form_data)) {
 			parse_str($form_data, $ajax_params); 
 		}
 		
 		// check for a Product with Payment Plan
-		$addresses  = $this->get_order_addresses();
-		$oo_params  = array(
-            'clientUniqueId'    => $uniq_str . '_wc_cart',
-            'amount'            => (string) number_format((float) $cart->total, 2, '.', ''),
-            'currency'          => get_woocommerce_currency(),
-            'billingAddress'	=> $addresses['billingAddress'],
-            'userDetails'       => $addresses['billingAddress'],
-            'shippingAddress'	=> $addresses['shippingAddress'],
-            'paymentOption'     => array('card' => array('threeD' => array('isDynamic3D' => 1))),
-            'transactionType'   => $this->plugin_settings['payment_action'],
-            'urlDetails'        => array(
-                'notificationUrl'   => Nuvei_String::get_notify_url($this->plugin_settings),
-            ),
-        );
+		$addresses = $this->get_order_addresses();
+		$oo_params = array(
+			'clientUniqueId'    => $uniq_str . '_wc_cart',
+			'amount'            => (string) number_format((float) $cart->total, 2, '.', ''),
+			'currency'          => get_woocommerce_currency(),
+			'billingAddress'	=> $addresses['billingAddress'],
+			'userDetails'       => $addresses['billingAddress'],
+			'shippingAddress'	=> $addresses['shippingAddress'],
+			'paymentOption'     => array('card' => array('threeD' => array('isDynamic3D' => 1))),
+			'transactionType'   => $this->plugin_settings['payment_action'],
+			'urlDetails'        => array(
+				'notificationUrl'   => Nuvei_String::get_notify_url($this->plugin_settings),
+			),
+		);
 		
 		$resp = $this->call_rest_api('openOrder', $oo_params);
 		
@@ -85,7 +87,7 @@ class Nuvei_Open_Order extends Nuvei_Request
 				exit;
 			}
 			
-            return false;
+			return false;
 		}
 		
 		// set them to session for the check before submit the data to the webSDK
@@ -109,14 +111,14 @@ class Nuvei_Open_Order extends Nuvei_Request
 		}
 		
 		return array_merge($resp, $oo_params);
-    }
-    
-    /**
-     * Return keys required to calculate checksum. Keys order is relevant.
-     *
-     * @return array
-     */
-    protected function get_checksum_params() {
-        return array('merchantId', 'merchantSiteId', 'clientRequestId', 'amount', 'currency', 'timeStamp');
-    }
+	}
+	
+	/**
+	 * Return keys required to calculate checksum. Keys order is relevant.
+	 *
+	 * @return array
+	 */
+	protected function get_checksum_params() {
+		return array('merchantId', 'merchantSiteId', 'clientRequestId', 'amount', 'currency', 'timeStamp');
+	}
 }

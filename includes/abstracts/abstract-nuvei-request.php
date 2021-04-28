@@ -3,15 +3,15 @@
 defined( 'ABSPATH' ) || exit;
 
 /**
- * @author Nuvei
+ * The base class for requests. The different requests classes inherit this one.
  */
-abstract class Nuvei_Request
-{
-    protected $plugin_settings;
-    
-    private $request_base_params;
-    
-    // array details to validate request parameters
+abstract class Nuvei_Request {
+
+	protected $plugin_settings;
+	
+	private $request_base_params;
+	
+	// array details to validate request parameters
 	private $params_validation = array(
 		// deviceDetails
 		'deviceType' => array(
@@ -114,37 +114,37 @@ abstract class Nuvei_Request
 		'length'    => 79,
 		'flag'        => FILTER_VALIDATE_EMAIL
 	);
-    
-    private $devices_os     = array('iphone', 'ipad', 'android', 'silk', 'blackberry', 'touch', 'linux', 'windows', 'mac');
-    private $browsers       = array('ucbrowser', 'firefox', 'chrome', 'opera', 'msie', 'edge', 'safari', 'blackberry', 'trident');
-    private $device_types   = array('macintosh', 'tablet', 'mobile', 'tv', 'windows', 'linux', 'tv', 'smarttv', 'googletv', 'appletv', 'hbbtv', 'pov_tv', 'netcast.tv', 'bluray');
-    
-    public abstract function process();
-    protected abstract function get_checksum_params();
+	
+	private $devices_os   = array('iphone', 'ipad', 'android', 'silk', 'blackberry', 'touch', 'linux', 'windows', 'mac');
+	private $browsers     = array('ucbrowser', 'firefox', 'chrome', 'opera', 'msie', 'edge', 'safari', 'blackberry', 'trident');
+	private $device_types = array('macintosh', 'tablet', 'mobile', 'tv', 'windows', 'linux', 'tv', 'smarttv', 'googletv', 'appletv', 'hbbtv', 'pov_tv', 'netcast.tv', 'bluray');
+	
+	abstract public function process();
+	abstract protected function get_checksum_params();
 
-    public function __construct(array $plugin_settings) {
-        $time                       = gmdate('Ymdhis');
-        $all_prod_data              = $this->get_products_data();
-        $this->plugin_settings      = $plugin_settings;
-        
-        $this->request_base_params  = array(
-            'merchantId'        => $plugin_settings['merchantId'],
-            'merchantSiteId'    => $plugin_settings['merchantSiteId'],
-            'clientRequestId'   => $time . '_' . uniqid(),
-            'timeStamp'         => $time,
-            'webMasterId'       => 'WooCommerce ' . WOOCOMMERCE_VERSION,
-            'sourceApplication' => NUVEI_SOURCE_APPLICATION,
-            'encoding'          => 'UTF-8',
-            'deviceDetails'     => $this->get_device_details(),
-            'merchantDetails'	=> array(
-                'customField1'      => json_encode($all_prod_data['subscr_data']),   // put subscr data here
-                'customField2'      => json_encode($all_prod_data['products_data']), // item details
-                'customField3'      => time(),                          // create time
-            ),
-        );
-    }
-    
-    /**
+	public function __construct( array $plugin_settings) {
+		$time                  = gmdate('Ymdhis');
+		$all_prod_data         = $this->get_products_data();
+		$this->plugin_settings = $plugin_settings;
+		
+		$this->request_base_params = array(
+			'merchantId'        => $plugin_settings['merchantId'],
+			'merchantSiteId'    => $plugin_settings['merchantSiteId'],
+			'clientRequestId'   => $time . '_' . uniqid(),
+			'timeStamp'         => $time,
+			'webMasterId'       => 'WooCommerce ' . WOOCOMMERCE_VERSION,
+			'sourceApplication' => NUVEI_SOURCE_APPLICATION,
+			'encoding'          => 'UTF-8',
+			'deviceDetails'     => $this->get_device_details(),
+			'merchantDetails'	=> array(
+				'customField1'      => json_encode($all_prod_data['subscr_data']),   // put subscr data here
+				'customField2'      => json_encode($all_prod_data['products_data']), // item details
+				'customField3'      => time(),                          // create time
+			),
+		);
+	}
+	
+	/**
 	 * Help function to generate Billing and Shipping details.
 	 * 
 	 * @global Woocommerce $woocommerce
@@ -262,7 +262,7 @@ abstract class Nuvei_Request
 		);
 	}
 
-    /**
+	/**
 	 * Call REST API with cURL post and get response.
 	 * The URL depends from the case.
 	 *
@@ -271,43 +271,43 @@ abstract class Nuvei_Request
 	 *
 	 * @return mixed
 	 */
-	protected function call_rest_api($method, $params) {
+	protected function call_rest_api( $method, $params) {
 		$concat = '';
-        $resp   = false;
-        $url    = $this->get_endpoint_base() . $method . '.do';
-        $params = $this->validate_parameters($params); // validate parameters
-        
-        if(isset($params['status']) && 'ERROR' == $params['status']) {
-            return $params;
-        }
-        
-        $all_params = array_merge($this->request_base_params, $params);
-        
-        // add the checksum
-        $checksum_keys = $this->get_checksum_params();
-        
-        if(is_array($checksum_keys)) {
-            foreach($checksum_keys as $idx => $key) {
-                if(isset($all_params[$key])) {
-                    $concat .= $all_params[$key];
-                }
-            }
-        }
-        
-        $all_params['checksum'] = hash(
+		$resp   = false;
+		$url    = $this->get_endpoint_base() . $method . '.do';
+		$params = $this->validate_parameters($params); // validate parameters
+		
+		if (isset($params['status']) && 'ERROR' == $params['status']) {
+			return $params;
+		}
+		
+		$all_params = array_merge($this->request_base_params, $params);
+		
+		// add the checksum
+		$checksum_keys = $this->get_checksum_params();
+		
+		if (is_array($checksum_keys)) {
+			foreach ($checksum_keys as $idx => $key) {
+				if (isset($all_params[$key])) {
+					$concat .= $all_params[$key];
+				}
+			}
+		}
+		
+		$all_params['checksum'] = hash(
 			$this->plugin_settings['hash_type'],
 			$concat . $this->plugin_settings['secret']
 		);
-        // add the checksum END
-        
-        Nuvei_Logger::write(
-            array(
-                'URL'       => $url,
-                'params'    => $all_params
-            ),
-            'Nuvei Request all params:'
-        );
-        
+		// add the checksum END
+		
+		Nuvei_Logger::write(
+			array(
+				'URL'       => $url,
+				'params'    => $all_params
+			),
+			'Nuvei Request all params:'
+		);
+		
 		$json_post = json_encode($all_params);
 		
 		try {
@@ -329,19 +329,19 @@ abstract class Nuvei_Request
 
 			$resp = curl_exec($ch);
 			curl_close($ch);
-            
+			
 			if (false === $resp) {
 				return array(
 					'status' => 'ERROR',
 					'message' => 'REST API ERROR: response is false'
 				);
 			}
-            
-            $resp_array	= json_decode($resp, true);
-            // return base params to the sender
-            $resp_array['request_base_params'] = $this->request_base_params;
-            
-            Nuvei_Logger::write($resp_array, 'Nuvei Request response:');
+			
+			$resp_array	= json_decode($resp, true);
+			// return base params to the sender
+			$resp_array['request_base_params'] = $this->request_base_params;
+			
+			Nuvei_Logger::write($resp_array, 'Nuvei Request response:');
 
 			return $resp_array;
 		} catch (Exception $e) {
@@ -351,8 +351,8 @@ abstract class Nuvei_Request
 			);
 		}
 	}
-    
-    /**
+	
+	/**
 	 * Function get_device_details
 	 *
 	 * Get browser and device based on HTTP_USER_AGENT.
@@ -385,35 +385,35 @@ abstract class Nuvei_Request
 		
 		$device_details['deviceName'] = $user_agent;
 
-        foreach ($this->device_types as $d) {
-            if (strstr($user_agent, $d) !== false) {
-                if (in_array($d, array('linux', 'windows', 'macintosh'), true)) {
-                    $device_details['deviceType'] = 'DESKTOP';
-                } elseif ('mobile' === $d) {
-                    $device_details['deviceType'] = 'SMARTPHONE';
-                } elseif ('tablet' === $d) {
-                    $device_details['deviceType'] = 'TABLET';
-                } else {
-                    $device_details['deviceType'] = 'TV';
-                }
+		foreach ($this->device_types as $d) {
+			if (strstr($user_agent, $d) !== false) {
+				if (in_array($d, array('linux', 'windows', 'macintosh'), true)) {
+					$device_details['deviceType'] = 'DESKTOP';
+				} elseif ('mobile' === $d) {
+					$device_details['deviceType'] = 'SMARTPHONE';
+				} elseif ('tablet' === $d) {
+					$device_details['deviceType'] = 'TABLET';
+				} else {
+					$device_details['deviceType'] = 'TV';
+				}
 
-                break;
-            }
-        }
+				break;
+			}
+		}
 
-        foreach ($this->devices_os as $d) {
-            if (strstr($user_agent, $d) !== false) {
-                $device_details['deviceOS'] = $d;
-                break;
-            }
-        }
+		foreach ($this->devices_os as $d) {
+			if (strstr($user_agent, $d) !== false) {
+				$device_details['deviceOS'] = $d;
+				break;
+			}
+		}
 
-        foreach ($this->browsers as $b) {
-            if (strstr($user_agent, $b) !== false) {
-                $device_details['browser'] = $b;
-                break;
-            }
-        }
+		foreach ($this->browsers as $b) {
+			if (strstr($user_agent, $b) !== false) {
+				$device_details['browser'] = $b;
+				break;
+			}
+		}
 
 		// get ip
 		if (!empty($_SERVER['REMOTE_ADDR'])) {
@@ -440,77 +440,74 @@ abstract class Nuvei_Request
 		
 		return $device_details;
 	}
-    
-    /**
-     * function get_products_data
-     * 
-     * A help function to get Products data from the Cart and pass it to the
-     * OpenOrder or UpdateOrder.
-     * 
-     * @return  array $data
-     */
-    protected function get_products_data() {
-        global $woocommerce;
-        
-        $items  = $woocommerce->cart->get_cart();
-        $data   = array(
-            'subscr_data'	=> array(),
-            'products_data'	=> array(),
-        );
-        
-        foreach ($items as $item_id => $item) {
-            $cart_product   = wc_get_product( $item['product_id'] );
-            $cart_prod_attr = $cart_product->get_attributes();
+	
+	/**
+	 * A help function to get Products data from the Cart and pass it to the OpenOrder or UpdateOrder.
+	 * 
+	 * @return  array $data
+	 */
+	protected function get_products_data() {
+		global $woocommerce;
+		
+		$items = $woocommerce->cart->get_cart();
+		$data  = array(
+			'subscr_data'	=> array(),
+			'products_data'	=> array(),
+		);
+		
+		foreach ($items as $item_id => $item) {
+			$cart_product   = wc_get_product( $item['product_id'] );
+			$cart_prod_attr = $cart_product->get_attributes();
 
-            // get short items data
-            $data['products_data'][$item['product_id']] = array(
-                'quantity'	=> $item['quantity'],
-                'price'		=> get_post_meta($item['product_id'] , '_price', true),
-            );
+			// get short items data
+			$data['products_data'][$item['product_id']] = array(
+				'quantity'	=> $item['quantity'],
+				'price'		=> get_post_meta($item['product_id'] , '_price', true),
+			);
 
-            // check for variations
-            if(empty($cart_prod_attr['pa_' . Nuvei_String::get_slug(NUVEI_GLOB_ATTR_NAME)])) {
-                continue;
-            }
+			// check for variations
+			if (empty($cart_prod_attr['pa_' . Nuvei_String::get_slug(NUVEI_GLOB_ATTR_NAME)])) {
+				continue;
+			}
 
-            Nuvei_Logger::write($item['variation_id'], 'item variation id');
-            Nuvei_Logger::write($item['variation'], 'item variation');
-            
-            $taxonomy_name  = wc_attribute_taxonomy_name(Nuvei_String::get_slug(NUVEI_GLOB_ATTR_NAME));
-            $term           = get_term_by('slug', current($item['variation']), $taxonomy_name);
+			Nuvei_Logger::write($item['variation_id'], 'item variation id');
+			Nuvei_Logger::write($item['variation'], 'item variation');
+			
+			$taxonomy_name = wc_attribute_taxonomy_name(Nuvei_String::get_slug(NUVEI_GLOB_ATTR_NAME));
+			$term          = get_term_by('slug', current($item['variation']), $taxonomy_name);
 
-            if(is_wp_error($term) || empty($term->term_id)) {
-                Nuvei_Logger::write($item['variation'], 'Error when try to get Term by Slug:');
-                continue;
-            }
-            
-            $term_meta = get_term_meta($term->term_id);
-            
-            $data['subscr_data'][$item['product_id']] = array(
-                'planId'			=> $term_meta['planId'][0],
-                'recurringAmount'	=> number_format($term_meta['recurringAmount'][0], 2, '.', ''),
-            );
+			if (is_wp_error($term) || empty($term->term_id)) {
+				Nuvei_Logger::write($item['variation'], 'Error when try to get Term by Slug:');
+				continue;
+			}
+			
+			$term_meta = get_term_meta($term->term_id);
+			
+			$data['subscr_data'][$item['product_id']] = array(
+				'planId'			=> $term_meta['planId'][0],
+				'recurringAmount'	=> number_format($term_meta['recurringAmount'][0], 2, '.', ''),
+			);
 
-            $data['subscr_data'][$item['product_id']]['recurringPeriod']
-                [$term_meta['recurringPeriodUnit'][0]] = $term_meta['recurringPeriodPeriod'][0];
-            
-            $data['subscr_data'][$item['product_id']]['startAfter']
-                [$term_meta['startAfterUnit'][0]] = $term_meta['startAfterPeriod'][0];
-            
-            $data['subscr_data'][$item['product_id']]['endAfter']
-                [$term_meta['endAfterUnit'][0]] = $term_meta['endAfterPeriod'][0];
-            # optional data END
-        }
+			$data['subscr_data'][$item['product_id']]['recurringPeriod']
+				[$term_meta['recurringPeriodUnit'][0]] = $term_meta['recurringPeriodPeriod'][0];
+			
+			$data['subscr_data'][$item['product_id']]['startAfter']
+				[$term_meta['startAfterUnit'][0]] = $term_meta['startAfterPeriod'][0];
+			
+			$data['subscr_data'][$item['product_id']]['endAfter']
+				[$term_meta['endAfterUnit'][0]] = $term_meta['endAfterPeriod'][0];
+			# optional data END
+		}
 
-        return $data;
-    }
-    
-    /**
+		return $data;
+	}
+	
+	/**
 	 * Set client unique id.
 	 * We change it only for Sandbox (test) mode.
 	 * 
 	 * @param int $order_id
-     * 
+	 * 
 	 * @return int|string
 	 */
 	protected function set_cuid( $order_id) {
@@ -520,26 +517,28 @@ abstract class Nuvei_Request
 		
 		return $order_id . '_' . time() . NUVEI_CUID_POSTFIX;
 	}
-    
-    /**
-     * 
-     * @return string
-     */
-    private function get_endpoint_base() {
+	
+	/**
+	 * Get the request endpoint - sandbox or production.
+	 * 
+	 * @return string
+	 */
+	private function get_endpoint_base() {
 		if ('yes' == $this->plugin_settings['test']) {
 			return 'https://ppp-test.safecharge.com/ppp/api/v1/';
 		}
 		
 		return 'https://secure.safecharge.com/ppp/api/v1/';
 	}
-    
-    /**
-     * 
-     * @param array $params
-     * @return array
-     */
-    private function validate_parameters($params) {
-        // directly check the mails
+	
+	/**
+	 * Validate some of the parameters in the request by predefined criteria.
+	 * 
+	 * @param array $params
+	 * @return array
+	 */
+	private function validate_parameters( $params) {
+		// directly check the mails
 		if (isset($params['billingAddress']['email'])) {
 			if (!filter_var($params['billingAddress']['email'], $this->params_validation_email['flag'])) {
 				
@@ -599,8 +598,8 @@ abstract class Nuvei_Request
 				}
 			}
 		}
-        
-        return $params;
-    }
-    
+		
+		return $params;
+	}
+	
 }

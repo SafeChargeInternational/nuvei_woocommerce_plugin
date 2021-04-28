@@ -3,23 +3,23 @@
 defined( 'ABSPATH' ) || exit;
 
 /**
- * @author Nuvei
+ * A custom class for logs.
  */
-class Nuvei_Logger
-{
-    public static function write($data, $title = '') {
-        if (!session_id()) {
+class Nuvei_Logger {
+
+	public static function write( $data, $title = '') {
+		if (!session_id()) {
 			session_start();
 		}
-        
-        $logs_path      = plugin_dir_path( NUVEI_PLUGIN_FILE ) . 'logs' . DIRECTORY_SEPARATOR;
-        $plugin_data    = get_plugin_data(plugin_dir_path(NUVEI_PLUGIN_FILE) . 'index.php');
-            
+		
+		$logs_path   = plugin_dir_path( NUVEI_PLUGIN_FILE ) . 'logs' . DIRECTORY_SEPARATOR;
+		$plugin_data = get_plugin_data(plugin_dir_path(NUVEI_PLUGIN_FILE) . 'index.php');
+			
 		// path is different fore each plugin
 		if (!is_dir($logs_path) 
-            || empty($_SESSION['nuvei_vars']['save_logs'])
-            || 'yes' != $_SESSION['nuvei_vars']['save_logs']
-        ) {
+			|| empty($_SESSION['nuvei_vars']['save_logs'])
+			|| 'yes' != $_SESSION['nuvei_vars']['save_logs']
+		) {
 			return;
 		}
 		
@@ -64,8 +64,8 @@ class Nuvei_Logger
 				$string .= $title;
 			} else {
 				$string .= "\r\n" . ( 
-                    (isset($_SESSION['nuvei_vars']['test_mode']) && 'yes' == $_SESSION['nuvei_vars']['test_mode'])
-                        ? json_encode($title, JSON_PRETTY_PRINT) : json_encode($title) );
+					( isset($_SESSION['nuvei_vars']['test_mode']) && 'yes' == $_SESSION['nuvei_vars']['test_mode'] )
+						? json_encode($title, JSON_PRETTY_PRINT) : json_encode($title) );
 			}
 			
 			$string .= "\r\n";
@@ -78,5 +78,5 @@ class Nuvei_Logger
 			gmdate('H:i:s', time()) . ': ' . $string,
 			FILE_APPEND
 		);
-    }
+	}
 }

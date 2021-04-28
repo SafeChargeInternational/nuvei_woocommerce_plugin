@@ -3,11 +3,11 @@
 defined( 'ABSPATH' ) || exit;
 
 /**
- * @author Nuvei
+ * A helper class to provide filtered $_REQUEST or array parameters by its key.
  */
-class Nuvei_Http
-{
-    /**
+class Nuvei_Http {
+
+	/**
 	 * Get request parameter by key
 	 *
 	 * @param string    $key - request key
@@ -17,13 +17,13 @@ class Nuvei_Http
 	 *
 	 * @return mixed
 	 */
-    public static function get_param($key, $type = 'string', $default = '', $parent = array()) {
+	public static function get_param( $key, $type = 'string', $default = '', $parent = array()) {
 		if (!empty($parent) && is_array($parent)) {
 			$arr = $parent;
 		} else {
-            $arr = $_REQUEST;
-        }
-        
+			$arr = $_REQUEST;
+		}
+		
 		switch ($type) {
 			case 'mail':
 			case 'email':
