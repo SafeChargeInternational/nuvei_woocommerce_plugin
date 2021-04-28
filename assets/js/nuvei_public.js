@@ -662,7 +662,7 @@ jQuery(function() {
 	
 	// change text on Place order button
 	jQuery('form.woocommerce-checkout').on('change', 'input[name=payment_method]', function(){
-		if(jQuery('input[name=payment_method]:checked').val() == 'sc') {
+		if(jQuery('input[name=payment_method]:checked').val() == scTrans.paymentGatewayName) {
 			jQuery('#place_order').html(jQuery('#place_order').attr('data-sc-text'));
 		}
 		else if(jQuery('#place_order').html() == jQuery('#place_order').attr('data-sc-text')) {

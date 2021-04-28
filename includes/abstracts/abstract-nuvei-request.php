@@ -506,6 +506,22 @@ abstract class Nuvei_Request
     }
     
     /**
+	 * Set client unique id.
+	 * We change it only for Sandbox (test) mode.
+	 * 
+	 * @param int $order_id
+     * 
+	 * @return int|string
+	 */
+	protected function set_cuid( $order_id) {
+		if ('yes' != $this->plugin_settings['test']) {
+			return (int) $order_id;
+		}
+		
+		return $order_id . '_' . time() . NUVEI_CUID_POSTFIX;
+	}
+    
+    /**
      * 
      * @return string
      */
@@ -587,19 +603,4 @@ abstract class Nuvei_Request
         return $params;
     }
     
-    /**
-	 * Set client unique id.
-	 * We change it only for Sandbox (test) mode.
-	 * 
-	 * @param int $order_id
-     * 
-	 * @return int|string
-	 */
-	private function set_cuid( $order_id) {
-		if ('yes' != $this->plugin_settings['test']) {
-			return (int) $order_id;
-		}
-		
-		return $order_id . '_' . time() . NUVEI_CUID_POSTFIX;
-	}
 }

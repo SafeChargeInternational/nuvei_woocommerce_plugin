@@ -23,6 +23,6 @@
                 <?php echo esc_html($this->get_description_html($data)); ?>
         </fieldset>
 
-        <div id="custom_loader" class="blockUI blockOverlay" style="margin-left: -3.5em;"></div>
+        <div id="custom_loader" class="blockUI blockOverlay" style="height: 100%; position: absolute; width: 100%; top: 0px; display: none;"></div>
     </td>
 </tr>

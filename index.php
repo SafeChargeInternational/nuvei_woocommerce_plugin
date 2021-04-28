@@ -89,10 +89,11 @@ function nuvei_init() {
 //        Nuvei_Logger::write($errors->errors, 'woocommerce_after_checkout_validation errors');
 //        Nuvei_Logger::write($_POST, 'woocommerce_after_checkout_validation post params');
 		
-		if ( empty( $errors->errors ) && 'sc' == $data['payment_method'] ) {
-			if (empty(Nuvei_Http::get_param('sc_payment_method'))) {
-				$content = $wc_nuvei->get_payment_methods();
-			} 
+		if (empty( $errors->errors ) 
+            && NUVEI_GATEWAY_NAME == $data['payment_method'] 
+            && empty(Nuvei_Http::get_param('sc_payment_method'))
+        ) {
+            $content = $wc_nuvei->get_payment_methods();
 		}
 	}, 9999, 2);
 	
@@ -324,16 +325,16 @@ function sc_enqueue_wo_files( $styles) {
 		'nuvei_js_public',
 		'scTrans',
 		array(
-			'ajaxurl'           => admin_url('admin-ajax.php'),
-			'security'          => wp_create_nonce('sc-security-nonce'),
-			'webMasterId'       => 'WooCommerce ' . WOOCOMMERCE_VERSION,
-			'sourceApplication'	=> NUVEI_SOURCE_APPLICATION,
-			'plugin_dir_url'    => plugin_dir_url(__FILE__),
-			'wcThSep'           => $wcThSep,
-			'wcDecSep'          => $wcDecSep,
-			'useUpos'			=> $wc_nuvei->can_use_upos(),
-			'isUserLogged'		=> is_user_logged_in() ? 1 : 0,
-            'paymentMethodName' => NUVEI_GATEWAY_NAME,
+			'ajaxurl'               => admin_url('admin-ajax.php'),
+			'security'              => wp_create_nonce('sc-security-nonce'),
+			'webMasterId'           => 'WooCommerce ' . WOOCOMMERCE_VERSION,
+			'sourceApplication'     => NUVEI_SOURCE_APPLICATION,
+			'plugin_dir_url'        => plugin_dir_url(__FILE__),
+			'wcThSep'               => $wcThSep,
+			'wcDecSep'              => $wcDecSep,
+			'useUpos'               => $wc_nuvei->can_use_upos(),
+			'isUserLogged'          => is_user_logged_in() ? 1 : 0,
+            'paymentGatewayName'    => NUVEI_GATEWAY_NAME,
 			
 			// translations
 			'paymentDeclined'	=> __('Your Payment was DECLINED. Please try another payment method!', 'nuvei_woocommerce'),
@@ -644,7 +645,8 @@ function sc_edit_order_buttons() {
 	</script>
 	<?php
 
-	if ('sc' == $chosen_payment_method) {
+	// check for 'sc' also, because of the older Orders
+	if (in_array($chosen_payment_method, array(NUVEI_GATEWAY_NAME, 'sc'))) {
 		return $sc_continue_text;
 	}
 
@@ -664,7 +666,6 @@ function nuvei_change_title_order_received( $title, $id) {
 }
 
 /**
- * Function nuvei_user_orders
  * Call this on Store when the logged user is in My Account section
  * 
  * @global type $wp
@@ -680,7 +681,8 @@ function nuvei_user_orders() {
 	$order_payment_method = $order->get_meta('_paymentMethod');
 	$order_key            = $order->get_order_key();
 	
-	if ('sc' != $order->get_payment_method()) {
+    // check for 'sc' also, because of the older Orders
+	if (!in_array($order->get_payment_method(), array(NUVEI_GATEWAY_NAME, 'sc'))) {
 		return;
 	}
 	

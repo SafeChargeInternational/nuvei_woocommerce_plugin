@@ -25,17 +25,14 @@ class Nuvei_Refund extends Nuvei_Request
         $notify_url	= Nuvei_String::get_notify_url($this->plugin_settings);
 		$time		= gmdate('YmdHis', time());
 		
-		$ref_parameters = array_merge(
-            $this->get_request_base_params(),
-            array(
-                'clientRequestId'       => $data['order_id'] . '_' . $time . '_' . uniqid(),
-                'clientUniqueId'        => $time . '_' . uniqid(),
-                'amount'                => number_format($data['ref_amount'], 2, '.', ''),
-                'currency'              => get_woocommerce_currency(),
-                'relatedTransactionId'  => $data['tr_id'], // GW Transaction ID
-                'urlDetails'            => array('notificationUrl' => $notify_url),
-                'url'                   => $notify_url, // custom parameter
-            )
+		$ref_parameters = array(
+            'clientRequestId'       => $data['order_id'] . '_' . $time . '_' . uniqid(),
+            'clientUniqueId'        => $time . '_' . uniqid(),
+            'amount'                => number_format($data['ref_amount'], 2, '.', ''),
+            'currency'              => get_woocommerce_currency(),
+            'relatedTransactionId'  => $data['tr_id'], // GW Transaction ID
+            'urlDetails'            => array('notificationUrl' => $notify_url),
+            'url'                   => $notify_url, // custom parameter
         );
 		
 		return $this->call_rest_api('refundTransaction', $ref_parameters);

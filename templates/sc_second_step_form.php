@@ -1,7 +1,7 @@
 <div id="sc_checkout_messages"></div>
 
 <div id="sc_second_step_form" style="display: none;">
-	<style><?php echo esc_html(trim($this->sc_get_setting('merchant_style'))); ?></style>
+	<style><?php echo esc_html(trim($this->get_setting('merchant_style'))); ?></style>
 	
 	<input type="hidden" name="sc_transaction_id" id="sc_transaction_id" value="" />
 	<input type="hidden" name="lst" id="lst" value="" />
@@ -33,9 +33,9 @@
 	
 	<script>
 		var locale			= "<?php echo esc_js(Nuvei_String::format_location(get_locale())); ?>";
-		scMerchantId		= scData.merchantId = "<?php echo esc_js($this->sc_get_setting('merchantId')); ?>";
-		scMerchantSiteId	= scData.merchantSiteId = "<?php echo esc_js($this->sc_get_setting('merchantSiteId')); ?>";
-        scData.env          = '<?= ('yes' == $this->sc_get_setting('test') ? 'int' : 'prod'); ?>';
+		scMerchantId		= scData.merchantId = "<?php echo esc_js($this->get_setting('merchantId')); ?>";
+		scMerchantSiteId	= scData.merchantSiteId = "<?php echo esc_js($this->get_setting('merchantSiteId')); ?>";
+        scData.env          = '<?= ('yes' == $this->get_setting('test') ? 'int' : 'prod'); ?>';
 		sfc                 = SafeCharge(scData);
 		scFields            = sfc.fields({ locale: locale });
         forceUserTokenId    = <?= $force_user_token_id ? 1 : 0; ?>

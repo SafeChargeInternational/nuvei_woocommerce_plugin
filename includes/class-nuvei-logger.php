@@ -16,7 +16,10 @@ class Nuvei_Logger
         $plugin_data    = get_plugin_data(plugin_dir_path(NUVEI_PLUGIN_FILE) . 'index.php');
             
 		// path is different fore each plugin
-		if (!is_dir($logs_path) || 'yes' != $_SESSION['nuvei_vars']['save_logs']) {
+		if (!is_dir($logs_path) 
+            || empty($_SESSION['nuvei_vars']['save_logs'])
+            || 'yes' != $_SESSION['nuvei_vars']['save_logs']
+        ) {
 			return;
 		}
 		

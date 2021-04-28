@@ -18,7 +18,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 		}
         
 		# settings to get/save options
-		$this->id                 = 'sc';
+		$this->id                 = NUVEI_GATEWAY_NAME;
 		$this->method_title       = NUVEI_GATEWAY_TITLE;
 		$this->method_description = 'Pay with ' . NUVEI_GATEWAY_TITLE . '.';
 		$this->icon               = plugin_dir_url(NUVEI_PLUGIN_FILE) . 'assets/icons/nuvei.png';
@@ -197,6 +197,9 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 	 * @return string
 	 */
 	public function generate_button_html($key, $data) {
+        Nuvei_Logger::write($key);
+        Nuvei_Logger::write($data);
+        
 		$defaults = array(
 			'class'             => 'button-secondary',
 			'css'               => '',
@@ -211,7 +214,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway
         $field  = $this->plugin_id . $this->id . '_' . $key;
         $data   = wp_parse_args($data, $defaults);
         
-        require_once dirname(NUVEI_PLUGIN_FILE) . '/templates/admin/button.php';
+        require_once dirname(NUVEI_PLUGIN_FILE) . '/templates/admin/download_payments_plans_btn.php';
         
 		return ob_get_clean();
 	}
@@ -244,11 +247,12 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 	  * submit the form and then redirect. Here we will get our custom fields.
 	  *
 	  * @param int $order_id
-	 **/
+      * @return array
+	 */
 	public function process_payment( $order_id) {
 		Nuvei_Logger::write('Process payment(), Order #' . $order_id);
-		
-		session_destroy();
+		// php docs recommend to clean the array instead of destroing the session
+		$_SESSION['nuvei_last_open_order_details'] = array();
 		
 		$sc_nonce = Nuvei_Http::get_param('sc_nonce');
 		
@@ -294,8 +298,8 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 			$this->get_return_url($order)
 		);
 		
-		if ('sc' !== $order->get_payment_method()) {
-			Nuvei_Logger::write('Process payment Error - Order payment method is not "sc".');
+		if ($order->get_payment_method() != NUVEI_GATEWAY_NAME) {
+			Nuvei_Logger::write('Process payment Error - Order payment gateway is not ' . NUVEI_GATEWAY_NAME);
 			
 			return array(
 				'result'    => 'success',
@@ -357,6 +361,17 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 			);
 		}
         
+        # Redirect
+        if (!empty($resp['redirectURL']) || !empty($resp['paymentOption']['redirectUrl'])) {
+			return array(
+				'result'    => 'success',
+				'redirect'    => add_query_arg(
+					array(),
+					!empty($resp['redirectURL']) ? $resp['redirectURL'] : $resp['paymentOption']['redirectUrl']
+				)
+			);
+		}
+        
 		if (empty($resp['transactionStatus'])) {
 			$msg = __('There is no Transaction Status for the Order.', 'nuvei_woocommerce');
 			
@@ -369,11 +384,6 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 			);
 		}
 		
-		// If we get Transaction ID save it as meta-data
-		if (isset($resp['transactionId']) && $resp['transactionId']) {
-			$order->update_meta_data(NUVEI_TRANS_ID, $resp['transactionId'], 0);
-		}
-
 		if ('DECLINED' === $this->get_request_status($resp)
 			|| 'DECLINED' === $resp['transactionStatus']
 		) {
@@ -426,26 +436,21 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 			);
 		}
 		
-		// Success status
-		if (!empty($resp['redirectURL']) || !empty($resp['paymentOption']['redirectUrl'])) {
-			return array(
-				'result'    => 'success',
-				'redirect'    => add_query_arg(
-					array(),
-					!empty($resp['redirectURL']) ? $resp['redirectURL'] : $resp['paymentOption']['redirectUrl']
-				)
-			);
+		# SUCCESS
+		// If we get Transaction ID save it as meta-data
+		if (isset($resp['transactionId']) && $resp['transactionId']) {
+			$order->update_meta_data(NUVEI_TRANS_ID, $resp['transactionId'], 0);
+		}
+        
+        // save the response transactionType value
+		if (isset($resp['transactionType']) && '' !== $resp['transactionType']) {
+			$order->update_meta_data(NUVEI_RESP_TRANS_TYPE, $resp['transactionType']);
 		}
 
 		if (isset($resp['transactionId']) && '' !== $resp['transactionId']) {
 			$order->add_order_note(__('Payment succsess for Transaction Id ', 'nuvei_woocommerce') . $resp['transactionId']);
 		} else {
 			$order->add_order_note(__('Payment succsess.', 'nuvei_woocommerce'));
-		}
-
-		// save the response transactionType value
-		if (isset($resp['transactionType']) && '' !== $resp['transactionType']) {
-			$order->update_meta_data(NUVEI_RESP_TRANS_TYPE, $resp['transactionType']);
 		}
 
 		$order->save();
@@ -614,6 +619,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 		$TransactionID          = Nuvei_Http::get_param('TransactionID', 'int');
 		$relatedTransactionId   = Nuvei_Http::get_param('relatedTransactionId', 'int');
 		$dmnType                = Nuvei_Http::get_param('dmnType');
+        $client_request_id      = Nuvei_Http::get_param('clientRequestId');
         
 		$req_status = $this->get_request_status();
 		
@@ -626,10 +632,9 @@ class Nuvei_Gateway extends WC_Payment_Gateway
         # Subscription State DMN
         if('subscription' == $dmnType) {
             $subscriptionState  = Nuvei_Http::get_param('subscriptionState');
-            $client_request_id  = Nuvei_Http::get_param('clientRequestId');
             $cri_parts          = explode('_', $client_request_id);
             
-            if(empty($cri_parts) || empty($cri_parts[0]) || is_numeric($cri_parts[0])) {
+            if(empty($cri_parts) || empty($cri_parts[0]) || !is_numeric($cri_parts[0])) {
                 Nuvei_Logger::write($cri_parts, 'DMN Subscription Error with Client Request Id parts:');
                 echo wp_json_encode('DMN Subscription Error with Client Request Id parts.');
                 exit;
@@ -639,23 +644,23 @@ class Nuvei_Gateway extends WC_Payment_Gateway
             
             if (!empty($subscriptionState)) {
                 if ('active' == strtolower($subscriptionState)) {
-                    $msg = __("<b>Subscription</b> is Active.", 'nuvei_woocommerce') . '<br/>'
-                        . __("Subscription ID: ", 'nuvei_woocommerce') . Nuvei_Http::get_param('subscriptionId', 'int')
-                        . __('Plan ID: ', 'nuvei_woocommerce') . Nuvei_Http::get_param('planId', 'int');
+                    $msg = __("<b>Subscription is Active</b>.", 'nuvei_woocommerce') . '<br/>'
+                        . __("<b>Subscription ID:</b> ", 'nuvei_woocommerce') . Nuvei_Http::get_param('subscriptionId', 'int') . '<br/>'
+                        . __('<b>Plan ID:</b> ', 'nuvei_woocommerce') . Nuvei_Http::get_param('planId', 'int');
                     
                     $this->sc_order->update_meta_data(NUVEI_ORDER_HAS_SUBSCR, 1);
                     $this->sc_order->add_order_note($msg);
                 } elseif ('inactive' == strtolower($subscriptionState)) {
-                    $msg            = __('Subscription is Inactive.', 'nuvei_woocommerce');
+                    $msg            = __('<b>Subscription is Inactive</b>.', 'nuvei_woocommerce');
                     $subscriptionId = Nuvei_Http::get_param('subscriptionId', 'int');
                     $planId         = Nuvei_Http::get_param('planId', 'int');
                     
                     if (0 < $subscriptionId) {
-                        $msg .= '<br/>' . __('Subscription ID: ', 'nuvei_woocommerce') . $subscriptionId;
+                        $msg .= '<br/>' . __('<b>Subscription ID:</b> ', 'nuvei_woocommerce') . $subscriptionId;
                     }
 
                     if (0 < $planId) {
-                        $msg .= '<br/>' . __(', Plan ID: ', 'nuvei_woocommerce') . $planId;
+                        $msg .= '<br/>' . __('<b>Plan ID:</b> ', 'nuvei_woocommerce') . $planId;
                     }
 
                     $this->sc_order->update_meta_data(NUVEI_ORDER_HAS_SUBSCR, 0);
@@ -681,17 +686,29 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 		}
         
         # Subscription Payment DMN
-        if('subscriptionPayment' == $dmnType && 0 < $TransactionID) {
+        if('subscriptionPayment' == $dmnType && 0 != $TransactionID) {
+            $cri_parts = explode('_', $client_request_id);
+            
+            if(empty($cri_parts) || empty($cri_parts[0]) || !is_numeric($cri_parts[0])) {
+                Nuvei_Logger::write($cri_parts, 'DMN Subscription Payment Error with Client Request Id parts:');
+                echo wp_json_encode('DMN Subscription Payment Error with Client Request Id parts.');
+                exit;
+            }
+            
+            $this->is_order_valid((int) $cri_parts[0]);
+            
             $msg = sprintf(
                 __('<b>Subscription Payment</b> with Status %s was made.', 'nuvei_woocommerce'),
                 $req_status
             )
-                . '<br/>' . __('Plan ID:', 'nuvei_woocommerce') . Nuvei_Http::get_param('planId', 'int') . '.'
-                . '<br/>' . __('Subscription ID: ', 'nuvei_woocommerce') . Nuvei_Http::get_param('subscriptionId', 'int') . '.'
-                . '<br/>' . __('Amount: ', 'nuvei_woocommerce') . $this->sc_order->get_currency() . ' '
+                . '<br/>' . __('<b>Plan ID:</b> ', 'nuvei_woocommerce') . Nuvei_Http::get_param('planId', 'int') . '.'
+                . '<br/>' . __('<b>Subscription ID:</b> ', 'nuvei_woocommerce') . Nuvei_Http::get_param('subscriptionId', 'int') . '.'
+                . '<br/>' . __('<b>Amount:</b> ', 'nuvei_woocommerce') . $this->sc_order->get_currency() . ' '
                 . Nuvei_Http::get_param('totalAmount', 'float') . '.'
-                . '<br/>' . __('TransactionId: ', 'nuvei_woocommerce') . $TransactionID;
+                . '<br/>' . __('<b>TransactionId:</b> ', 'nuvei_woocommerce') . $TransactionID;
 
+            Nuvei_Logger::write($msg, 'Subscription DMN Payment');
+            
             $this->sc_order->add_order_note($msg);
             
             echo wp_json_encode('DMN received.');
@@ -1271,8 +1288,12 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 			exit;
 		}
 		
-		if ('sc' !== $this->sc_order->get_payment_method()) {
-			Nuvei_Logger::write($this->sc_order->get_payment_method(), 'DMN Error - the order does not belongs to Nuvei.');
+        // check for 'sc' also because of the older Orders
+		if (!in_array($this->sc_order->get_payment_method(), array(NUVEI_GATEWAY_NAME, 'sc'))) {
+			Nuvei_Logger::write(
+                $this->sc_order->get_payment_method(), 
+                'DMN Error - the order does not belongs to Nuvei.'
+            );
 			
 			if ($return) {
 				return false;
@@ -1572,7 +1593,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 	 * Change the status of the order.
 	 *
 	 * @param int $order_id
-	 * @param string $status
+	 * @param string $req_status
 	 * @param string $transactionType
 	 * @param array $res_args - we must use $res_args instead $_REQUEST, if not empty
 	 */
