@@ -13,10 +13,9 @@ class Nuvei_Update_Order extends Nuvei_Request
     
     /**
      * @global Woocommerce $woocommerce
-     * @params array $args - default empty parameter
      * @return array
      */
-    public function process($args = array()) {
+    public function process() {
         if (!session_id()) {
 			session_start();
 		}

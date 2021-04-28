@@ -42,17 +42,19 @@ function settleAndCancelOrder(question, action, orderId) {
 						var urlParts    = window.location.toString().split('post.php');
 						window.location = urlParts[0] + 'edit.php?post_type=shop_order';
 					} else if (resp.data.reason != 'undefined' && resp.data.reason != '') {
+						jQuery('#custom_loader').hide();
 						alert(resp.data.reason);
 					} else if (resp.data.gwErrorReason != 'undefined' && resp.data.gwErrorReason != '') {
+						jQuery('#custom_loader').hide();
 						alert(resp.data.gwErrorReason);
 					} else {
+						jQuery('#custom_loader').hide();
 						alert('Response error.');
 					}
 				} else {
+					jQuery('#custom_loader').hide();
 					alert('Response error.');
 				}
-				
-				jQuery('#custom_loader').hide();
 			});
 	}
 }

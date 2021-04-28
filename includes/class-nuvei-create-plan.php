@@ -8,10 +8,9 @@ defined( 'ABSPATH' ) || exit;
 class Nuvei_Create_Plan extends Nuvei_Request
 {
     /**
-     * @param array $args - default empty parameter
      * @return array|false
      */
-    public function process($args = array()) {
+    public function process() {
         $create_params = array(
             'name'              => 'Default_plan_for_site_' . $this->plugin_settings['merchantSiteId'],
             'initialAmount'     => 0,

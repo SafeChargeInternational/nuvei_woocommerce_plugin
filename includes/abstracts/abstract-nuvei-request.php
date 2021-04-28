@@ -119,7 +119,7 @@ abstract class Nuvei_Request
     private $browsers       = array('ucbrowser', 'firefox', 'chrome', 'opera', 'msie', 'edge', 'safari', 'blackberry', 'trident');
     private $device_types   = array('macintosh', 'tablet', 'mobile', 'tv', 'windows', 'linux', 'tv', 'smarttv', 'googletv', 'appletv', 'hbbtv', 'pov_tv', 'netcast.tv', 'bluray');
     
-    public abstract function process(array $args = array());
+    public abstract function process();
     protected abstract function get_checksum_params();
 
     public function __construct(array $plugin_settings) {

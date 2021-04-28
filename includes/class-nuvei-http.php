@@ -18,16 +18,12 @@ class Nuvei_Http
 	 * @return mixed
 	 */
     public static function get_param($key, $type = 'string', $default = '', $parent = array()) {
-		$arr            = array();
-        $glob_request   = filter_var($_REQUEST, FILTER_REQUIRE_ARRAY);
-        
-		if (!empty($glob_request) && is_array($glob_request)) {
-			$arr = $glob_request;
-		}
 		if (!empty($parent) && is_array($parent)) {
 			$arr = $parent;
-		}
-		
+		} else {
+            $arr = $_REQUEST;
+        }
+        
 		switch ($type) {
 			case 'mail':
 			case 'email':

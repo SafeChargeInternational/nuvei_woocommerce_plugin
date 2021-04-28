@@ -23,10 +23,9 @@ class Nuvei_Open_Order extends Nuvei_Request
     /**
      * @global object $woocommerce
      * 
-     * @param array $args - default empty parameter
      * @return array|boolean
      */
-    public function process($args = array()) {
+    public function process() {
         global $woocommerce;
 		
 		$cart           = $woocommerce->cart;

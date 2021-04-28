@@ -20,6 +20,12 @@ if ( ! defined( 'NUVEI_PLUGIN_FILE' ) ) {
 	define( 'NUVEI_PLUGIN_FILE', __FILE__ );
 }
 
+require_once 'config.php';
+require_once 'includes' . DIRECTORY_SEPARATOR . 'class-nuvei-autoloader.php';
+require_once ABSPATH . 'wp-admin/includes/plugin.php';
+
+$wc_nuvei = null;
+
 // check if there is the version with "nuvei" in the name of directory, in this case deactivate the current plugin
 add_action('admin_init', function() {
 	$path_to_nuvei_plugin = dirname(plugin_dir_path(__FILE__)) . DIRECTORY_SEPARATOR
@@ -30,12 +36,6 @@ add_action('admin_init', function() {
 	}
 });
 
-require_once 'config.php';
-//require_once 'SC_CLASS.php';
-require_once 'includes' . DIRECTORY_SEPARATOR . 'class-nuvei-autoloader.php';
-
-$wc_nuvei = null;
-
 add_filter('woocommerce_payment_gateways', 'nuvei_add_gateway');
 add_action('plugins_loaded', 'nuvei_init', 0);
 
@@ -44,12 +44,7 @@ function nuvei_init() {
 		return;
 	}
 	
-	require_once ABSPATH . 'wp-admin/includes/plugin.php';
-//	require_once 'WC_SC.php';
-	
-//	global $wc_nuvei;
-//	$wc_nuvei = new WC_SC();
-	global $wc_nuvei;
+    global $wc_nuvei;
 	$wc_nuvei = new Nuvei_Gateway();
 	
 	load_plugin_textdomain(
@@ -90,7 +85,9 @@ function nuvei_init() {
 	// if validation success get order details
 	add_action('woocommerce_after_checkout_validation', function( $data, $errors) {
 		global $wc_nuvei;
-		//      Nuvei_Logger::write($errors->errors, 'woocommerce_after_checkout_validation errors');
+        
+//        Nuvei_Logger::write($errors->errors, 'woocommerce_after_checkout_validation errors');
+//        Nuvei_Logger::write($_POST, 'woocommerce_after_checkout_validation post params');
 		
 		if ( empty( $errors->errors ) && 'sc' == $data['payment_method'] ) {
 			if (empty(Nuvei_Http::get_param('sc_payment_method'))) {
@@ -228,7 +225,7 @@ function sc_ajax_action() {
 	
 	// when Reorder
 	if (Nuvei_Http::get_param('sc_request') == 'scReorder') {
-		$wc_nuvei->sc_reorder();
+		$wc_nuvei->reorder();
 	}
 	
 	// download Subscriptions Plans
@@ -336,6 +333,7 @@ function sc_enqueue_wo_files( $styles) {
 			'wcDecSep'          => $wcDecSep,
 			'useUpos'			=> $wc_nuvei->can_use_upos(),
 			'isUserLogged'		=> is_user_logged_in() ? 1 : 0,
+            'paymentMethodName' => NUVEI_GATEWAY_NAME,
 			
 			// translations
 			'paymentDeclined'	=> __('Your Payment was DECLINED. Please try another payment method!', 'nuvei_woocommerce'),

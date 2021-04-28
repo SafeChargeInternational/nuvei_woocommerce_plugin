@@ -11,7 +11,9 @@ class Nuvei_Delete_Upo extends Nuvei_Request
      * @param array $args
      * @return array|false
      */
-    public function process(array $args) {
+    public function process() {
+        $args = current(func_get_args());
+        
         if(empty($args['email']) || empty($args['upo_id'])) {
             Nuvei_Logger::write($args, 'Nuvei_Delete_Upo error, missiing email and/or upo_id parameter:');
             return false;

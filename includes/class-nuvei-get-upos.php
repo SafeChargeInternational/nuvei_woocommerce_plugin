@@ -11,7 +11,9 @@ class Nuvei_Get_Upos extends Nuvei_Request
      * @param array $args - the Open Order data
      * @return array|bool
      */
-    public function process(array $args = array()) {
+    public function process() {
+        $args = current(func_get_args());
+        
         if(empty($args['billingAddress']['email'])) {
             Nuvei_Logger::write($args, 'Nuvei_Get_Upos error, missing Billing Address Email.');
             return false;

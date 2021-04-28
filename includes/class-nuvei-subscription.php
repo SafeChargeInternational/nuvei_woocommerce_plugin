@@ -7,13 +7,36 @@ defined( 'ABSPATH' ) || exit;
  */
 class Nuvei_Subscription extends Nuvei_Request
 {
-    
-    protected function get_checksum_params() {
-        
-    }
-
+    /**
+     * @param array $prod_plan - plan details
+     * @return array|bool
+     */
     public function process() {
+        $prod_plan = current(func_get_args());
         
+        $params = array_merge(
+            array(
+                'userPaymentOptionId'   => Nuvei_Http::get_param('userPaymentOptionId', 'int'),
+                'userTokenId'           => Nuvei_Http::get_param('user_token_id', 'mail'),
+                'currency'              => Nuvei_Http::get_param('currency'),
+            ),
+            $prod_plan
+        );
+        
+        return $this->call_rest_api('createSubscription', $params);
     }
 
+    protected function get_checksum_params() {
+        return array(
+            'merchantId',
+            'merchantSiteId',
+            'userTokenId',
+            'planId',
+            'userPaymentOptionId',
+            'initialAmount',
+            'recurringAmount',
+            'currency',
+            'timeStamp',
+        );
+    }
 }

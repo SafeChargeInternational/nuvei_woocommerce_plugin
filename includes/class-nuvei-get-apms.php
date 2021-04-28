@@ -11,7 +11,9 @@ class Nuvei_Get_Apms extends Nuvei_Request
      * @param array $args
      * @return array|false
      */
-    public function process(array $args = array()) {
+    public function process() {
+        $args = current(func_get_args());
+        
 		$currency = !empty($args['currency']) ? $args['currency'] : get_woocommerce_currency();
 		
 		if (!empty($args['billingAddress']['country'])) {

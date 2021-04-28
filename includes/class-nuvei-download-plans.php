@@ -8,11 +8,9 @@ defined( 'ABSPATH' ) || exit;
 class Nuvei_Download_Plans extends Nuvei_Request
 {
     /**
-     * 
-     * @param array $args - default empty parameter
      * @return array|false
      */
-    public function process($args = array()) {
+    public function process() {
         $params = array(
             'planStatus'		=> 'ACTIVE',
             'currency'			=> '',

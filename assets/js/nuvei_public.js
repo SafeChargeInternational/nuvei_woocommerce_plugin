@@ -244,11 +244,11 @@ function scValidateAPMFields() {
  * @returns {undefined}
  */
 function afterSdkResponse(resp) {
-	console.log('afterSdkResponse');
+	console.log('afterSdkResponse', resp);
 	console.log(resp);
 	
 	if (typeof resp.result != 'undefined') {
-		console.log(resp.result)
+		console.log('resp.result', resp.result)
 
 		if (resp.result == 'APPROVED' && resp.transactionId != 'undefined') {
 			jQuery('#sc_transaction_id').val(resp.transactionId);

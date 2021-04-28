@@ -11,7 +11,9 @@ class Nuvei_Refund extends Nuvei_Request
      * @param array $data
      * @return array|false
      */
-    public function process(array $data) {
+    public function process() {
+        $data = current(func_get_args());
+        
         if(empty($data['order_id']) 
             || empty($data['ref_amount'])
             || empty($data['tr_id'])

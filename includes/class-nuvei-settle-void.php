@@ -8,10 +8,14 @@ defined( 'ABSPATH' ) || exit;
 class Nuvei_Settle_Void extends Nuvei_Request
 {
     /**
+     * Expected parameters are:
      * 
-     * @param array $data
+     * @param array [order_id, action, method]
+     * @return array|false
      */
-    public function process(array $data) {
+    public function process() {
+        $data = current(func_get_args());
+        
         if(empty($data['order_id']) 
             || empty($data['action'])
             || empty($data['method'])
@@ -23,19 +27,16 @@ class Nuvei_Settle_Void extends Nuvei_Request
         $order      = wc_get_order($data['order_id']);
         $notify_url = Nuvei_String::get_notify_url($this->plugin_settings);
         
-        $params = array_merge(
-            $this->get_request_base_params(),
-            array(
-                'clientUniqueId'        => $data['order_id'],
-                'amount'                => (string) $order->get_total(),
-                'currency'              => get_woocommerce_currency(),
-                'relatedTransactionId'  => $order->get_meta(NUVEI_TRANS_ID),
-                'authCode'              => $order->get_meta(NUVEI_AUTH_CODE_KEY),
-                'urlDetails'            => array(
-                    'notificationUrl' => $notify_url,
-                ),
-                'url'                   => $notify_url, // a custom parameter
-            )
+        $params = array(
+            'clientUniqueId'        => $data['order_id'],
+            'amount'                => (string) $order->get_total(),
+            'currency'              => get_woocommerce_currency(),
+            'relatedTransactionId'  => $order->get_meta(NUVEI_TRANS_ID),
+            'authCode'              => $order->get_meta(NUVEI_AUTH_CODE_KEY),
+            'urlDetails'            => array(
+                'notificationUrl' => $notify_url,
+            ),
+            'url'                   => $notify_url, // a custom parameter
         );
 
         return $this->call_rest_api($data['method'], $params);
