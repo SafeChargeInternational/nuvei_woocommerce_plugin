@@ -650,6 +650,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 					
 					$this->sc_order->update_meta_data(NUVEI_ORDER_HAS_SUBSCR, 1);
 					$this->sc_order->add_order_note($msg);
+                    $this->sc_order->save();
 				} elseif ('inactive' == strtolower($subscriptionState)) {
 					$msg            = __('<b>Subscription is Inactive</b>.', 'nuvei_woocommerce');
 					$subscriptionId = Nuvei_Http::get_param('subscriptionId', 'int');
@@ -665,6 +666,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 
 					$this->sc_order->update_meta_data(NUVEI_ORDER_HAS_SUBSCR, 0);
 					$this->sc_order->add_order_note($msg);
+                    $this->sc_order->save();
 				}
 			}
 
