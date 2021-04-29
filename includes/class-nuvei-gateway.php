@@ -1487,7 +1487,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 			return;
 		}
 		
-		$subscr_data = json_decode(str_replace('\\', '', $_REQUEST['customField1']), true);
+		$subscr_data = json_decode(Nuvei_Http::get_param('customField1', 'json'), true);
 		
 		if (empty($subscr_data) || !is_array($subscr_data)) {
 			Nuvei_Logger::write($subscr_data, 'There is a problem with the DMN Payment Plan data:');
@@ -1558,10 +1558,18 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 			return false;
 		}
 		
-		// subscription DMN with responsechecksum case
+		# subscription DMN with responsechecksum case
 		$concat = '';
 		
-		foreach ($_POST as $name => $value) {
+		// complicated way to filter all $_REQUEST input, but WP will be happy
+		$request_arr = $_REQUEST;
+		array_walk_recursive($request_arr, function ( &$value) {
+			$value = trim($value);
+			$value = filter_var($value);
+		});
+		// complicated way to filter all $_REQUEST input, but WP will be happy END
+		
+		foreach ($request_arr as $name => $value) {
 			if ('responsechecksum' == $name) {
 				continue;
 			}
@@ -1619,7 +1627,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 		
 		switch ($req_status) {
 			case 'CANCELED':
-				$message            = __('Your action was Canceld.', 'nuvei_woocommerce') . $gw_data;
+				$message            = __('Your action was <b>Canceld</b>.', 'nuvei_woocommerce') . $gw_data;
 				$this->msg['class'] = 'woocommerce_message';
 				
 				if (in_array($transactionType, array('Auth', 'Settle', 'Sale'))) {
@@ -1643,9 +1651,10 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 					$currency_symbol = get_woocommerce_currency_symbol( $currency_code );
 					
 					if (isset($refunds[Nuvei_Http::get_param('TransactionID', 'int')]['refund_amount'])) {
-						$message .= '<br/>' . __('Refund Amount') . ': ' . $currency_symbol
+						$message .= '<br/>' . __('<b>Refund Amount:</b>') . ': ' . $currency_symbol
 							. number_format($refunds[Nuvei_Http::get_param('TransactionID', 'int')]['refund_amount'], 2, '.', '')
-							. '<br/>' . __('Refund') . ' #' . $refunds[Nuvei_Http::get_param('TransactionID', 'int')]['wc_id'];
+							. '<br/>' . __('<b>Refund:</b>') . ' #' 
+							. $refunds[Nuvei_Http::get_param('TransactionID', 'int')]['wc_id'];
 					}
 					
 					if (round($this->sc_order->get_total(), 2) <= $this->sum_order_refunds()) {
@@ -1690,20 +1699,20 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 			case 'ERROR':
 			case 'DECLINED':
 			case 'FAIL':
-				$reason = ',<br/>' . __('Reason: ', 'nuvei_woocommerce');
+				$reason = ',<br/>' . __('<b>Reason:</b> ', 'nuvei_woocommerce');
 				if ('' != Nuvei_Http::get_param('reason')) {
 					$reason .= Nuvei_Http::get_param('reason');
 				} elseif ('' != Nuvei_Http::get_param('Reason')) {
 					$reason .= Nuvei_Http::get_param('Reason');
 				}
 				
-				$message = __('Transaction failed.', 'nuvei_woocommerce')
-					. '<br/>' . __('Error code: ', 'nuvei_woocommerce') . Nuvei_Http::get_param('ErrCode')
-					. '<br/>' . __('Message: ', 'nuvei_woocommerce') . Nuvei_Http::get_param('message') . $reason . $gw_data;
+				$message = __('<b>Transaction failed.</b>', 'nuvei_woocommerce') . '<br/>' 
+					. __('<b>Error code:</b> ', 'nuvei_woocommerce') . Nuvei_Http::get_param('ErrCode') . '<br/>' 
+					. __('<b>Message:</b> ', 'nuvei_woocommerce') . Nuvei_Http::get_param('message') . $reason . $gw_data;
 				
 				// do not change status
 				if ('Void' === $transactionType) {
-					$message = 'DMN message: Your Void request fail.';
+					$message = 'Your Void request <b>fail</b>.';
 				}
 				if (in_array($transactionType, array('Auth', 'Settle', 'Sale'))) {
 					$status = 'failed';

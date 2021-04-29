@@ -52,6 +52,9 @@ class Nuvei_Http {
 				
 			case 'string':
 				return !empty($arr[$key]) ? filter_var($arr[$key], FILTER_SANITIZE_STRING) : $default;
+			
+			case 'json':
+				return !empty($arr[$key]) ? filter_var(stripslashes($arr[$key]), FILTER_DEFAULT) : $default;
 				
 			default:
 				return !empty($arr[$key]) ? filter_var($arr[$key], FILTER_DEFAULT) : $default;

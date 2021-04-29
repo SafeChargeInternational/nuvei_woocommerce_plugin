@@ -35,10 +35,10 @@
 		var locale			= "<?php echo esc_js(Nuvei_String::format_location(get_locale())); ?>";
 		scMerchantId		= scData.merchantId = "<?php echo esc_js($this->get_setting('merchantId')); ?>";
 		scMerchantSiteId	= scData.merchantSiteId = "<?php echo esc_js($this->get_setting('merchantSiteId')); ?>";
-        scData.env          = '<?= ('yes' == $this->get_setting('test') ? 'int' : 'prod'); ?>';
+		scData.env          = '<?php echo ( 'yes' == $this->get_setting('test') ? 'int' : 'prod' ); ?>';
 		sfc                 = SafeCharge(scData);
 		scFields            = sfc.fields({ locale: locale });
-        forceUserTokenId    = <?= $force_user_token_id ? 1 : 0; ?>
+		forceUserTokenId    = <?php echo $force_user_token_id ? 1 : 0; ?>
 	</script>
 </div>
 

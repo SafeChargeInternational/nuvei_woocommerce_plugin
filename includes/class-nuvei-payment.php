@@ -44,8 +44,7 @@ class Nuvei_Payment extends Nuvei_Request {
 		}
 		
 		$post_array = $_POST;
-		
-		array_walk_recursive($post_array, function (&$value) {
+		array_walk_recursive($post_array, function ( &$value) {
 			$value = trim($value);
 			$value = filter_var($value);
 		});
@@ -93,7 +92,7 @@ class Nuvei_Payment extends Nuvei_Request {
 			$params['paymentMethod'] = $sc_payment_method;
 			
 			if (!empty($post_array[$sc_payment_method])) {
-				$params['userAccountDetails'] = $post_array[$sc_payment_method];
+				$params['userAccountDetails'] = $post_array[$sc_payment_method]; // this is array
 			}
 			
 			if (Nuvei_Http::get_param('nuvei_save_upo') == 1) {

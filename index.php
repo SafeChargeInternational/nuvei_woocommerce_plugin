@@ -44,7 +44,7 @@ function nuvei_init() {
 		return;
 	}
 	
-    global $wc_nuvei;
+	global $wc_nuvei;
 	$wc_nuvei = new Nuvei_Gateway();
 	
 	load_plugin_textdomain(
@@ -85,15 +85,15 @@ function nuvei_init() {
 	// if validation success get order details
 	add_action('woocommerce_after_checkout_validation', function( $data, $errors) {
 		global $wc_nuvei;
-        
-//        Nuvei_Logger::write($errors->errors, 'woocommerce_after_checkout_validation errors');
-//        Nuvei_Logger::write($_POST, 'woocommerce_after_checkout_validation post params');
+		
+		//        Nuvei_Logger::write($errors->errors, 'woocommerce_after_checkout_validation errors');
+		//        Nuvei_Logger::write($_POST, 'woocommerce_after_checkout_validation post params');
 		
 		if (empty( $errors->errors ) 
-            && NUVEI_GATEWAY_NAME == $data['payment_method'] 
-            && empty(Nuvei_Http::get_param('sc_payment_method'))
-        ) {
-            $content = $wc_nuvei->get_payment_methods();
+			&& NUVEI_GATEWAY_NAME == $data['payment_method'] 
+			&& empty(Nuvei_Http::get_param('sc_payment_method'))
+		) {
+			$content = $wc_nuvei->get_payment_methods();
 		}
 	}, 9999, 2);
 	
@@ -159,19 +159,19 @@ function nuvei_init() {
 	if (!empty($_GET['sc_msg'])) {
 		add_filter('woocommerce_before_cart', 'nuvei_show_message_on_cart', 10, 2);
 	}
-    
-    # Payment Plans taxonomies
-    // extend Term form to add meta data
-    add_action('pa_' . Nuvei_String::get_slug(NUVEI_GLOB_ATTR_NAME) . '_add_form_fields', 'nuvei_add_term_fields_form', 10, 2);
-    // update Terms' meta data form
-    add_action('pa_' . Nuvei_String::get_slug(NUVEI_GLOB_ATTR_NAME) . '_edit_form_fields', 'nuvei_edit_term_meta_form', 10, 2);
-    // hook to catch our meta data and save it
-    add_action( 'created_' . 'pa_' . Nuvei_String::get_slug(NUVEI_GLOB_ATTR_NAME), 'nuvei_save_term_meta', 10, 2 );
-    // eit Term meta data
-    add_action( 'edited_' . 'pa_' . Nuvei_String::get_slug(NUVEI_GLOB_ATTR_NAME), 'nuvei_edit_term_meta', 10, 2 );
-    
-    // before add a product to the cart
-    add_filter( 'woocommerce_add_to_cart_validation', array($wc_nuvei, 'add_to_cart_validation'), 10, 3 );
+	
+	# Payment Plans taxonomies
+	// extend Term form to add meta data
+	add_action('pa_' . Nuvei_String::get_slug(NUVEI_GLOB_ATTR_NAME) . '_add_form_fields', 'nuvei_add_term_fields_form', 10, 2);
+	// update Terms' meta data form
+	add_action('pa_' . Nuvei_String::get_slug(NUVEI_GLOB_ATTR_NAME) . '_edit_form_fields', 'nuvei_edit_term_meta_form', 10, 2);
+	// hook to catch our meta data and save it
+	add_action( 'created_pa_' . Nuvei_String::get_slug(NUVEI_GLOB_ATTR_NAME), 'nuvei_save_term_meta', 10, 2 );
+	// eit Term meta data
+	add_action( 'edited_pa_' . Nuvei_String::get_slug(NUVEI_GLOB_ATTR_NAME), 'nuvei_edit_term_meta', 10, 2 );
+	
+	// before add a product to the cart
+	add_filter( 'woocommerce_add_to_cart_validation', array($wc_nuvei, 'add_to_cart_validation'), 10, 3 );
 }
 
 /**
@@ -334,7 +334,7 @@ function sc_enqueue_wo_files( $styles) {
 			'wcDecSep'              => $wcDecSep,
 			'useUpos'               => $wc_nuvei->can_use_upos(),
 			'isUserLogged'          => is_user_logged_in() ? 1 : 0,
-            'paymentGatewayName'    => NUVEI_GATEWAY_NAME,
+			'paymentGatewayName'    => NUVEI_GATEWAY_NAME,
 			
 			// translations
 			'paymentDeclined'	=> __('Your Payment was DECLINED. Please try another payment method!', 'nuvei_woocommerce'),
@@ -405,15 +405,15 @@ function sc_enqueue( $hook) {
 			'1'
 		);
 		
-        $nuvei_plans_path       = plugin_dir_path(__FILE__) . '/tmp/sc_plans.json';
+		$nuvei_plans_path       = plugin_dir_path(__FILE__) . '/tmp/sc_plans.json';
 		$sc_plans_last_mod_time = '';
-        $plans_list             = array();
-        
+		$plans_list             = array();
+		
 		if (is_readable($nuvei_plans_path)) { 
 			$sc_plans_last_mod_time = gmdate('Y-m-d H:i:s', filemtime($nuvei_plans_path));
-            $plans_list             = file_get_contents($nuvei_plans_path);
+			$plans_list             = stripslashes(file_get_contents($nuvei_plans_path));
 		}
-        
+		
 		// put translations here into the array
 		wp_localize_script(
 			'nuvei_js_admin',
@@ -422,9 +422,9 @@ function sc_enqueue( $hook) {
 				'ajaxurl'				=> admin_url('admin-ajax.php'),
 				'security'				=> wp_create_nonce('sc-security-nonce'),
 				'scPlansLastModTime'	=> $sc_plans_last_mod_time,
-                'nuveiPaymentPlans'     => $plans_list,
+				'nuveiPaymentPlans'     => $plans_list,
 				
-                // translations
+				// translations
 				'refundQuestion'		=> __('Are you sure about this Refund?', 'nuvei_woocommerce'),
 				'LastDownload'			=> __('Last Download', 'nuvei_woocommerce'),
 			)
@@ -681,7 +681,7 @@ function nuvei_user_orders() {
 	$order_payment_method = $order->get_meta('_paymentMethod');
 	$order_key            = $order->get_order_key();
 	
-    // check for 'sc' also, because of the older Orders
+	// check for 'sc' also, because of the older Orders
 	if (!in_array($order->get_payment_method(), array(NUVEI_GATEWAY_NAME, 'sc'))) {
 		return;
 	}
@@ -711,90 +711,89 @@ function nuvei_show_message_on_cart( $data) {
 }
 
 // Attributes, Terms and Meta functions
-function nuvei_add_term_fields_form($taxonomy) {
-    $nuvei_plans_path = plugin_dir_path(__FILE__) . '/tmp/sc_plans.json';
-    
-    ob_start();
-    $plans_list = array();
-    $plans_json = '';
-    
-    if (is_readable($nuvei_plans_path)) {
-        $plans_json = file_get_contents($nuvei_plans_path);
-        $plans_list = json_decode($plans_json, true);
-    }
-    
-    require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'templates/admin/add_terms_form.php';
-    ob_end_flush();
+function nuvei_add_term_fields_form( $taxonomy) {
+	$nuvei_plans_path = plugin_dir_path(__FILE__) . '/tmp/sc_plans.json';
+	
+	ob_start();
+	
+	$plans_list = array();
+	if (is_readable($nuvei_plans_path)) {
+		$plans_list = json_decode(file_get_contents($nuvei_plans_path), true);
+	}
+	
+	require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'templates/admin/add_terms_form.php';
+	
+	ob_end_flush();
 }
 
-function nuvei_edit_term_meta_form($term, $taxonomy) {
-    $nuvei_plans_path = plugin_dir_path(__FILE__) . '/tmp/sc_plans.json';
+function nuvei_edit_term_meta_form( $term, $taxonomy) {
+	$nuvei_plans_path = plugin_dir_path(__FILE__) . '/tmp/sc_plans.json';
 
-    ob_start();
-    $term_meta  = get_term_meta($term->term_id);
-    $plans_list = array();
-    $plans_json = '';
-    
-    if (is_readable($nuvei_plans_path)) {
-        $plans_json = file_get_contents($nuvei_plans_path);
-        $plans_list = json_decode($plans_json, true);
-    }
-    
-    // clean unused elements
-    foreach ($term_meta as $key => $data) {
-        if(strpos($key, '_') !== false) {
-            unset($term_meta[$key]);
-            break;
-        }
-    }
-    
-    require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'templates/admin/edit_term_form.php';
-    ob_end_flush();
+	ob_start();
+	$term_meta  = get_term_meta($term->term_id);
+	$plans_list = array();
+	$plans_json = '';
+	
+	if (is_readable($nuvei_plans_path)) {
+		$plans_json = file_get_contents($nuvei_plans_path);
+		$plans_list = json_decode($plans_json, true);
+	}
+	
+	// clean unused elements
+	foreach ($term_meta as $key => $data) {
+		if (strpos($key, '_') !== false) {
+			unset($term_meta[$key]);
+			break;
+		}
+	}
+	
+	require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'templates/admin/edit_term_form.php';
+	ob_end_flush();
 }
 
-function nuvei_save_term_meta($term_id, $tt_id) {
-    global $wc_nuvei;
-    
-    $taxonomy       = 'pa_' . Nuvei_String::get_slug(NUVEI_GLOB_ATTR_NAME);
-    $post_taxonomy  = Nuvei_Http::get_param('taxonomy', 'string');
-    
-    if($post_taxonomy != $taxonomy) {
-        return;
-    }
-    
-    add_term_meta( $term_id, 'planId', Nuvei_Http::get_param('planId', 'int') );
-    add_term_meta( $term_id, 'recurringAmount', Nuvei_Http::get_param('recurringAmount', 'float') );
+function nuvei_save_term_meta( $term_id, $tt_id) {
+	global $wc_nuvei;
+	
+	$taxonomy      = 'pa_' . Nuvei_String::get_slug(NUVEI_GLOB_ATTR_NAME);
+	$post_taxonomy = Nuvei_Http::get_param('taxonomy', 'string');
+	
+	if ($post_taxonomy != $taxonomy) {
+		return;
+	}
+	
+	add_term_meta( $term_id, 'planId', Nuvei_Http::get_param('planId', 'int') );
+	add_term_meta( $term_id, 'recurringAmount', Nuvei_Http::get_param('recurringAmount', 'float') );
 
-    add_term_meta( $term_id, 'startAfterUnit', Nuvei_Http::get_param('startAfterUnit', 'string') );
-    add_term_meta( $term_id, 'startAfterPeriod', Nuvei_Http::get_param('startAfterPeriod', 'int') );
+	add_term_meta( $term_id, 'startAfterUnit', Nuvei_Http::get_param('startAfterUnit', 'string') );
+	add_term_meta( $term_id, 'startAfterPeriod', Nuvei_Http::get_param('startAfterPeriod', 'int') );
 
-    add_term_meta( $term_id, 'recurringPeriodUnit', Nuvei_Http::get_param('recurringPeriodUnit', 'string') );
-    add_term_meta( $term_id, 'recurringPeriodPeriod', Nuvei_Http::get_param('recurringPeriodPeriod', 'int') );
+	add_term_meta( $term_id, 'recurringPeriodUnit', Nuvei_Http::get_param('recurringPeriodUnit', 'string') );
+	add_term_meta( $term_id, 'recurringPeriodPeriod', Nuvei_Http::get_param('recurringPeriodPeriod', 'int') );
 
-    add_term_meta( $term_id, 'endAfterUnit', Nuvei_Http::get_param('endAfterUnit', 'string') );
-    add_term_meta( $term_id, 'endAfterPeriod', Nuvei_Http::get_param('endAfterPeriod', 'int') );
+	add_term_meta( $term_id, 'endAfterUnit', Nuvei_Http::get_param('endAfterUnit', 'string') );
+	add_term_meta( $term_id, 'endAfterPeriod', Nuvei_Http::get_param('endAfterPeriod', 'int') );
 }
 
-function nuvei_edit_term_meta($term_id, $tt_id) {
-    global $wc_nuvei;
-    
-    $taxonomy       = 'pa_' . Nuvei_String::get_slug(NUVEI_GLOB_ATTR_NAME);
-    $post_taxonomy  = Nuvei_Http::get_param('taxonomy', 'string');
-    
-    if($post_taxonomy != $taxonomy) {
-        return;
-    }
-    
-    update_term_meta( $term_id, 'planId', Nuvei_Http::get_param('planId', 'int') );
-    update_term_meta( $term_id, 'recurringAmount', Nuvei_Http::get_param('recurringAmount', 'float') );
+function nuvei_edit_term_meta( $term_id, $tt_id) {
+	global $wc_nuvei;
+	
+	$taxonomy      = 'pa_' . Nuvei_String::get_slug(NUVEI_GLOB_ATTR_NAME);
+	$post_taxonomy = Nuvei_Http::get_param('taxonomy', 'string');
+	
+	if ($post_taxonomy != $taxonomy) {
+		return;
+	}
+	
+	update_term_meta( $term_id, 'planId', Nuvei_Http::get_param('planId', 'int') );
+	update_term_meta( $term_id, 'recurringAmount', Nuvei_Http::get_param('recurringAmount', 'float') );
 
-    update_term_meta( $term_id, 'startAfterUnit', Nuvei_Http::get_param('startAfterUnit', 'string') );
-    update_term_meta( $term_id, 'startAfterPeriod', Nuvei_Http::get_param('startAfterPeriod', 'int') );
+	update_term_meta( $term_id, 'startAfterUnit', Nuvei_Http::get_param('startAfterUnit', 'string') );
+	update_term_meta( $term_id, 'startAfterPeriod', Nuvei_Http::get_param('startAfterPeriod', 'int') );
 
-    update_term_meta( $term_id, 'recurringPeriodUnit', Nuvei_Http::get_param('recurringPeriodUnit', 'string') );
-    update_term_meta( $term_id, 'recurringPeriodPeriod', Nuvei_Http::get_param('recurringPeriodPeriod', 'int') );
+	update_term_meta( $term_id, 'recurringPeriodUnit', Nuvei_Http::get_param('recurringPeriodUnit', 'string') );
+	update_term_meta( $term_id, 'recurringPeriodPeriod', Nuvei_Http::get_param('recurringPeriodPeriod', 'int') );
 
-    update_term_meta( $term_id, 'endAfterUnit', Nuvei_Http::get_param('endAfterUnit', 'string') );
-    update_term_meta( $term_id, 'endAfterPeriod', Nuvei_Http::get_param('endAfterPeriod', 'int') );
+	update_term_meta( $term_id, 'endAfterUnit', Nuvei_Http::get_param('endAfterUnit', 'string') );
+	update_term_meta( $term_id, 'endAfterPeriod', Nuvei_Http::get_param('endAfterPeriod', 'int') );
 }
 // Attributes, Terms and Meta functions END
