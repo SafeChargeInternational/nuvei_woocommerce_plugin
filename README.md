@@ -31,12 +31,13 @@ Upload the provided archive and install it. As a final step you should activate 
 1. Backup your site completely before proceeding.
 2. To install a WordPress Plugin manually:
 3. Download your WordPress Plugin to your desktop.
-4. If downloaded as a zip archive, install it from WordPress > Plugins > Add New. Go to point 8.
-5. If the plugin is extracted or prefer this way - continue.
-6. Read through the "readme" file thoroughly to ensure you follow the installation instructions.
-7. With your FTP program, upload the Plugin folder (nuveie_woocommerce_plugin) to the wp-content/plugins folder in your WordPress directory online.
-8. Go to Plugins screen and find the newly uploaded Plugin in the list.
-9. Click Activate to activate it.
+4. If you have installed older version of the plugin (before version 4.0.0) uninstall the plugin and remove its files.
+5. If downloaded as a zip archive, install it from WordPress > Plugins > Add New. Go to point 8.
+6. If the plugin is extracted or prefer this way - continue.
+7. Read through the "readme" file thoroughly to ensure you follow the installation instructions.
+8. With your FTP program, upload the Plugin folder (nuveie_woocommerce_plugin) to the wp-content/plugins folder in your WordPress directory online.
+9. Go to Plugins screen and find the newly uploaded Plugin in the list.
+10. Click Activate to activate it.
 
 ## Support
 Please, contact out Tech-Support team (tech-support@nuvei.com) in case of questions and difficulties.
