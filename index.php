@@ -114,12 +114,11 @@ function nuvei_init() {
 		if (isset($wc_nuvei->settings['rewrite_dmn']) && 'yes' == $wc_nuvei->settings['rewrite_dmn']) {
 			add_action('template_redirect', 'sc_rewrite_return_url'); // need WC_SC
 		}
-        
-        // For the custom column in the Order list
-//        add_filter( 'manage_edit-shop_order_columns', 'nuvei_edit_orders_list' );
-        add_action( 'manage_shop_order_posts_custom_column', 'nuvei_fill_custom_column' );
-        // for the Store > My Account > Orders list
-        add_action( 'woocommerce_my_account_my_orders_column_order-number', 'nuvei_edit_my_account_orders_col' );
+		
+		// For the custom column in the Order list
+		add_action( 'manage_shop_order_posts_custom_column', 'nuvei_fill_custom_column' );
+		// for the Store > My Account > Orders list
+		add_action( 'woocommerce_my_account_my_orders_column_order-number', 'nuvei_edit_my_account_orders_col' );
 	}
 	
 	// change Thank-you page title and text
@@ -802,33 +801,33 @@ function nuvei_edit_term_meta( $term_id, $tt_id) {
 // Attributes, Terms and Meta functions END
 
 # For the custom column in the Order list
-//function nuvei_edit_orders_list($columns) {
-////    $columns['nuvei_subscr'] = __('Nuvei Subscriptions', 'nuvei_woocommerce');
-//    return $columns;
-//}
-
-function nuvei_fill_custom_column($column) {
-    global $post;
-    
-    $order      = wc_get_order( $post->ID );
-    $has_plan   = $order->get_meta(NUVEI_ORDER_HAS_SUBSCR);
-    
-    if ('order_number' === $column && 1 == $has_plan) { ?>
-        <mark class="order-status status-processing tips" style="float: right;">
-            <span><?php echo esc_html__('Nuvei Subscription', 'nuvei_woocommerce'); ?></span>
-        </mark>
-    <?php }
+function nuvei_fill_custom_column( $column) {
+	global $post;
+	
+	$order = wc_get_order($post->ID);
+	
+	if ('order_number' === $column && $order->get_meta(NUVEI_ORDER_HAS_SUBSCR) == 1) { 
+		?>
+		<mark class="order-status status-processing tips" style="float: right;">
+			<span><?php echo esc_html__('Nuvei Subscription', 'nuvei_woocommerce'); ?></span>
+		</mark>
+		<?php 
+	}
 }
 # For the custom column in the Order list END
 
-// mmodify Sotre > My Account > Orders table
-function nuvei_edit_my_account_orders_col($order ) {
-    //var_dump(count(func_get_args()));
-    //echo '<pre>'.print_r($order, true).'</pre>';
-    //echo '#' . $order->get_id();
-    
-    echo    '<a href="' . esc_url( $order->get_view_order_url() ) . '">'
-                . _x( '#', 'hash before order number', 'woocommerce' ) . $order->get_order_number() // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-            . '</a>'
-            . '<img src="'. esc_url(plugin_dir_url(NUVEI_PLUGIN_FILE)) .'assets/icons/subscription.png" alt="'. esc_html__('Subscription', 'nuvei_woocommerce') .'" width="20" />';
+/**
+ * In Store > My Account > Orders table, Order column
+ * add Rebilling icon for the Orders with Nuvei Payment Plan.
+ * 
+ * @param WC_Order $order
+ */
+function nuvei_edit_my_account_orders_col( $order) {
+	echo '<a href="' . esc_url( $order->get_view_order_url() ) . '"';
+	
+	if ($order->get_meta(NUVEI_ORDER_HAS_SUBSCR) == 1) {
+		echo ' class="nuvei_plan_order" title="' . esc_attr__('Nuvei Payment Plan Order', 'nuvei_woocommerce') . '"';
+	}
+	
+	echo '>#' . esc_html($order->get_order_number()) . '</a>';
 }
