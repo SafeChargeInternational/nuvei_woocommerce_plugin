@@ -53,26 +53,15 @@ function nuvei_init() {
 		dirname( plugin_basename( __FILE__ ) ) . '/languages/'
 	);
 	
-	add_action('init', 'sc_enqueue');
-	// load WC styles
-	add_filter('woocommerce_enqueue_styles', 'sc_enqueue_wo_files');
-	// add admin style
-	add_action( 'admin_enqueue_scripts', function( $hook) {
-		if ( 'post.php' != $hook ) {
-			return;
-		}
-		
-		wp_register_style(
-			'nuvei_admin_style',
-			plugins_url('/assets/css/nuvei_admin_style.css',
-			__FILE__),
-			'',
-			1.1,
-			'all'
-		);
-		wp_enqueue_style('nuvei_admin_style');
-	});
-	// add void and/or settle buttons to completed orders, we check in the method is this order made via SC paygate
+	add_action('init', 'nuvei_enqueue');
+	
+    // load WC styles
+	add_filter('woocommerce_enqueue_styles', 'nuvei_load_styles_scripts');
+	
+    // add admin style
+    add_filter('admin_enqueue_scripts', 'nuvei_load_admin_styles_scripts');
+	
+    // add void and/or settle buttons to completed orders, we check in the method is this order made via SC paygate
 	add_action('woocommerce_order_item_add_action_buttons', 'sc_add_buttons');
 	
 	// handle custom Ajax calls
@@ -251,7 +240,16 @@ function nuvei_add_gateway( $methods) {
 	return $methods;
 }
 
-function sc_enqueue_wo_files( $styles) {
+# Load Styles and Scripts
+/**
+ * Loads public styles and scripts
+ * 
+ * @global Nuvei_Gateway $wc_nuvei
+ * @global type $wpdb
+ * 
+ * @param type $styles
+ */
+function nuvei_load_styles_scripts( $styles) {
 	global $wc_nuvei;
 	global $wpdb;
 	
@@ -351,8 +349,6 @@ function sc_enqueue_wo_files( $styles) {
 			'errorWithSToken'	=> __('Error when try to get the Session Token. Please try again later', 'nuvei_woocommerce'),
 			'missData'          => __('Mandatory data is missing, please try again later!', 'nuvei_woocommerce'),
 			'proccessError'     => __('Error in the proccess. Please, try again later!', 'nuvei_woocommerce'),
-	//          'chooseUPO'         => __('Choose from you preferred payment methods', 'nuvei_woocommerce'),
-	//          'chooseAPM'         => __('Choose from the payment options', 'nuvei_woocommerce'),
 			'goBack'            => __('Go back', 'nuvei_woocommerce'),
 			'CCNameIsEmpty'     => __('Card Holder Name is empty.', 'nuvei_woocommerce'),
 			'CCNumError'        => __('Card Number is empty or wrong.', 'nuvei_woocommerce'),
@@ -370,13 +366,70 @@ function sc_enqueue_wo_files( $styles) {
 	return $styles;
 }
 
+/**
+ * Loads admin styles and scripts
+ * 
+ * @param string $hook
+ */
+function nuvei_load_admin_styles_scripts($hook) {
+    $plugin_url = plugin_dir_url(__FILE__);
+    
+    if ( 'post.php' == $hook ) {
+        wp_register_style(
+            'nuvei_admin_style',
+            $plugin_url . 'assets/css/nuvei_admin_style.css',
+            '',
+            1.1,
+            'all'
+        );
+        wp_enqueue_style('nuvei_admin_style');
+    }
+
+    // main JS
+    wp_register_script(
+        'nuvei_js_admin',
+        $plugin_url . 'assets/js/nuvei_admin.js',
+        array('jquery'),
+        '1'
+    );
+
+    $nuvei_plans_path       = plugin_dir_path(__FILE__) . '/tmp/sc_plans.json';
+    $sc_plans_last_mod_time = '';
+    $plans_list             = array();
+
+    if (is_readable($nuvei_plans_path)) { 
+        $sc_plans_last_mod_time = gmdate('Y-m-d H:i:s', filemtime($nuvei_plans_path));
+        $plans_list             = stripslashes(file_get_contents($nuvei_plans_path));
+    }
+
+    // put translations here into the array
+    wp_localize_script(
+        'nuvei_js_admin',
+        'scTrans',
+        array(
+            'ajaxurl'				=> admin_url('admin-ajax.php'),
+            'security'				=> wp_create_nonce('sc-security-nonce'),
+            'scPlansLastModTime'	=> $sc_plans_last_mod_time,
+            'nuveiPaymentPlans'     => $plans_list,
+
+            // translations
+            'refundQuestion'		=> __('Are you sure about this Refund?', 'nuvei_woocommerce'),
+            'LastDownload'			=> __('Last Download', 'nuvei_woocommerce'),
+        )
+    );
+
+    wp_enqueue_script('nuvei_js_admin');
+}
+
 // first method we come in
-function sc_enqueue( $hook) {
+function nuvei_enqueue($hook) {
 	global $wc_nuvei;
 		
 	# DMNs catch
-	if (isset($_REQUEST['wc-api']) && 'sc_listener' == $_REQUEST['wc-api']) {
-		$wc_nuvei->process_dmns();
+	if (isset($_REQUEST['wc-api']) 
+        && in_array($_REQUEST['wc-api'], array('sc_listener', 'nuvei_listener')) // sc_listener is legacy value
+    ) {
+        add_action('wp_loaded', array($wc_nuvei, 'process_dmns'));
 	}
 	
 	// second checkout step process order
@@ -387,58 +440,8 @@ function sc_enqueue( $hook) {
 	) {
 		$wc_nuvei->process_payment(Nuvei_Http::get_param('order_id', 'int', 0));
 	}
-	
-	# load external files
-	$plugin_url = plugin_dir_url(__FILE__);
-	
-	if (
-		( isset($_SERVER['HTTPS']) && 'on' == $_SERVER['HTTPS'] )
-		&& ( isset($_SERVER['REQUEST_SCHEME']) && 'https' == $_SERVER['REQUEST_SCHEME'] )
-	) {
-		if (strpos($plugin_url, 'https') === false) {
-			$plugin_url = str_replace('http:', 'https:', $plugin_url);
-		}
-	}
-	
-	// load admin JS file
-	if (is_admin()) {
-		// main JS
-		wp_register_script(
-			'nuvei_js_admin',
-			$plugin_url . 'assets/js/nuvei_admin.js',
-			array('jquery'),
-			'1'
-		);
-		
-		$nuvei_plans_path       = plugin_dir_path(__FILE__) . '/tmp/sc_plans.json';
-		$sc_plans_last_mod_time = '';
-		$plans_list             = array();
-		
-		if (is_readable($nuvei_plans_path)) { 
-			$sc_plans_last_mod_time = gmdate('Y-m-d H:i:s', filemtime($nuvei_plans_path));
-			$plans_list             = stripslashes(file_get_contents($nuvei_plans_path));
-		}
-		
-		// put translations here into the array
-		wp_localize_script(
-			'nuvei_js_admin',
-			'scTrans',
-			array(
-				'ajaxurl'				=> admin_url('admin-ajax.php'),
-				'security'				=> wp_create_nonce('sc-security-nonce'),
-				'scPlansLastModTime'	=> $sc_plans_last_mod_time,
-				'nuveiPaymentPlans'     => $plans_list,
-				
-				// translations
-				'refundQuestion'		=> __('Are you sure about this Refund?', 'nuvei_woocommerce'),
-				'LastDownload'			=> __('Last Download', 'nuvei_woocommerce'),
-			)
-		);
-		
-		wp_enqueue_script('nuvei_js_admin');
-	}
-	# load external files END
 }
+# Load Styles and Scripts END
 
 // show final payment text
 function sc_show_final_text() {
@@ -454,11 +457,6 @@ function sc_show_final_text() {
 		$msg = __('Your payment failed. Please, try again.', 'nuvei_woocommerce');
 	} else {
 		$woocommerce->cart->empty_cart();
-	}
-	
-	// clear session variables for the order
-	if (isset($_SESSION['SC_Variables'])) {
-		unset($_SESSION['SC_Variables']);
 	}
 	
 	return $msg;

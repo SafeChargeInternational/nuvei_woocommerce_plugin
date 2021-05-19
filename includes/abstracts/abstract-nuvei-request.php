@@ -8,8 +8,7 @@ defined( 'ABSPATH' ) || exit;
 abstract class Nuvei_Request {
 
 	protected $plugin_settings;
-	
-	private $request_base_params;
+	protected $request_base_params;
 	
 	// array details to validate request parameters
 	private $params_validation = array(
@@ -122,10 +121,11 @@ abstract class Nuvei_Request {
 	abstract public function process();
 	abstract protected function get_checksum_params();
 
-	public function __construct( array $plugin_settings) {
+	public function __construct(array $plugin_settings) {
 		$time                  = gmdate('Ymdhis');
 		$all_prod_data         = $this->get_products_data();
 		$this->plugin_settings = $plugin_settings;
+        $notify_url             = Nuvei_String::get_notify_url($plugin_settings);
 		
 		$this->request_base_params = array(
 			'merchantId'        => $plugin_settings['merchantId'],
@@ -141,6 +141,10 @@ abstract class Nuvei_Request {
 				'customField2'      => json_encode($all_prod_data['products_data']), // item details
 				'customField3'      => time(),                          // create time
 			),
+            'urlDetails'        => array(
+				'notificationUrl'   => $notify_url,
+			),
+            'url'               => $notify_url, // a custom parameter for the checksum
 		);
 	}
 	

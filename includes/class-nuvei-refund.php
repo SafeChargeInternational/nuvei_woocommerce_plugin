@@ -33,8 +33,6 @@ class Nuvei_Refund extends Nuvei_Request {
 			'amount'                => number_format($data['ref_amount'], 2, '.', ''),
 			'currency'              => get_woocommerce_currency(),
 			'relatedTransactionId'  => $data['tr_id'], // GW Transaction ID
-			'urlDetails'            => array('notificationUrl' => $notify_url),
-			'url'                   => $notify_url, // custom parameter
 		);
 		
 		return $this->call_rest_api('refundTransaction', $ref_parameters);

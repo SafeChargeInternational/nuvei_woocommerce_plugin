@@ -13,10 +13,6 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 	private $subscr_units = array('year', 'month', 'day');
 	
 	public function __construct() {
-		if (!session_id()) {
-			session_start();
-		}
-		
 		# settings to get/save options
 		$this->id                 = NUVEI_GATEWAY_NAME;
 		$this->method_title       = NUVEI_GATEWAY_TITLE;
@@ -33,10 +29,14 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 		$this->rewrite_dmn = $this->get_setting('rewrite_dmn', 'no');
 		$this->plugin_data = get_plugin_data(plugin_dir_path(NUVEI_PLUGIN_FILE) . DIRECTORY_SEPARATOR . 'index.php');
 		
-		$_SESSION['nuvei_vars'] = array(
+        $nuvei_vars = array(
 			'save_logs' => $this->get_setting('save_logs'),
 			'test_mode' => $this->get_setting('test'),
 		);
+        
+        if(!is_admin() && !empty(WC()->session)) {
+            WC()->session->set('nuvei_vars', $nuvei_vars);
+        }
 		
 		$this->use_wpml_thanks_page = !empty($this->settings['use_wpml_thanks_page']) 
 			? $this->settings['use_wpml_thanks_page'] : 'no';
@@ -47,7 +47,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 		
 		$this->msg['message'] = '';
 		$this->msg['class']   = '';
-		
+        
 		add_action(
 			'woocommerce_update_options_payment_gateways_' . $this->id,
 			array( &$this, 'process_admin_options' )
@@ -57,8 +57,8 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 		add_action('woocommerce_order_after_calculate_totals', array($this, 'return_settle_btn'));
 		add_action('woocommerce_order_status_refunded', array($this, 'restock_on_refunded_status'));
 	}
-	
-	/**
+    
+    /**
 	 * Function init_form_fields
 	 * Set all fields for admin settings page.
 	 */
@@ -251,8 +251,6 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 	 */
 	public function process_payment( $order_id) {
 		Nuvei_Logger::write('Process payment(), Order #' . $order_id);
-		// php docs recommend to clean the array instead of destroing the session
-		$_SESSION['nuvei_last_open_order_details'] = array();
 		
 		$sc_nonce = Nuvei_Http::get_param('sc_nonce');
 		
@@ -599,9 +597,9 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 		Nuvei_Logger::write($_REQUEST, 'DMN params');
 		
 		// stop DMNs only on test mode
-		if (Nuvei_Http::get_param('stopDMN', 'int') == 1 && $this->get_setting('test') == 'yes') {
+		if (Nuvei_Http::get_param('stop_dmn', 'int') == 1 && $this->get_setting('test') == 'yes') {
 			$params            = $_REQUEST;
-			$params['stopDMN'] = 0;
+			$params['stop_dmn'] = 0;
 			
 			Nuvei_Logger::write(
 				get_site_url() . '/?' . http_build_query($params),
@@ -1492,7 +1490,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 		$subscr_data = json_decode(Nuvei_Http::get_param('customField1', 'json'), true);
 		
 		if (empty($subscr_data) || !is_array($subscr_data)) {
-			Nuvei_Logger::write($subscr_data, 'There is a problem with the DMN Payment Plan data:');
+			Nuvei_Logger::write($subscr_data, 'DMN Payment Plan data is empty or wrong format. We will not start a Payment plan.');
 			return;
 		}
 		

@@ -1,7 +1,10 @@
 *** WooCommerce Extension Template Changelog ***
 
 version 4.0.0
-	* Removed SC_CLASS class and WC_SC class.
+	* Use wc-api=nuvei_listener instead sc_listener in the Notify URL, but still check for the old value.
+	* Logger class use only GET parameters instead of Session parameters.
+	* Use WC()->session instead of php session in Store.
+	* Removed SC_CLASS and WC_SC classes.
 	* Changes in files structure.
 	* Added Rebilling.
 

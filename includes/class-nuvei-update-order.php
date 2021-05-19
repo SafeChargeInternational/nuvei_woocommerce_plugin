@@ -18,19 +18,21 @@ class Nuvei_Update_Order extends Nuvei_Request {
 	 * @return array
 	 */
 	public function process() {
-		if (!session_id()) {
-			session_start();
-		}
-		
+        $nuvei_last_open_order_details = array();
+        
+        if(!empty(WC()->session)) {
+            $nuvei_last_open_order_details = WC()->session->get('nuvei_last_open_order_details');
+        }
+        
 		Nuvei_Logger::write(
-			isset($_SESSION['nuvei_last_open_order_details']) ? $_SESSION['nuvei_last_open_order_details'] : '',
+			isset($nuvei_last_open_order_details) ? $nuvei_last_open_order_details : '',
 			'update_order() - session[nuvei_last_open_order_details]'
 		);
 		
-		if (empty($_SESSION['nuvei_last_open_order_details'])
-			|| empty($_SESSION['nuvei_last_open_order_details']['sessionToken'])
-			|| empty($_SESSION['nuvei_last_open_order_details']['orderId'])
-			|| empty($_SESSION['nuvei_last_open_order_details']['clientRequestId'])
+		if (empty($nuvei_last_open_order_details)
+			|| empty($nuvei_last_open_order_details['sessionToken'])
+			|| empty($nuvei_last_open_order_details['orderId'])
+			|| empty($nuvei_last_open_order_details['clientRequestId'])
 		) {
 			Nuvei_Logger::write('update_order() - Missing last Order session data.');
 			
@@ -45,9 +47,9 @@ class Nuvei_Update_Order extends Nuvei_Request {
 		
 		// create Order upgrade
 		$params = array(
-			'sessionToken'		=> $_SESSION['nuvei_last_open_order_details']['sessionToken'],
-			'orderId'			=> $_SESSION['nuvei_last_open_order_details']['orderId'],
-			'clientRequestId'	=> $_SESSION['nuvei_last_open_order_details']['clientRequestId'],
+			'sessionToken'		=> $nuvei_last_open_order_details['sessionToken'],
+			'orderId'			=> $nuvei_last_open_order_details['orderId'],
+			'clientRequestId'	=> $nuvei_last_open_order_details['clientRequestId'],
 			'currency'			=> get_woocommerce_currency(),
 			'amount'			=> $cart_amount,
 			'billingAddress'	=> $addresses['billingAddress'],
@@ -66,9 +68,9 @@ class Nuvei_Update_Order extends Nuvei_Request {
 		
 		# Success
 		if (!empty($resp['status']) && 'SUCCESS' == $resp['status']) {
-			$_SESSION['nuvei_last_open_order_details']['amount']					= $cart_amount;
-			$_SESSION['nuvei_last_open_order_details']['merchantDetails']			= $resp['request_base_params']['merchantDetails'];
-			$_SESSION['nuvei_last_open_order_details']['billingAddress']['country']	= $params['billingAddress']['country'];
+			$nuvei_last_open_order_details['amount']					= $cart_amount;
+			$nuvei_last_open_order_details['merchantDetails']			= $resp['request_base_params']['merchantDetails'];
+			$nuvei_last_open_order_details['billingAddress']['country']	= $params['billingAddress']['country'];
 			
 			return array_merge($resp, $params);
 		}

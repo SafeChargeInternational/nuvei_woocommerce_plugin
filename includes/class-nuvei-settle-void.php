@@ -34,10 +34,6 @@ class Nuvei_Settle_Void extends Nuvei_Request {
 			'currency'              => get_woocommerce_currency(),
 			'relatedTransactionId'  => $order->get_meta(NUVEI_TRANS_ID),
 			'authCode'              => $order->get_meta(NUVEI_AUTH_CODE_KEY),
-			'urlDetails'            => array(
-				'notificationUrl' => $notify_url,
-			),
-			'url'                   => $notify_url, // a custom parameter
 		);
 
 		return $this->call_rest_api($data['method'], $params);

@@ -14,14 +14,14 @@ class Nuvei_Get_Apms extends Nuvei_Request {
 	 * @return array|false
 	 */
 	public function process() {
-		$args = current(func_get_args());
-		
-		$currency = !empty($args['currency']) ? $args['currency'] : get_woocommerce_currency();
+		$args                           = current(func_get_args());
+		$currency                       = !empty($args['currency']) ? $args['currency'] : get_woocommerce_currency();
+        $nuvei_last_open_order_details  = WC()->session->get('nuvei_last_open_order_details');
 		
 		if (!empty($args['billingAddress']['country'])) {
 			$countryCode = $args['billingAddress']['country'];
-		} elseif (!empty($_SESSION['nuvei_last_open_order_details']['billingAddress']['country'])) {
-			$countryCode = $_SESSION['nuvei_last_open_order_details']['billingAddress']['country'];
+		} elseif (!empty($nuvei_last_open_order_details['billingAddress']['country'])) {
+			$countryCode = $nuvei_last_open_order_details['billingAddress']['country'];
 		} else {
 			$addresses = $this->get_order_addresses();
 			
