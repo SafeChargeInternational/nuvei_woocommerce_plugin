@@ -8,18 +8,18 @@ defined( 'ABSPATH' ) || exit;
 class Nuvei_Logger {
 
 	public static function write( $data, $title = '') {
-		$logs_path      = plugin_dir_path( NUVEI_PLUGIN_FILE ) . 'logs' . DIRECTORY_SEPARATOR;
-		$plugin_data    = get_plugin_data(plugin_dir_path(NUVEI_PLUGIN_FILE) . 'index.php');
-        $save_logs      = 'no';
-        $test_mode      = 'yes';
+		$logs_path   = plugin_dir_path( NUVEI_PLUGIN_FILE ) . 'logs' . DIRECTORY_SEPARATOR;
+		$plugin_data = get_plugin_data(plugin_dir_path(NUVEI_PLUGIN_FILE) . 'index.php');
+		$save_logs   = 'no';
+		$test_mode   = 'yes';
 			
-        if(!empty($_GET['save_logs'])) {
-            $save_logs = filter_var($_GET['save_logs'], FILTER_SANITIZE_STRING);
-        }
-        if(!empty($_GET['test_mode'])) {
-            $test_mode = filter_var($_GET['test_mode'], FILTER_SANITIZE_STRING);
-        }
-        
+		if (!empty($_GET['save_logs'])) {
+			$save_logs = filter_var($_GET['save_logs'], FILTER_SANITIZE_STRING);
+		}
+		if (!empty($_GET['test_mode'])) {
+			$test_mode = filter_var($_GET['test_mode'], FILTER_SANITIZE_STRING);
+		}
+		
 		// path is different fore each plugin
 		if (!is_dir($logs_path) || 'yes' != $save_logs) {
 			return;

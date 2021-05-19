@@ -88,7 +88,7 @@ class Nuvei_Open_Order extends Nuvei_Request {
 		}
 		
 		// set them to session for the check before submit the data to the webSDK
-        $nuvei_last_open_order_details = array(
+		$nuvei_last_open_order_details = array(
 			'amount'			=> $oo_params['amount'],
 			'merchantDetails'	=> $resp['request_base_params']['merchantDetails'],
 			'sessionToken'		=> $resp['sessionToken'],
@@ -96,8 +96,8 @@ class Nuvei_Open_Order extends Nuvei_Request {
 			'orderId'			=> $resp['orderId'],
 			'billingAddress'	=> $oo_params['billingAddress'],
 		);
-        
-        WC()->session->set('nuvei_last_open_order_details', $nuvei_last_open_order_details);
+		
+		WC()->session->set('nuvei_last_open_order_details', $nuvei_last_open_order_details);
 		
 		Nuvei_Logger::write($cart->nuvei_last_open_order_details, 'nuvei_last_open_order_details');
 		

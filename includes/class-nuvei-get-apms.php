@@ -14,9 +14,9 @@ class Nuvei_Get_Apms extends Nuvei_Request {
 	 * @return array|false
 	 */
 	public function process() {
-		$args                           = current(func_get_args());
-		$currency                       = !empty($args['currency']) ? $args['currency'] : get_woocommerce_currency();
-        $nuvei_last_open_order_details  = WC()->session->get('nuvei_last_open_order_details');
+		$args                          = current(func_get_args());
+		$currency                      = !empty($args['currency']) ? $args['currency'] : get_woocommerce_currency();
+		$nuvei_last_open_order_details = WC()->session->get('nuvei_last_open_order_details');
 		
 		if (!empty($args['billingAddress']['country'])) {
 			$countryCode = $args['billingAddress']['country'];

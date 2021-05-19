@@ -50,14 +50,14 @@ class Nuvei_Payment extends Nuvei_Request {
 		});
 		// complicated way to filter all $_POST input, but WP will be happy END
 		
-        if(!empty($data['return_success_url'])) {
-            $this->request_base_params['urlDetails']['successUrl'] = $data['return_success_url'];
-            $this->request_base_params['urlDetails']['pendingUrl'] = $data['return_success_url'];
-        }
-        if(!empty($data['return_error_url'])) {
-            $this->request_base_params['urlDetails']['failureUrl'] = $data['return_error_url'];
-        }
-        
+		if (!empty($data['return_success_url'])) {
+			$this->request_base_params['urlDetails']['successUrl'] = $data['return_success_url'];
+			$this->request_base_params['urlDetails']['pendingUrl'] = $data['return_success_url'];
+		}
+		if (!empty($data['return_error_url'])) {
+			$this->request_base_params['urlDetails']['failureUrl'] = $data['return_error_url'];
+		}
+		
 		$params = array(
 			'clientUniqueId'    => $this->set_cuid($data['order_id']),
 			'currency'          => $order->get_currency(),

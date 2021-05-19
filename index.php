@@ -55,13 +55,13 @@ function nuvei_init() {
 	
 	add_action('init', 'nuvei_enqueue');
 	
-    // load WC styles
+	// load WC styles
 	add_filter('woocommerce_enqueue_styles', 'nuvei_load_styles_scripts');
 	
-    // add admin style
-    add_filter('admin_enqueue_scripts', 'nuvei_load_admin_styles_scripts');
+	// add admin style
+	add_filter('admin_enqueue_scripts', 'nuvei_load_admin_styles_scripts');
 	
-    // add void and/or settle buttons to completed orders, we check in the method is this order made via SC paygate
+	// add void and/or settle buttons to completed orders, we check in the method is this order made via SC paygate
 	add_action('woocommerce_order_item_add_action_buttons', 'sc_add_buttons');
 	
 	// handle custom Ajax calls
@@ -371,65 +371,65 @@ function nuvei_load_styles_scripts( $styles) {
  * 
  * @param string $hook
  */
-function nuvei_load_admin_styles_scripts($hook) {
-    $plugin_url = plugin_dir_url(__FILE__);
-    
-    if ( 'post.php' == $hook ) {
-        wp_register_style(
-            'nuvei_admin_style',
-            $plugin_url . 'assets/css/nuvei_admin_style.css',
-            '',
-            1.1,
-            'all'
-        );
-        wp_enqueue_style('nuvei_admin_style');
-    }
+function nuvei_load_admin_styles_scripts( $hook) {
+	$plugin_url = plugin_dir_url(__FILE__);
+	
+	if ( 'post.php' == $hook ) {
+		wp_register_style(
+			'nuvei_admin_style',
+			$plugin_url . 'assets/css/nuvei_admin_style.css',
+			'',
+			1.1,
+			'all'
+		);
+		wp_enqueue_style('nuvei_admin_style');
+	}
 
-    // main JS
-    wp_register_script(
-        'nuvei_js_admin',
-        $plugin_url . 'assets/js/nuvei_admin.js',
-        array('jquery'),
-        '1'
-    );
+	// main JS
+	wp_register_script(
+		'nuvei_js_admin',
+		$plugin_url . 'assets/js/nuvei_admin.js',
+		array('jquery'),
+		'1'
+	);
 
-    $nuvei_plans_path       = plugin_dir_path(__FILE__) . '/tmp/sc_plans.json';
-    $sc_plans_last_mod_time = '';
-    $plans_list             = array();
+	$nuvei_plans_path       = plugin_dir_path(__FILE__) . '/tmp/sc_plans.json';
+	$sc_plans_last_mod_time = '';
+	$plans_list             = array();
 
-    if (is_readable($nuvei_plans_path)) { 
-        $sc_plans_last_mod_time = gmdate('Y-m-d H:i:s', filemtime($nuvei_plans_path));
-        $plans_list             = stripslashes(file_get_contents($nuvei_plans_path));
-    }
+	if (is_readable($nuvei_plans_path)) { 
+		$sc_plans_last_mod_time = gmdate('Y-m-d H:i:s', filemtime($nuvei_plans_path));
+		$plans_list             = stripslashes(file_get_contents($nuvei_plans_path));
+	}
 
-    // put translations here into the array
-    wp_localize_script(
-        'nuvei_js_admin',
-        'scTrans',
-        array(
-            'ajaxurl'				=> admin_url('admin-ajax.php'),
-            'security'				=> wp_create_nonce('sc-security-nonce'),
-            'scPlansLastModTime'	=> $sc_plans_last_mod_time,
-            'nuveiPaymentPlans'     => $plans_list,
+	// put translations here into the array
+	wp_localize_script(
+		'nuvei_js_admin',
+		'scTrans',
+		array(
+			'ajaxurl'				=> admin_url('admin-ajax.php'),
+			'security'				=> wp_create_nonce('sc-security-nonce'),
+			'scPlansLastModTime'	=> $sc_plans_last_mod_time,
+			'nuveiPaymentPlans'     => $plans_list,
 
-            // translations
-            'refundQuestion'		=> __('Are you sure about this Refund?', 'nuvei_woocommerce'),
-            'LastDownload'			=> __('Last Download', 'nuvei_woocommerce'),
-        )
-    );
+			// translations
+			'refundQuestion'		=> __('Are you sure about this Refund?', 'nuvei_woocommerce'),
+			'LastDownload'			=> __('Last Download', 'nuvei_woocommerce'),
+		)
+	);
 
-    wp_enqueue_script('nuvei_js_admin');
+	wp_enqueue_script('nuvei_js_admin');
 }
 
 // first method we come in
-function nuvei_enqueue($hook) {
+function nuvei_enqueue( $hook) {
 	global $wc_nuvei;
 		
 	# DMNs catch
 	if (isset($_REQUEST['wc-api']) 
-        && in_array($_REQUEST['wc-api'], array('sc_listener', 'nuvei_listener')) // sc_listener is legacy value
-    ) {
-        add_action('wp_loaded', array($wc_nuvei, 'process_dmns'));
+		&& in_array($_REQUEST['wc-api'], array('sc_listener', 'nuvei_listener')) // sc_listener is legacy value
+	) {
+		add_action('wp_loaded', array($wc_nuvei, 'process_dmns'));
 	}
 	
 	// second checkout step process order

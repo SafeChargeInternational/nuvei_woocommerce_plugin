@@ -12,17 +12,17 @@ class Nuvei_String {
 	 * 
 	 * @return string
 	 */
-	public static function get_notify_url($plugin_settings) {
+	public static function get_notify_url( $plugin_settings) {
 		$url_part = get_site_url();
 			
-//		$url = $url_part . ( strpos($url_part, '?') !== false ? '&' : '?' )
-//			. 'wc-api=sc_listener&stop_dmn=' . NUVEI_STOP_DMN;
-        
-        $url = $url_part . ( strpos($url_part, '?') !== false ? '&' : '?' )
+		//      $url = $url_part . ( strpos($url_part, '?') !== false ? '&' : '?' )
+		//          . 'wc-api=sc_listener&stop_dmn=' . NUVEI_STOP_DMN;
+		
+		$url = $url_part . ( strpos($url_part, '?') !== false ? '&' : '?' )
 			. 'wc-api=nuvei_listener'
-            . '&save_logs=' . $plugin_settings['save_logs']
-            . '&test_mode=' . $plugin_settings['test']
-            . '&stop_dmn=' . NUVEI_STOP_DMN;
+			. '&save_logs=' . $plugin_settings['save_logs']
+			. '&test_mode=' . $plugin_settings['test']
+			. '&stop_dmn=' . NUVEI_STOP_DMN;
 		
 		// some servers needs / before ?
 		if (strpos($url, '?') !== false && strpos($url, '/?') === false) {

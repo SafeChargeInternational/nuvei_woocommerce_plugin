@@ -18,12 +18,12 @@ class Nuvei_Update_Order extends Nuvei_Request {
 	 * @return array
 	 */
 	public function process() {
-        $nuvei_last_open_order_details = array();
-        
-        if(!empty(WC()->session)) {
-            $nuvei_last_open_order_details = WC()->session->get('nuvei_last_open_order_details');
-        }
-        
+		$nuvei_last_open_order_details = array();
+		
+		if (!empty(WC()->session)) {
+			$nuvei_last_open_order_details = WC()->session->get('nuvei_last_open_order_details');
+		}
+		
 		Nuvei_Logger::write(
 			isset($nuvei_last_open_order_details) ? $nuvei_last_open_order_details : '',
 			'update_order() - session[nuvei_last_open_order_details]'
