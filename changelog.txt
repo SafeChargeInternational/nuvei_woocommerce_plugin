@@ -1,5 +1,8 @@
 *** WooCommerce Extension Template Changelog ***
 
+version 4.0.1
+	* Fix for the missing labels in Add Term Form.
+
 version 4.0.0
 	* When Void an Order, the merchant Cancel all Order Subscriptions, if there are any.
 	* Better logs for Checksum validations.
