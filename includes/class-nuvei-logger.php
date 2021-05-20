@@ -10,7 +10,7 @@ class Nuvei_Logger {
 	public static function write( $data, $title = '') {
 		$logs_path   = plugin_dir_path( NUVEI_PLUGIN_FILE ) . 'logs' . DIRECTORY_SEPARATOR;
 		$plugin_data = get_plugin_data(plugin_dir_path(NUVEI_PLUGIN_FILE) . 'index.php');
-		$save_logs   = 'no';
+		$save_logs   = 'yes';
 		$test_mode   = 'yes';
 			
 		if (!empty($_GET['save_logs'])) {
