@@ -9,9 +9,9 @@
  * Text Domain: nuvei_woocommerce
  * Domain Path: /languages
  * Require at least: 4.7
- * Tested up to: 5.7.1
+ * Tested up to: 5.7.2
  * WC requires at least: 3.0
- * WC tested up to: 5.2.2
+ * WC tested up to: 5.3.0
 */
 
 defined('ABSPATH') || die('die');
@@ -62,11 +62,11 @@ function nuvei_init() {
 	add_filter('admin_enqueue_scripts', 'nuvei_load_admin_styles_scripts');
 	
 	// add void and/or settle buttons to completed orders, we check in the method is this order made via SC paygate
-	add_action('woocommerce_order_item_add_action_buttons', 'sc_add_buttons');
+	add_action('woocommerce_order_item_add_action_buttons', 'nuvei_add_buttons');
 	
 	// handle custom Ajax calls
-	add_action('wp_ajax_sc-ajax-action', 'sc_ajax_action');
-	add_action('wp_ajax_nopriv_sc-ajax-action', 'sc_ajax_action');
+	add_action('wp_ajax_sc-ajax-action', 'nuvei_ajax_action');
+	add_action('wp_ajax_nopriv_sc-ajax-action', 'nuvei_ajax_action');
 	
 	// add the APMs step with the custom merchant style, if any
 	add_action( 'woocommerce_checkout_after_order_review', array($wc_nuvei, 'add_apms_step'), 10, 1 );
@@ -87,7 +87,7 @@ function nuvei_init() {
 	}, 9999, 2);
 	
 	// use this to change button text, because of the cache the jQuery not always works
-	add_filter('woocommerce_order_button_text', 'sc_edit_order_buttons');
+	add_filter('woocommerce_order_button_text', 'nuvei_edit_order_buttons');
 	
 	// those actions are valid only when the plugin is enabled
 	if ('yes' == $wc_nuvei->settings['enabled']) {
@@ -96,12 +96,12 @@ function nuvei_init() {
 			is_plugin_active('sitepress-multilingual-cms' . DIRECTORY_SEPARATOR . 'sitepress.php')
 			&& 'yes' == $wc_nuvei->settings['use_wpml_thanks_page']
 		) {
-			add_filter('woocommerce_get_checkout_order_received_url', 'sc_wpml_thank_you_page', 10, 2);
+			add_filter('woocommerce_get_checkout_order_received_url', 'nuvei_wpml_thank_you_page', 10, 2);
 		}
 
 		// if the merchant needs to rewrite the DMN URL
 		if (isset($wc_nuvei->settings['rewrite_dmn']) && 'yes' == $wc_nuvei->settings['rewrite_dmn']) {
-			add_action('template_redirect', 'sc_rewrite_return_url'); // need WC_SC
+			add_action('template_redirect', 'nuvei_rewrite_return_url'); // need WC_SC
 		}
 		
 		// For the custom column in the Order list
@@ -169,10 +169,10 @@ function nuvei_init() {
 }
 
 /**
- * Function sc_ajax_action
+ * Function nuvei_ajax_action
  * Main function for the Ajax requests.
  */
-function sc_ajax_action() {
+function nuvei_ajax_action() {
 	if (!check_ajax_referer('sc-security-nonce', 'security')) {
 		wp_send_json_error(__('Invalid security token sent.'));
 		wp_die('Invalid security token sent');
@@ -443,26 +443,7 @@ function nuvei_enqueue( $hook) {
 }
 # Load Styles and Scripts END
 
-// show final payment text
-function sc_show_final_text() {
-	global $woocommerce;
-	global $wc_nuvei;
-	
-	$msg = __('Your payment is being processed. Your order status will be updated soon.', 'nuvei_woocommerce');
-   
-	// REST API tahnk you page handler
-	if (
-		!empty($_REQUEST['Status'])
-		&& 'error' == sanitize_text_field($_REQUEST['Status'])) {
-		$msg = __('Your payment failed. Please, try again.', 'nuvei_woocommerce');
-	} else {
-		$woocommerce->cart->empty_cart();
-	}
-	
-	return $msg;
-}
-
-function sc_add_buttons() {
+function nuvei_add_buttons() {
 	global $wc_nuvei;
 	
 	$order_id = false;
@@ -475,7 +456,7 @@ function sc_add_buttons() {
 		$order = $wc_nuvei->is_order_valid($order_id, true);
 		
 		if (!$order) {
-			Nuvei_Logger::write('sc_add_buttons() - hook activated for not valid Order. Probably an Order created form the Admin.');
+			Nuvei_Logger::write('nuvei_add_buttons() - hook activated for not valid Order. Probably an Order created form the Admin.');
 			
 			return;
 		}
@@ -565,13 +546,13 @@ function sc_add_buttons() {
 }
 
 /**
- * Function sc_rewrite_return_url
+ * Function nuvei_rewrite_return_url
  * When user have problem with white spaces in the URL, it have option to
  * rewrite the return URL and redirect to new one.
  *
  * @global WC_SC $wc_nuvei
  */
-function sc_rewrite_return_url() {
+function nuvei_rewrite_return_url() {
 	if (
 		isset($_REQUEST['ppp_status']) && '' != $_REQUEST['ppp_status']
 		&& ( !isset($_REQUEST['wc_sc_redirected']) || 0 ==  $_REQUEST['wc_sc_redirected'] )
@@ -612,7 +593,6 @@ function sc_rewrite_return_url() {
 }
 
 /**
- * Function sc_wpml_thank_you_page
  * Fix for WPML plugin "Thank you" page
  *
  * @param string $order_received_url
@@ -620,18 +600,18 @@ function sc_rewrite_return_url() {
  * 
  * @return string $order_received_url
  */
-function sc_wpml_thank_you_page( $order_received_url, $order) {
+function nuvei_wpml_thank_you_page( $order_received_url, $order) {
 	global $wc_nuvei;
 	
 	$lang_code          = get_post_meta($order->id, 'wpml_language', true);
 	$order_received_url = apply_filters('wpml_permalink', $order_received_url, $lang_code);
 	
-	Nuvei_Logger::write($order_received_url, 'sc_wpml_thank_you_page: ');
+	Nuvei_Logger::write($order_received_url, 'nuvei_wpml_thank_you_page: ');
  
 	return $order_received_url;
 }
 
-function sc_edit_order_buttons() {
+function nuvei_edit_order_buttons() {
 	$default_text          = __('Place order', 'woocommerce');
 	$sc_continue_text      = __('Continue', 'woocommerce');
 	$chosen_payment_method = WC()->session->get('chosen_payment_method');
@@ -804,7 +784,7 @@ function nuvei_fill_custom_column( $column) {
 	
 	$order = wc_get_order($post->ID);
 	
-	if ('order_number' === $column && $order->get_meta(NUVEI_ORDER_HAS_SUBSCR) == 1) { 
+	if ('order_number' === $column && !empty($order->get_meta(NUVEI_ORDER_SUBSCR_IDS))) { 
 		?>
 		<mark class="order-status status-processing tips" style="float: right;">
 			<span><?php echo esc_html__('Nuvei Subscription', 'nuvei_woocommerce'); ?></span>
@@ -823,7 +803,7 @@ function nuvei_fill_custom_column( $column) {
 function nuvei_edit_my_account_orders_col( $order) {
 	echo '<a href="' . esc_url( $order->get_view_order_url() ) . '"';
 	
-	if ($order->get_meta(NUVEI_ORDER_HAS_SUBSCR) == 1) {
+	if (!empty($order->get_meta(NUVEI_ORDER_SUBSCR_IDS))) {
 		echo ' class="nuvei_plan_order" title="' . esc_attr__('Nuvei Payment Plan Order', 'nuvei_woocommerce') . '"';
 	}
 	

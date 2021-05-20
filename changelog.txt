@@ -1,7 +1,9 @@
 *** WooCommerce Extension Template Changelog ***
 
 version 4.0.0
-	* Use wc-api=nuvei_listener instead sc_listener in the Notify URL, but still check for the old value.
+	* When Void an Order, the merchant Cancel all Order Subscriptions, if there are any.
+	* Better logs for Checksum validations.
+	* Changes in notify URL - use wc-api=nuvei_listener instead sc_listener in the Notify URL, but still check for the old value. Added parameter for Site Mode option. The stopDMN parameter was changed to stop_dmn.
 	* Logger class use only GET parameters instead of Session parameters.
 	* Use WC()->session instead of php session in Store.
 	* Removed SC_CLASS and WC_SC classes.

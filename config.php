@@ -14,7 +14,7 @@ define('NUVEI_RESP_TRANS_TYPE', '_transactionType');
 define('NUVEI_PAYMENT_METHOD', '_paymentMethod');
 define('NUVEI_ORDER_HAS_REFUND', '_scHasRefund');
 define('NUVEI_REFUNDS', '_sc_refunds');
-define('NUVEI_ORDER_HAS_SUBSCR', '_nuveiHasSubscr');
+define('NUVEI_ORDER_SUBSCR_IDS', '_nuveiSubscrIDs');
 define('NUVEI_SOURCE_APPLICATION', 'WOOCOMMERCE_PLUGIN');
 define('NUVEI_GLOB_ATTR_NAME', 'Nuvei Payment Plan'); // the name of the Nuvei Global Product Attribute name
 define('NUVEI_STOP_DMN', 0); // manually stop DMN process

@@ -630,6 +630,8 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 		# Subscription State DMN
 		if ('subscription' == $dmnType) {
 			$subscriptionState = Nuvei_Http::get_param('subscriptionState');
+			$subscriptionId    = Nuvei_Http::get_param('subscriptionId', 'int');
+			$planId            = Nuvei_Http::get_param('planId', 'int');
 			$cri_parts         = explode('_', $client_request_id);
 			
 			if (empty($cri_parts) || empty($cri_parts[0]) || !is_numeric($cri_parts[0])) {
@@ -643,29 +645,33 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 			if (!empty($subscriptionState)) {
 				if ('active' == strtolower($subscriptionState)) {
 					$msg = __('<b>Subscription is Active</b>.', 'nuvei_woocommerce') . '<br/>'
-						. __('<b>Subscription ID:</b> ', 'nuvei_woocommerce') . Nuvei_Http::get_param('subscriptionId', 'int') . '<br/>'
+						. __('<b>Subscription ID:</b> ', 'nuvei_woocommerce') . $subscriptionId . '<br/>'
 						. __('<b>Plan ID:</b> ', 'nuvei_woocommerce') . Nuvei_Http::get_param('planId', 'int');
 					
-					$this->sc_order->update_meta_data(NUVEI_ORDER_HAS_SUBSCR, 1);
-					$this->sc_order->add_order_note($msg);
-					$this->sc_order->save();
-				} elseif ('inactive' == strtolower($subscriptionState)) {
-					$msg            = __('<b>Subscription is Inactive</b>.', 'nuvei_woocommerce');
-					$subscriptionId = Nuvei_Http::get_param('subscriptionId', 'int');
-					$planId         = Nuvei_Http::get_param('planId', 'int');
+					// save the Subscription ID
+					$ord_subscr_ids = json_decode($this->sc_order->get_meta(NUVEI_ORDER_SUBSCR_IDS));
 					
-					if (0 < $subscriptionId) {
-						$msg .= '<br/>' . __('<b>Subscription ID:</b> ', 'nuvei_woocommerce') . $subscriptionId;
+					if (empty($ord_subscr_ids)) {
+						$ord_subscr_ids = array();
 					}
-
-					if (0 < $planId) {
-						$msg .= '<br/>' . __('<b>Plan ID:</b> ', 'nuvei_woocommerce') . $planId;
+					
+					// just add the ID without the details, we need only the ID to cancel the Subscription
+					if (!in_array($subscriptionId, $ord_subscr_ids)) {
+						$ord_subscr_ids[] = $subscriptionId;
 					}
-
-					//                  $this->sc_order->update_meta_data(NUVEI_ORDER_HAS_SUBSCR, 0);
-					$this->sc_order->add_order_note($msg);
-					$this->sc_order->save();
+					
+					$this->sc_order->update_meta_data(NUVEI_ORDER_SUBSCR_IDS, json_encode($ord_subscr_ids));
+				} elseif ('inactive' == strtolower($subscriptionState)) {
+					$msg = __('<b>Subscription is Inactive</b>.', 'nuvei_woocommerce') . '<br/>' 
+						. __('<b>Subscription ID:</b> ', 'nuvei_woocommerce') . $subscriptionId . '<br/>' 
+						. __('<b>Plan ID:</b> ', 'nuvei_woocommerce') . $planId;
+				} elseif ('canceled' == strtolower($subscriptionState)) {
+					$msg = __('<b>Subscription</b> was canceled. ') . '<br/>'
+						. __('<b>Subscription ID:</b> ', 'nuvei_woocommerce') . $subscriptionId;
 				}
+				
+				$this->sc_order->add_order_note($msg);
+				$this->sc_order->save();
 			}
 
 			echo wp_json_encode('DMN received.');
@@ -680,7 +686,6 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 		}
 		
 		if (!$this->check_advanced_checksum()) {
-			Nuvei_Logger::write('DMN Error - AdvancedCheckSum problem!');
 			echo wp_json_encode('DMN Error - Checksum validation problem!');
 			exit;
 		}
@@ -771,6 +776,10 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 
 			$this->change_order_status($order_id, $req_status, $transactionType);
 			$this->subscription_start($transactionType, $order_id);
+			
+			if ('Void' == $transactionType) {
+				$this->subscription_cancel($order_id);
+			}
 				
 			echo wp_json_encode('DMN received.');
 			exit;
@@ -1289,6 +1298,11 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 			exit;
 		}
 		
+		// in case of Subscription states DMNs - stop proccess here. We will save only a message to the Order.
+		if ('subscription' == Nuvei_Http::get_param('dmnType')) {
+			return true;
+		}
+		
 		// check for 'sc' also because of the older Orders
 		if (!in_array($this->sc_order->get_payment_method(), array(NUVEI_GATEWAY_NAME, 'sc'))) {
 			Nuvei_Logger::write(
@@ -1504,30 +1518,86 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 		$prod_plan['clientRequestId'] = $order_id . '_' . uniqid();
 		
 		$ns_obj = new Nuvei_Subscription($this->settings);
-		$resp   = $ns_obj->process($prod_plan);
 		
-		// On Error
-		if (!$resp || !is_array($resp) || 'SUCCESS' != $resp['status']) {
-			$msg = __('<b>Error</b> when try to start a Subscription by the Order.', 'nuvei_woocommerce');
+		// check for more than one products of same type
+		$qty        = 1;
+		$items_data = json_decode(Nuvei_Http::get_param('customField2', 'json'), true);
+		
+		if (!empty($items_data) && is_array($items_data)) {
+			$items_data_curr = current($items_data);
 			
-			if (!empty($resp['reason'])) {
-				$msg .= '<br/>' . __('<b>Reason:</b> ', 'nuvei_woocommerce') . $resp['reason'];
+			if (!empty($items_data_curr['quantity']) && is_numeric($items_data_curr['quantity'])) {
+				$qty = $items_data_curr['quantity'];
+				
+				Nuvei_Logger::write('We will create ' . $qty . ' subscriptions.');
 			}
-		} else { // On Success
+		}
+		
+		for ($qty; $qty > 0; $qty--) {
+			$resp = $ns_obj->process($prod_plan);
+		
+			// On Error
+			if (!$resp || !is_array($resp) || 'SUCCESS' != $resp['status']) {
+				$msg = __('<b>Error</b> when try to start a Subscription by the Order.', 'nuvei_woocommerce');
+
+				if (!empty($resp['reason'])) {
+					$msg .= '<br/>' . __('<b>Reason:</b> ', 'nuvei_woocommerce') . $resp['reason'];
+				}
+				
+				$this->sc_order->add_order_note($msg);
+				$this->sc_order->save();
+				
+				break;
+			}
+			
+			// On Success
 			$msg = __('<b>Subscription</b> was created. ') . '<br/>'
 				. __('<b>Subscription ID:</b> ', 'nuvei_woocommerce') . $resp['subscriptionId'] . '.<br/>' 
 				. __('<b>Recurring amount:</b> ', 'nuvei_woocommerce') . $this->sc_order->get_currency() . ' '
 				. $prod_plan['recurringAmount'];
+
+			$this->sc_order->add_order_note($msg);
+			$this->sc_order->save();
 		}
-		
-		$this->sc_order->add_order_note($msg);
-		$this->sc_order->save();
 			
 		return;
 	}
 	
 	/**
-	 * Validate advanceResponseChecksum and/or responsechecksum parameters
+	 * Try to Cancel any Subscription if there are.
+	 * 
+	 * @param int $order_id
+	 */
+	private function subscription_cancel( $order_id) {
+		Nuvei_Logger::write($order_id, 'subscription_cancel()');
+		
+		$subscr_ids = json_decode($this->sc_order->get_meta(NUVEI_ORDER_SUBSCR_IDS));
+
+		if (empty($subscr_ids) || !is_array($subscr_ids)) {
+			Nuvei_Logger::write($subscr_ids_data, 'DMN Message - there is no Subscription to be canceled.');
+			return;
+		}
+
+		$ncs_obj = new Nuvei_Subscription_Cancel($this->settings);
+
+		foreach ($subscr_ids as $id) {
+			$resp = $ncs_obj->process(array('subscriptionId' => $id));
+
+			// On Error
+			if (!$resp || !is_array($resp) || 'SUCCESS' != $resp['status']) {
+				$msg = __('<b>Error</b> when try to cancel a Subscription by the Order.', 'nuvei_woocommerce');
+
+				if (!empty($resp['reason'])) {
+					$msg .= '<br/>' . __('<b>Reason:</b> ', 'nuvei_woocommerce') . $resp['reason'];
+				}
+			}
+		}
+		
+		return;
+	}
+
+	/**
+	 * Validate advanceResponseChecksum and/or responsechecksum parameters.
 	 *
 	 * @return boolean
 	 */
@@ -1536,6 +1606,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 		$responsechecksum        = Nuvei_Http::get_param('responsechecksum');
 		
 		if (empty($advanceResponseChecksum) && empty($responsechecksum)) {
+			Nuvei_Logger::write('Error - advanceResponseChecksum and responsechecksum parameters are empty.');
 			return false;
 		}
 		
@@ -1555,6 +1626,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 				return true;
 			}
 
+			Nuvei_Logger::write('Error - advanceResponseChecksum validation fail.');
 			return false;
 		}
 		
@@ -1581,6 +1653,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 		$checksum     = hash($this->get_setting('hash_type'), utf8_encode($concat_final));
 		
 		if ($responsechecksum !== $checksum) {
+			Nuvei_Logger::write('Error - responsechecksum validation fail.');
 			return false;
 		}
 		
