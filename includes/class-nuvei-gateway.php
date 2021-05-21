@@ -666,7 +666,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 						. __('<b>Subscription ID:</b> ', 'nuvei_woocommerce') . $subscriptionId . '<br/>' 
 						. __('<b>Plan ID:</b> ', 'nuvei_woocommerce') . $planId;
 				} elseif ('canceled' == strtolower($subscriptionState)) {
-					$msg = __('<b>Subscription</b> was canceled. ') . '<br/>'
+					$msg = __('<b>Subscription</b> was canceled.', 'nuvei_woocommerce') . '<br/>'
 						. __('<b>Subscription ID:</b> ', 'nuvei_woocommerce') . $subscriptionId;
 				}
 				
