@@ -1590,6 +1590,9 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 				if (!empty($resp['reason'])) {
 					$msg .= '<br/>' . __('<b>Reason:</b> ', 'nuvei_woocommerce') . $resp['reason'];
 				}
+                
+                $this->sc_order->add_order_note($msg);
+				$this->sc_order->save();
 			}
 		}
 		

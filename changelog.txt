@@ -1,5 +1,8 @@
 *** WooCommerce Extension Template Changelog ***
 
+version 4.0.2
+	* Fix - save the error message on failed try of Cancel Subscription request.
+
 version 4.0.1
 	* Fix for the missing labels in Add Term Form.
 
