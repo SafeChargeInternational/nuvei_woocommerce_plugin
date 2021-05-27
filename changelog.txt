@@ -1,5 +1,8 @@
 *** WooCommerce Extension Template Changelog ***
 
+version 4.0.4
+	* Fix for the wrong calculation of the checksum in the Subscription DMNs.
+
 version 4.0.3
 	* Fix - added the missing text domain to a message.
 

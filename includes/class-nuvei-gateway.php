@@ -1590,8 +1590,8 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 				if (!empty($resp['reason'])) {
 					$msg .= '<br/>' . __('<b>Reason:</b> ', 'nuvei_woocommerce') . $resp['reason'];
 				}
-                
-                $this->sc_order->add_order_note($msg);
+				
+				$this->sc_order->add_order_note($msg);
 				$this->sc_order->save();
 			}
 		}
@@ -1636,19 +1636,19 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 		# subscription DMN with responsechecksum case
 		$concat = '';
 		
-		// complicated way to filter all $_REQUEST input, but WP will be happy
-		$request_arr = $_REQUEST;
-		array_walk_recursive($request_arr, function ( &$value) {
-			$value = trim($value);
-			$value = filter_var($value);
-		});
-		// complicated way to filter all $_REQUEST input, but WP will be happy END
+		$request_arr   = $_REQUEST;
+		$custom_params = array(
+			'wc-api'            => '',
+			'save_logs'         => '',
+			'test_mode'         => '',
+			'stop_dmn'          => '',
+			'responsechecksum'  => '',
+		);
 		
-		foreach ($request_arr as $name => $value) {
-			if ('responsechecksum' == $name) {
-				continue;
-			}
-			
+		// remove parameters not part of the checksum
+		$dmn_params = array_diff_key($request_arr, $custom_params);
+		
+		foreach ($dmn_params as $name => $value) {
 			$concat .= $value;
 		}
 		
