@@ -487,6 +487,8 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 	}
 	
 	public function get_payment_methods() {
+        global $woocommerce;
+        
 		$resp_data = array(); // use it in the template
 		
 		# OpenOrder
@@ -524,6 +526,25 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 		}
 		
 		$resp_data['apms'] = $apms_data['paymentMethods'];
+        
+        // check for product with a plan
+        $cart           = $woocommerce->cart;
+        $cart_items     = $cart->get_cart();
+        
+        foreach($cart_items as $item => $values) {
+            $product    = wc_get_product($values['data']->get_id());
+            $attributes = $product->get_attributes();
+            
+            // if there is a plan, remove all APMs
+            if (!empty($attributes['pa_' . Nuvei_String::get_slug(NUVEI_GLOB_ATTR_NAME)])) {
+                foreach($resp_data['apms'] as $key => $data) {
+                    if('cc_card' != $data['paymentMethod']) {
+                        unset($resp_data['apms'][$key]);
+                    }
+                }
+            }
+        }
+        // check for product with a plan END
 		# get APMs END
 		
 		# get UPOs
@@ -533,7 +554,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 		if (
 			1 == $this->get_setting('use_upos')
 			&& is_user_logged_in()
-			&& !empty($apms_data['paymentMethods'])
+			&& !empty($resp_data['apms'])
 		) {
 			$gupos_obj = new Nuvei_Get_Upos($this->settings);
 			$upo_res   = $gupos_obj->process($oo_data);
@@ -550,7 +571,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 					}
 
 					// search for same method in APMs, use this UPO only if it is available there
-					foreach ($apms_data['paymentMethods'] as $pm_data) {
+					foreach ($resp_data['apms'] as $pm_data) {
 						// found it
 						if ($pm_data['paymentMethod'] === $data['paymentMethodName']) {
 							if (!empty($pm_data['logoURL'])) {
