@@ -3,7 +3,7 @@
  * Plugin Name: Nuvei Payments
  * Plugin URI: https://github.com/SafeChargeInternational/safecharge_woocommerce_plugin
  * Description: Nuvei Gateway for WooCommerce
- * Version: 4.0.5
+ * Version: 4.1.0
  * Author: Nuvei
  * Author URI: https://nuvei.com
  * Text Domain: nuvei_woocommerce
@@ -340,15 +340,13 @@ function nuvei_load_styles_scripts( $styles) {
 			'paymentGatewayName'    => NUVEI_GATEWAY_NAME,
 			
 			// translations
-			'paymentDeclined'	=> __('Your Payment was DECLINED. Please try another payment method!', 'nuvei_woocommerce'),
-			'paymentError'      => __('Error with your Payment. Please try again later!', 'nuvei_woocommerce'),
-			'unexpectedError'	=> __('Unexpected error, please try again later!', 'nuvei_woocommerce'),
+			'paymentDeclined'	=> __('Your Payment was DECLINED.', 'nuvei_woocommerce'),
+			'paymentError'      => __('Error with your Payment.', 'nuvei_woocommerce'),
+			'unexpectedError'	=> __('Unexpected error.', 'nuvei_woocommerce'),
 			'choosePM'          => __('Please, choose payment method, and fill all fields!', 'nuvei_woocommerce'),
 			'fillFields'        => __('Please fill all fields marked with * !', 'nuvei_woocommerce'),
 			'errorWithPMs'      => __('Error when try to get the Payment Methods. Please try again later or use different Payment Option!', 'nuvei_woocommerce'),
-			'errorWithSToken'	=> __('Error when try to get the Session Token. Please try again later', 'nuvei_woocommerce'),
-			'missData'          => __('Mandatory data is missing, please try again later!', 'nuvei_woocommerce'),
-			'proccessError'     => __('Error in the proccess. Please, try again later!', 'nuvei_woocommerce'),
+			'errorWithSToken'	=> __('Error when try to get the Session Token.', 'nuvei_woocommerce'),
 			'goBack'            => __('Go back', 'nuvei_woocommerce'),
 			'CCNameIsEmpty'     => __('Card Holder Name is empty.', 'nuvei_woocommerce'),
 			'CCNumError'        => __('Card Number is empty or wrong.', 'nuvei_woocommerce'),
@@ -357,6 +355,9 @@ function nuvei_load_styles_scripts( $styles) {
 			'AskDeleteUpo'      => __('Do you want to delete this UPO?', 'nuvei_woocommerce'),
 			'ConfirmSaveUpo'	=> __('Would you like Nuvei to keep the selected payment method as Preferred?', 'nuvei_woocommerce'),
 			'RequestFail'       => __('Request fail.', 'nuvei_woocommerce'),
+			'ApplePayError'     => __('Unexpected session error.', 'nuvei_woocommerce'),
+			'TryAgainLater'     => __('Please try again later!', 'nuvei_woocommerce'),
+			'TryAnotherPM'      => __('Please try another payment method!', 'nuvei_woocommerce'),
 		)
 	);
 

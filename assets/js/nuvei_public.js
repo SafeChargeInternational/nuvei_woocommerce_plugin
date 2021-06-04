@@ -11,6 +11,10 @@ var cardCvc				= null;
 var scData				= {};
 var lastCvcHolder		= '';
 var selectedPM			= '';
+var countryCode			= '';
+var currencyCode		= '';
+var applePayLabel		= '';
+var orderAmount			= 0;
 
 // set some classes for the Fields
 var elementClasses = {
@@ -76,7 +80,7 @@ function scUpdateCart() {
 				sfc			= SafeCharge(scData);
 				scFields	= sfc.fields({ locale: locale });
 				
-				scFormFalse(scTrans.paymentError);
+				scFormFalse(scTrans.paymentError + ' ' + scTrans.TryAgainLater);
 				
 				jQuery('#sc_second_step_form .input-radio').prop('checked', false);
 				jQuery('.apm_fields, #sc_loader_background').hide();
@@ -109,7 +113,30 @@ function scValidateAPMFields() {
 		nuveiPaymentParams.userTokenId = scUserTokenId;
 	}
 
-	console.log(selectedPM)
+	console.log('selectedPM', 'selectedPM');
+	
+	// use apple pay
+	if('ppp_ApplePay' == selectedPM) {
+		if(typeof ApplePaySession != 'function') {
+			scFormFalse(scTrans.ApplePayError + ' ' + scTrans.TryAnotherPM);
+			return;
+		}
+		
+		nuveiPaymentParams.countryCode	= countryCode;
+		nuveiPaymentParams.currencyCode	= currencyCode;
+		nuveiPaymentParams.amount		= orderAmount;
+		nuveiPaymentParams.total		= {
+			label: 'Your Company', // must be set from plugin settings
+			amount: orderAmount
+		};
+		
+		console.log(nuveiPaymentParams)
+		
+		sfc.createApplePayPayment(nuveiPaymentParams, function(resp) {
+			afterSdkResponse(resp);
+		});
+		return;
+	}
 
 	// use cards
 	if (selectedPM == 'cc_card') {
@@ -118,7 +145,7 @@ function scValidateAPMFields() {
 			|| typeof scMerchantId == 'undefined'
 			|| typeof scMerchantSiteId == 'undefined'
 		) {
-			scFormFalse(scTrans.unexpectedError);
+			scFormFalse(scTrans.unexpectedError + ' ' + scTrans.TryAgainLater);
 			console.error('Missing SDK parameters.');
 			return;
 		}
@@ -258,13 +285,13 @@ function afterSdkResponse(resp) {
 			return;
 		}
 		else if (resp.result == 'DECLINED') {
-			scFormFalse(scTrans.paymentDeclined);
+			scFormFalse(scTrans.paymentDeclined + ' ' + scTrans.TryAnotherPM);
 		}
 		else {
 			if (resp.errorDescription != 'undefined' && resp.errorDescription != '') {
 				scFormFalse(resp.errorDescription);
 			} else {
-				scFormFalse(scTrans.paymentError);
+				scFormFalse(scTrans.paymentError + ' ' + scTrans.TryAgainLater);
 			}
 
 			jQuery('#sc_card_number, #sc_card_expiry, #sc_card_cvc').html('');
@@ -273,7 +300,7 @@ function afterSdkResponse(resp) {
 		}
 	}
 	else {
-		scFormFalse(scTrans.unexpectedError);
+		scFormFalse(scTrans.unexpectedError + ' ' + scTrans.TryAgainLater);
 		console.error('Error with SDK response: ' + resp);
 
 		jQuery('#sc_card_number, #sc_card_expiry, #sc_card_cvc').html('');
@@ -350,7 +377,7 @@ function getNewSessionToken() {
 				|| typeof resp.status == 'undefined'
 				|| typeof resp.sessionToken == 'undefined'
 			) {
-				scFormFalse(scTrans.errorWithSToken);
+				scFormFalse(scTrans.errorWithSToken + ' ' + scTrans.TryAgainLater);
 				return;
 			}
 			
@@ -430,7 +457,13 @@ function scPrintApms(data) {
 	scUserTokenId				= data.userTokenId;
 	scData.sessionToken			= data.sessonToken;
 	scData.sourceApplication	= scTrans.webMasterId;
+	// for Apple pay
+	currencyCode				= data.currencyCode;
+	countryCode					= data.countryCode;
+	orderAmount					= data.orderAmount;
+	applePayLabel				= data.applePayLabel;
 	
+	// UPOs
 	if(Object.keys(data.upos).length > 0) {
 		var upoHtml = '';
 		
@@ -484,6 +517,7 @@ function scPrintApms(data) {
 		jQuery('#upos_list_title, #sc_upos_list').hide();
 	}
 	
+	// APMs
 	if(Object.keys(data.apms).length > 0) {
 		var apmHmtl = '';
 		
@@ -506,13 +540,14 @@ function scPrintApms(data) {
 			if ('cc_card' == data.apms[j]['paymentMethod']) {
 				newImg = '<img src="' + data.pluginUrl + 'assets/icons/visa_mc_maestro.svg" alt="'
 					+ pmMsg + '" style="height: 36px;" />';
-			} else if (
-				data.apms[j].hasOwnProperty('logoURL')
+			}
+			else if (data.apms[j].hasOwnProperty('logoURL')
 				&& data.apms[j]['logoURL'] != ''
 			) {
 				newImg = '<img src="' + data.apms[j]['logoURL'].replace('/svg/', '/svg/solid-white/')
 					+ '" alt="' + pmMsg + '" />';
-			} else {
+			}
+			else {
 				newImg = '<img src="#" alt="' + pmMsg + '" />';
 			}
 			
@@ -524,6 +559,7 @@ function scPrintApms(data) {
 							+ newImg
 						+ '</label>';
 			
+			// CC
 			if ('cc_card' == data.apms[j]['paymentMethod']) {
 				apmHmtl +=
 						'<div class="apm_fields" id="sc_' + data.apms[j]['paymentMethod'] + '">'
@@ -532,7 +568,9 @@ function scPrintApms(data) {
 							+ '<div id="sc_card_number"></div>'
 							+ '<div id="sc_card_expiry"></div>'
 							+ '<div id="sc_card_cvc"></div>';
-			} else if (data.apms[j]['fields'].length > 0) {
+			}
+			// APM with fields
+			else if (data.apms[j]['fields'].length > 0) {
 				apmHmtl +=
 						'<div class="apm_fields">';
 
@@ -572,10 +610,19 @@ function scPrintApms(data) {
 						'</div>';
 			}
 			
+			// Apple Pay
+			if('ppp_ApplePay' == data.apms[j]['paymentMethod']) {
+				apmHmtl += '<div class="apm_fields">'
+					+ '<button type="button" id="apple-pay-button" onclick="scUpdateCart()">Pay</button>'
+					+ '<span id="apple-pay-error">You can not use Apple Pay. Please try another payment method!</span>'
+				+ '</div>';
+			}
+			
 			apmHmtl +=
 					'</li>';
 		}
 		
+		// save UPO checkout
 		if(1 == scTrans.useUpos && 1 == scTrans.isUserLogged) {
 			apmHmtl +=
 					'<li class="apm_container" id="nuvei_save_upo_li">'
@@ -600,7 +647,9 @@ jQuery(function() {
 		var currInput		= jQuery(this);
 		var filedsToShowId	= currInput.closest('li').find('.apm_fields');
 		
-		if(undefined !== currInput.attr('data-upo-name')) {
+		if(undefined !== currInput.attr('data-upo-name')
+			|| currInput.val() == 'ppp_ApplePay'
+		) {
 			jQuery('body').find('#nuvei_save_upo_li').hide();
 		}
 		else {
@@ -616,9 +665,13 @@ jQuery(function() {
 		if('undefined' != filedsToShowId) {
 			filedsToShowId.slideToggle('fast');
 		}
+		
+		jQuery('button[name="woocommerce_checkout_place_order"]').show();
 
 		// CC - load webSDK fields
 		if(currInput.val() == 'cc_card') {
+			console.log('CC');
+			
 			jQuery('#sc_card_number').html('');
 			cardNumber = sfcFirstField = scFields.create('ccNumber', {
 				classes: elementClasses
@@ -642,11 +695,41 @@ jQuery(function() {
 			});
 			cardCvc.attach(lastCvcHolder);
 		}
-		else if( // CC UPO - load webSDK fields
-			!isNaN(currInput.val())
+		// Apple Pay
+		else if(currInput.val() == 'ppp_ApplePay') {
+			console.log('Apple Pay');
+			
+			if(!window.ApplePaySession) {
+				jQuery('#apple-pay-button').hide();
+				jQuery('#apple-pay-error, button[name="woocommerce_checkout_place_order"]').show();
+				return;
+			}
+			
+//			var merchantIdentifier = 'example.com.store';
+//			var promise = ApplePaySession.canMakePaymentsWithActiveCard(merchantIdentifier);
+//			
+//			promise.then(function(canMakePayments) {
+//				// Display Apple Pay Button
+//				if(canMakePayments) {
+//					jQuery('#apple-pay-error').hide();
+//					jQuery('#apple-pay-button').show();
+//				}
+//				else {
+//					jQuery('#apple-pay-button').hide();
+//					jQuery('#apple-pay-error').show();
+//				}
+//			});
+
+			jQuery('#apple-pay-error, button[name="woocommerce_checkout_place_order"]').hide();
+			jQuery('#apple-pay-button').show();
+		}
+		// CC UPO - load webSDK fields
+		else if(!isNaN(currInput.val())
 			&& typeof currInput.attr('data-upo-name') != 'undefined'
 			&& currInput.attr('data-upo-name') === 'cc_card'
 		) {
+			console.log('CC UPO');
+			
 			lastCvcHolder = '#sc_upo_' + currInput.val() + '_cvc';
 
 			cardCvc = scFields.create('ccCvc', {

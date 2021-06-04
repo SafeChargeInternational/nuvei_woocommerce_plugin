@@ -59,7 +59,6 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 	}
 	
 	/**
-	 * Function init_form_fields
 	 * Set all fields for admin settings page.
 	 */
 	public function init_form_fields() {
@@ -139,6 +138,12 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 					1 => 'Yes',
 				)
 			),
+            'apple_pay_label' => array(
+                'title' => __('Apple Pay Label', 'nuvei_woocommerce'),
+				'type' => 'text',
+				//'default' => '',
+				//'description' => __('Override the build-in style for the Nuvei elements.', 'nuvei_woocommerce')
+            ),
 			'merchant_style' => array(
 				'title' => __('Custom style', 'nuvei_woocommerce'),
 				'type' => 'textarea',
@@ -510,8 +515,9 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 		# OpenOrder END
 		
 		# get APMs
-		$gapms_obj = new Nuvei_Get_Apms($this->settings);
-		$apms_data = $gapms_obj->process($oo_data);
+        $apms       = array();
+		$gapms_obj  = new Nuvei_Get_Apms($this->settings);
+		$apms_data  = $gapms_obj->process($oo_data);
 		
 		if (!is_array($apms_data) || empty($apms_data['paymentMethods'])) {
 			wp_send_json(array(
@@ -524,8 +530,26 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 
 			exit;
 		}
-		
-		$resp_data['apms'] = $apms_data['paymentMethods'];
+        
+        $apms = $apms_data['paymentMethods'];
+        
+        // check for Apple Pay
+        $apple_pay_data = array();
+        
+        foreach($apms as $key => $data) {
+            if('ppp_ApplePay' == $data['paymentMethod']) {
+                $data['logoURL']    = 'https://cdn-int.safecharge.com/ppp_resources/05261338/resources/img/svg/applepay.svg';
+                $apple_pay_data     = $data;
+                
+                unset($apms[$key]);
+                break;
+            }
+        }
+        
+        if(!empty($apple_pay_data)) {
+            $apms   = array_merge(array(0 => $apple_pay_data), $apms);
+        }
+        // check for Apple Pay END
         
         // check for product with a plan
         $cart           = $woocommerce->cart;
@@ -537,9 +561,9 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
             
             // if there is a plan, remove all APMs
             if (!empty($attributes['pa_' . Nuvei_String::get_slug(NUVEI_GLOB_ATTR_NAME)])) {
-                foreach($resp_data['apms'] as $key => $data) {
+                foreach($apms as $key => $data) {
                     if('cc_card' != $data['paymentMethod']) {
-                        unset($resp_data['apms'][$key]);
+                        unset($apms[$key]);
                     }
                 }
             }
@@ -554,7 +578,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 		if (
 			1 == $this->get_setting('use_upos')
 			&& is_user_logged_in()
-			&& !empty($resp_data['apms'])
+			&& !empty($apms)
 		) {
 			$gupos_obj = new Nuvei_Get_Upos($this->settings);
 			$upo_res   = $gupos_obj->process($oo_data);
@@ -571,7 +595,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 					}
 
 					// search for same method in APMs, use this UPO only if it is available there
-					foreach ($resp_data['apms'] as $pm_data) {
+					foreach ($apms as $pm_data) {
 						// found it
 						if ($pm_data['paymentMethod'] === $data['paymentMethodName']) {
 							if (!empty($pm_data['logoURL'])) {
@@ -589,14 +613,17 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 				}
 			}
 		}
-		
-		$resp_data['upos'] = $upos;
 		# get UPOs END
 		
-		$resp_data['orderAmount'] = WC()->cart->total;
-		$resp_data['userTokenId'] = $oo_data['billingAddress']['email'];
-		$resp_data['pluginUrl']   = plugin_dir_url(NUVEI_PLUGIN_FILE);
-		$resp_data['siteUrl']     = get_site_url();
+        $resp_data['apms']          = $apms;
+        $resp_data['upos']          = $upos;
+		$resp_data['orderAmount']   = WC()->cart->total;
+		$resp_data['userTokenId']   = $oo_data['billingAddress']['email'];
+		$resp_data['pluginUrl']     = plugin_dir_url(NUVEI_PLUGIN_FILE);
+		$resp_data['siteUrl']       = get_site_url();
+		$resp_data['currencyCode']  = get_woocommerce_currency();
+		$resp_data['countryCode']   = $oo_data['billingAddress']['country'];
+		$resp_data['applePayLabel'] = $this->settings['apple_pay_label'];
 			
 		wp_send_json(array(
 			'result'	=> 'failure', // this is just to stop WC send the form, and show APMs

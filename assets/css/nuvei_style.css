@@ -32,8 +32,6 @@
 	font-size: 1rem;
 	padding: 30px;
 	text-align: center;
-
-
 }
 
 #sc_second_step_form #sc_loader_background .sc_header {
@@ -206,6 +204,10 @@
 	border-color: #2c2d33;
 	color: #ffffff;
 }
+
+#sc_second_step_form span, #sc_second_step_form #apple-pay-button,
+#sc_second_step_form span, #sc_second_step_form #apple-pay-error 
+{ display: none; }
 
 /* for the 3DS modal */
 .sfcModal-dialog {
