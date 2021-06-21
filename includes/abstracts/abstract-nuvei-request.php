@@ -284,7 +284,7 @@ abstract class Nuvei_Request {
 		}
 		
 		$all_params = array_merge_recursive($this->request_base_params, $params);
-        
+		
 		// add the checksum
 		$checksum_keys = $this->get_checksum_params();
 		
@@ -295,7 +295,7 @@ abstract class Nuvei_Request {
 				}
 			}
 		}
-        
+		
 		$all_params['checksum'] = hash(
 			$this->plugin_settings['hash_type'],
 			$concat . $this->plugin_settings['secret']

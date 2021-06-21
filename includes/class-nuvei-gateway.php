@@ -138,12 +138,12 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 					1 => 'Yes',
 				)
 			),
-            'apple_pay_label' => array(
-                'title' => __('Apple Pay Label', 'nuvei_woocommerce'),
+			'apple_pay_label' => array(
+				'title' => __('Apple Pay Label', 'nuvei_woocommerce'),
 				'type' => 'text',
 				//'default' => '',
 				//'description' => __('Override the build-in style for the Nuvei elements.', 'nuvei_woocommerce')
-            ),
+			),
 			'merchant_style' => array(
 				'title' => __('Custom style', 'nuvei_woocommerce'),
 				'type' => 'textarea',
@@ -492,8 +492,8 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 	}
 	
 	public function get_payment_methods() {
-        global $woocommerce;
-        
+		global $woocommerce;
+		
 		$resp_data = array(); // use it in the template
 		
 		# OpenOrder
@@ -515,10 +515,10 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 		# OpenOrder END
 		
 		# get APMs
-        $apms       = array();
-        $apple_pay  = array();
-		$gapms_obj  = new Nuvei_Get_Apms($this->settings);
-		$apms_data  = $gapms_obj->process($oo_data);
+		$apms      = array();
+		$apple_pay = array();
+		$gapms_obj = new Nuvei_Get_Apms($this->settings);
+		$apms_data = $gapms_obj->process($oo_data);
 		
 		if (!is_array($apms_data) || empty($apms_data['paymentMethods'])) {
 			wp_send_json(array(
@@ -531,38 +531,38 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 
 			exit;
 		}
-        
-        $apms = $apms_data['paymentMethods'];
-        
-        // check for Apple Pay
-        foreach($apms as $key => $data) {
-            if('ppp_ApplePay' == $data['paymentMethod']) {
-                $apple_pay = $data;
-                
-                unset($apms[$key]);
-                break;
-            }
-        }
-        // check for Apple Pay END
-        
-        // check for product with a plan
-        $cart           = $woocommerce->cart;
-        $cart_items     = $cart->get_cart();
-        
-        foreach($cart_items as $item => $values) {
-            $product    = wc_get_product($values['data']->get_id());
-            $attributes = $product->get_attributes();
-            
-            // if there is a plan, remove all APMs
-            if (!empty($attributes['pa_' . Nuvei_String::get_slug(NUVEI_GLOB_ATTR_NAME)])) {
-                foreach($apms as $key => $data) {
-                    if('cc_card' != $data['paymentMethod']) {
-                        unset($apms[$key]);
-                    }
-                }
-            }
-        }
-        // check for product with a plan END
+		
+		$apms = $apms_data['paymentMethods'];
+		
+		// check for Apple Pay
+		foreach ($apms as $key => $data) {
+			if ('ppp_ApplePay' == $data['paymentMethod']) {
+				$apple_pay = $data;
+				
+				unset($apms[$key]);
+				break;
+			}
+		}
+		// check for Apple Pay END
+		
+		// check for product with a plan
+		$cart       = $woocommerce->cart;
+		$cart_items = $cart->get_cart();
+		
+		foreach ($cart_items as $item => $values) {
+			$product    = wc_get_product($values['data']->get_id());
+			$attributes = $product->get_attributes();
+			
+			// if there is a plan, remove all APMs
+			if (!empty($attributes['pa_' . Nuvei_String::get_slug(NUVEI_GLOB_ATTR_NAME)])) {
+				foreach ($apms as $key => $data) {
+					if ('cc_card' != $data['paymentMethod']) {
+						unset($apms[$key]);
+					}
+				}
+			}
+		}
+		// check for product with a plan END
 		# get APMs END
 		
 		# get UPOs
@@ -609,9 +609,9 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 		}
 		# get UPOs END
 		
-        $resp_data['apms']          = $apms;
-        $resp_data['upos']          = $upos;
-        $resp_data['applePay']      = $apple_pay;
+		$resp_data['apms']          = $apms;
+		$resp_data['upos']          = $upos;
+		$resp_data['applePay']      = $apple_pay;
 		$resp_data['orderAmount']   = WC()->cart->total;
 		$resp_data['userTokenId']   = $oo_data['billingAddress']['email'];
 		$resp_data['pluginUrl']     = plugin_dir_url(NUVEI_PLUGIN_FILE);
