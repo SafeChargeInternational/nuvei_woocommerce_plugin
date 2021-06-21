@@ -41,10 +41,12 @@ class Nuvei_Update_Order extends Nuvei_Request {
 		
 		global $woocommerce;
 		
-		$cart        = $woocommerce->cart;
-		$cart_amount = (string) number_format((float) $cart->total, 2, '.', '');
-		$addresses   = $this->get_order_addresses();
-		
+		$cart           = $woocommerce->cart;
+		$cart_amount    = (string) number_format((float) $cart->total, 2, '.', '');
+		$addresses      = $this->get_order_addresses();
+		$product_data   = $this->get_products_data();
+        
+        
 		// create Order upgrade
 		$params = array(
 			'sessionToken'		=> $nuvei_last_open_order_details['sessionToken'],
@@ -55,15 +57,33 @@ class Nuvei_Update_Order extends Nuvei_Request {
 			'billingAddress'	=> $addresses['billingAddress'],
 			'userDetails'       => $addresses['billingAddress'],
 			'shippingAddress'	=> $addresses['shippingAddress'],
-			'items'				=> array(
+			
+            'items'				=> array(
 				array(
 					'name'		=> 'wc_order',
 					'price'		=> $cart_amount,
 					'quantity'	=> 1
 				)
 			),
+            
+            'merchantDetails'   => array(
+                'customField1' => '', // subscription details
+                'customField2' => json_encode($product_data['products_data']), // item details
+            ),
 		);
-		
+        
+        // lat changes for the rebilling
+        if (!empty($product_data['subscr_data'])) {
+            $params['isRebilling']                                          = 0;
+            $params['paymentOption']['card']['threeD']['rebillFrequency']   = 1;
+            $params['paymentOption']['card']['threeD']['rebillExpiry']      = date('Ymd', strtotime("+10 years"));
+            $params['merchantDetails']['customField1']                      = json_encode($product_data['subscr_data']);
+        } else { // for normal transaction
+            $params['isRebilling']                                          = 1;
+            $params['paymentOption']['card']['threeD']['rebillFrequency']   = 0;
+            $params['paymentOption']['card']['threeD']['rebillExpiry']      = date('Ymd', time());
+        }
+        
 		$resp = $this->call_rest_api('updateOrder', $params);
 		
 		# Success

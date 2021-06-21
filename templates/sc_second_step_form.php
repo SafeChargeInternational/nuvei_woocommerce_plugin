@@ -16,6 +16,8 @@
 			</div>
 		</div>
 	</div>
+    
+    <ul id="nuvei_apple_pay"></ul>
 
 	<h3 id="upos_list_title">
 		<?php echo esc_html_e('Choose from yours preferred payment methods', 'nuvei_woocommerce'); ?>

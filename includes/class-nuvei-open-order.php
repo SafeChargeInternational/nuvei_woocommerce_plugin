@@ -61,15 +61,15 @@ class Nuvei_Open_Order extends Nuvei_Request {
 		$addresses = $this->get_order_addresses();
 		$oo_params = array(
 			'clientUniqueId'    => $uniq_str . '_wc_cart',
+            'currency'          => get_woocommerce_currency(),
 			'amount'            => (string) number_format((float) $cart->total, 2, '.', ''),
-			'currency'          => get_woocommerce_currency(),
+			'shippingAddress'	=> $addresses['shippingAddress'],
 			'billingAddress'	=> $addresses['billingAddress'],
 			'userDetails'       => $addresses['billingAddress'],
-			'shippingAddress'	=> $addresses['shippingAddress'],
-			'paymentOption'     => array('card' => array('threeD' => array('isDynamic3D' => 1))),
 			'transactionType'   => $this->plugin_settings['payment_action'],
+			'paymentOption'     => array('card' => array('threeD' => array('isDynamic3D' => 1))),
 		);
-		
+        
 		$resp = $this->call_rest_api('openOrder', $oo_params);
 		
 		if (empty($resp['status'])

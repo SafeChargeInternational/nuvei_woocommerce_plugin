@@ -82,7 +82,7 @@
     font-weight: 400;
 }
 	
-#sc_second_step_form #sc_upos_list, #sc_second_step_form #sc_apms_list {
+#sc_second_step_form #sc_upos_list, #sc_second_step_form #sc_apms_list, #sc_second_step_form #nuvei_apple_pay {
 	margin: 0.5em 0 1.4em 0;
 	list-style: none;
 	padding: 0;
@@ -205,8 +205,15 @@
 	color: #ffffff;
 }
 
-#sc_second_step_form span, #sc_second_step_form #apple-pay-button,
-#sc_second_step_form span, #sc_second_step_form #apple-pay-error 
+#sc_second_step_form span, #sc_second_step_form #nuvei-apple-pay-button {
+	display: none;
+	background: none;
+	width: auto;
+	padding: 0;
+	border-radius: 6px;
+}
+
+#sc_second_step_form span, #sc_second_step_form #nuvei-apple-pay-error 
 { display: none; }
 
 /* for the 3DS modal */

@@ -126,7 +126,7 @@ function scValidateAPMFields() {
 		nuveiPaymentParams.currencyCode	= currencyCode;
 		nuveiPaymentParams.amount		= orderAmount;
 		nuveiPaymentParams.total		= {
-			label: 'Your Company', // must be set from plugin settings
+			label: applePayLabel, // must be set from plugin settings
 			amount: orderAmount
 		};
 		
@@ -463,6 +463,60 @@ function scPrintApms(data) {
 	orderAmount					= data.orderAmount;
 	applePayLabel				= data.applePayLabel;
 	
+	// Apple Pay
+	if(typeof data.applePay == 'object' 
+		&& Object.keys(data.applePay).length > 0
+		//&& typeof ApplePaySession == 'function' 
+	) {
+		var applePayHtml	= '';
+		var pmMsg			= '';
+			
+		if (data.applePay['paymentMethodDisplayName'].hasOwnProperty(0)
+			&& data.applePay['paymentMethodDisplayName'][0].hasOwnProperty('message')
+		) {
+			pmMsg = data.applePay['paymentMethodDisplayName'][0]['message'];
+		}
+		// fix when there is no display name
+		else if ('' != data.applePay['paymentMethod']) {
+			pmMsg = data.applePay['paymentMethod'].replace('apmgw_', '');
+			pmMsg = pmMsg.replace('_', ' ');
+		}
+
+		var newImg = pmMsg;
+
+		if (data.applePay.hasOwnProperty('logoURL')
+			&& data.applePay['logoURL'] != ''
+		) {
+			newImg = '<img src="' + data.applePay['logoURL'].replace('/svg/', '/svg/solid-white/')
+				+ '" alt="' + pmMsg + '" />';
+		}
+		else {
+			newImg = '<img src="' + data.pluginUrl + 'assets/icons/applepay.svg" alt="' + pmMsg + '" style="height: 36px;" />';
+		}
+
+		applePayHtml +=
+				'<li class="apm_container">'
+					+ '<label class="apm_title">'
+						+ '<input id="sc_payment_method_' + data.applePay['paymentMethod'] + '" type="radio" class="input-radio sc_payment_method_field" name="sc_payment_method" value="' + data.applePay['paymentMethod'] + '" data-nuvei-is-direct="'
+							+ ( typeof data.applePay['isDirect'] != 'undefined' ? data.applePay['isDirect'] : 'false' ) + '" />&nbsp;'
+						+ newImg
+					+ '</label>';
+
+		applePayHtml += 
+			'<div class="apm_fields">'
+				+ '<button type="button" id="nuvei-apple-pay-button" onclick="scUpdateCart()">'
+					+ '<img src="' + data.pluginUrl + 'assets/icons/ApplePay-Button.png" />'
+				+ '</button>'
+				+ '<span id="nuvei-apple-pay-error">You can not use Apple Pay. Please try another payment method!</span>'
+			+ '</div>'
+		+ '</li>';
+		
+		jQuery('#sc_second_step_form #nuvei_apple_pay').html(applePayHtml);
+	}
+	else {
+		jQuery('#upos_list_title, #nuvei_apple_pay').hide();
+	}
+	
 	// UPOs
 	if(Object.keys(data.upos).length > 0) {
 		var upoHtml = '';
@@ -613,8 +667,8 @@ function scPrintApms(data) {
 			// Apple Pay
 			if('ppp_ApplePay' == data.apms[j]['paymentMethod']) {
 				apmHmtl += '<div class="apm_fields">'
-					+ '<button type="button" id="apple-pay-button" onclick="scUpdateCart()">Pay</button>'
-					+ '<span id="apple-pay-error">You can not use Apple Pay. Please try another payment method!</span>'
+					+ '<button type="button" id="nuvei-apple-pay-button" onclick="scUpdateCart()">Pay</button>'
+					+ '<span id="nuvei-apple-pay-error">You can not use Apple Pay. Please try another payment method!</span>'
 				+ '</div>';
 			}
 			
@@ -700,8 +754,8 @@ jQuery(function() {
 			console.log('Apple Pay');
 			
 			if(!window.ApplePaySession) {
-				jQuery('#apple-pay-button').hide();
-				jQuery('#apple-pay-error, button[name="woocommerce_checkout_place_order"]').show();
+				jQuery('#nuvei-apple-pay-button').hide();
+				jQuery('#nuvei-apple-pay-error, button[name="woocommerce_checkout_place_order"]').show();
 				return;
 			}
 			
@@ -711,17 +765,17 @@ jQuery(function() {
 //			promise.then(function(canMakePayments) {
 //				// Display Apple Pay Button
 //				if(canMakePayments) {
-//					jQuery('#apple-pay-error').hide();
-//					jQuery('#apple-pay-button').show();
+//					jQuery('#nuvei-apple-pay-error').hide();
+//					jQuery('#nuvei-apple-pay-button').show();
 //				}
 //				else {
-//					jQuery('#apple-pay-button').hide();
-//					jQuery('#apple-pay-error').show();
+//					jQuery('#nuvei-apple-pay-button').hide();
+//					jQuery('#nuvei-apple-pay-error').show();
 //				}
 //			});
 
-			jQuery('#apple-pay-error, button[name="woocommerce_checkout_place_order"]').hide();
-			jQuery('#apple-pay-button').show();
+			jQuery('#nuvei-apple-pay-error, button[name="woocommerce_checkout_place_order"]').hide();
+			jQuery('#nuvei-apple-pay-button').show();
 		}
 		// CC UPO - load webSDK fields
 		else if(!isNaN(currInput.val())

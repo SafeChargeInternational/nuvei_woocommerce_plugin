@@ -137,8 +137,6 @@ abstract class Nuvei_Request {
 			'encoding'          => 'UTF-8',
 			'deviceDetails'     => $this->get_device_details(),
 			'merchantDetails'	=> array(
-				'customField1'      => json_encode($all_prod_data['subscr_data']),   // put subscr data here
-				'customField2'      => json_encode($all_prod_data['products_data']), // item details
 				'customField3'      => time(),                          // create time
 			),
 			'urlDetails'        => array(
@@ -285,8 +283,8 @@ abstract class Nuvei_Request {
 			return $params;
 		}
 		
-		$all_params = array_merge($this->request_base_params, $params);
-		
+		$all_params = array_merge_recursive($this->request_base_params, $params);
+        
 		// add the checksum
 		$checksum_keys = $this->get_checksum_params();
 		
@@ -297,7 +295,7 @@ abstract class Nuvei_Request {
 				}
 			}
 		}
-		
+        
 		$all_params['checksum'] = hash(
 			$this->plugin_settings['hash_type'],
 			$concat . $this->plugin_settings['secret']
@@ -448,7 +446,7 @@ abstract class Nuvei_Request {
 	/**
 	 * A help function to get Products data from the Cart and pass it to the OpenOrder or UpdateOrder.
 	 * 
-	 * @return  array $data
+	 * @return array $data
 	 */
 	protected function get_products_data() {
 		global $woocommerce;

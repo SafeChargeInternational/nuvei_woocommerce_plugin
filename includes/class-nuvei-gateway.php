@@ -516,6 +516,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 		
 		# get APMs
         $apms       = array();
+        $apple_pay  = array();
 		$gapms_obj  = new Nuvei_Get_Apms($this->settings);
 		$apms_data  = $gapms_obj->process($oo_data);
 		
@@ -534,20 +535,13 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
         $apms = $apms_data['paymentMethods'];
         
         // check for Apple Pay
-        $apple_pay_data = array();
-        
         foreach($apms as $key => $data) {
             if('ppp_ApplePay' == $data['paymentMethod']) {
-                $data['logoURL']    = 'https://cdn-int.safecharge.com/ppp_resources/05261338/resources/img/svg/applepay.svg';
-                $apple_pay_data     = $data;
+                $apple_pay = $data;
                 
                 unset($apms[$key]);
                 break;
             }
-        }
-        
-        if(!empty($apple_pay_data)) {
-            $apms   = array_merge(array(0 => $apple_pay_data), $apms);
         }
         // check for Apple Pay END
         
@@ -617,6 +611,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 		
         $resp_data['apms']          = $apms;
         $resp_data['upos']          = $upos;
+        $resp_data['applePay']      = $apple_pay;
 		$resp_data['orderAmount']   = WC()->cart->total;
 		$resp_data['userTokenId']   = $oo_data['billingAddress']['email'];
 		$resp_data['pluginUrl']     = plugin_dir_url(NUVEI_PLUGIN_FILE);
@@ -1305,7 +1300,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 		}
 		
 		Nuvei_Logger::write(
-			plugin_dir_path(NUVEI_PLUGIN_FILE) . '/tmp/sc_plans.json',
+			plugin_dir_path(NUVEI_PLUGIN_FILE) . 'tmp/sc_plans.json',
 			'Plans list was not saved.'
 		);
 		
