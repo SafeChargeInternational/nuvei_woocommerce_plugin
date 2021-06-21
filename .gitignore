@@ -1,5 +1,5 @@
 logs/*.txt
-tmp/*
+tmp/*.json
 desktop.ini
 Rubbish/*
 error_log
