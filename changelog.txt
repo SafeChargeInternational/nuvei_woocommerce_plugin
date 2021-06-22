@@ -1,5 +1,8 @@
 *** WooCommerce Extension Changelog ***
 
+version 4.1.1
+	* Added few variables checks.
+
 version 4.1.0
 	* Fix - added missing tmp folder in the plugin root directory.
 	* Fix for the Open Order request, when we have a Product with a Payment plan.

@@ -3,7 +3,7 @@
  * Plugin Name: Nuvei Payments
  * Plugin URI: https://github.com/SafeChargeInternational/safecharge_woocommerce_plugin
  * Description: Nuvei Gateway for WooCommerce
- * Version: 4.1.0
+ * Version: 4.1.1
  * Author: Nuvei
  * Author URI: https://nuvei.com
  * Text Domain: nuvei_woocommerce
@@ -90,7 +90,9 @@ function nuvei_init() {
 	add_filter('woocommerce_order_button_text', 'nuvei_edit_order_buttons');
 	
 	// those actions are valid only when the plugin is enabled
-	if ('yes' == $wc_nuvei->settings['enabled']) {
+    $plugin_enabled = isset($wc_nuvei->settings['enabled']) ? $wc_nuvei->settings['enabled'] : 'no';
+    
+	if ('yes' == $plugin_enabled) {
 		// for WPML plugin
 		if (
 			is_plugin_active('sitepress-multilingual-cms' . DIRECTORY_SEPARATOR . 'sitepress.php')
