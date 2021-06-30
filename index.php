@@ -31,74 +31,74 @@ add_filter('woocommerce_payment_gateways', 'nuvei_add_gateway');
 add_action('plugins_loaded', 'nuvei_init', 0);
 
 function nuvei_admin_init() {
-    // check if there is the version with "nuvei" in the name of directory, in this case deactivate the current plugin
-    $path_to_nuvei_plugin = dirname(plugin_dir_path(__FILE__)) . DIRECTORY_SEPARATOR
+	// check if there is the version with "nuvei" in the name of directory, in this case deactivate the current plugin
+	$path_to_nuvei_plugin = dirname(plugin_dir_path(__FILE__)) . DIRECTORY_SEPARATOR
 		. 'nuvei_woocommerce_plugin' . DIRECTORY_SEPARATOR . 'index.php';
 	
 	if (strpos(basename(dirname(__FILE__)), 'safecharge') !== false && file_exists($path_to_nuvei_plugin)) {
 		deactivate_plugins(plugin_basename( __FILE__ ));
 	}
-    // check if there is the version with "nuvei" in the name of directory, in this case deactivate the current plugin END
-    
-    // check in GIT for new version
-    $plugin_data    = get_plugin_data(__FILE__);
-    $curr_version   = (int) str_replace('.', '', $plugin_data['Version']);
-    $git_version    = 0;
-    $date_check     = 0;
-    
-    if(!file_exists($file)) {
-        $data = nuvei_get_file_form_git();
-        
-        if(!empty($data['git_v'])) {
-            $git_version = $data['git_v'];
-        }
-        if(!empty($data['date'])) {
-            $date_check = $data['date'];
-        }
-    }
-    
-    // read file if need to
-    if(0 == $date_check || 0 == $git_version) {
-        $version_file_data = json_decode(file_get_contents($file), true);
-        
-        if(!empty($version_file_data['date'])) {
-            $date_check = $version_file_data['date'];
-        }
-        if(!empty($version_file_data['git_v'])) {
-            $git_version = $version_file_data['git_v'];
-        }
-    }
-    
-    // check file date and get new file if current one is more than a week old
-    if(strtotime('-1 Week') > strtotime($date_check)) {
-        $data = nuvei_get_file_form_git();
-        
-        if(!empty($data['git_v'])) {
-            $git_version = $data['git_v'];
-        }
-        if(!empty($data['date'])) {
-            $date_check = $data['date'];
-        }
-    }
-    
-    // compare versions and show message if need to
-    if($git_version > $curr_version) {
-        add_action('admin_notices', function() {
-            $class      = 'notice notice-info is-dismissible';
-            $url        = 'https://github.com/SafeChargeInternational/nuvei_woocommerce_plugin/blob/main/changelog.txt';
-            $message_1  = __('There is a new version of Nuvei Plugin available.', 'nuvei_woocommerce' );
-            $message_2  = __('View version details.', 'nuvei_woocommerce' );
-            
-            printf(
-                '<div class="%1$s"><p>%2$s <a href="%3$s" target="_blank">%4$s</a></p></div>',
-                esc_attr($class),
-                esc_html($message_1),
-                esc_url($url),
-                esc_html($message_2)
-            );
-        });
-    }
-    // check in GIT for new version END
+	// check if there is the version with "nuvei" in the name of directory, in this case deactivate the current plugin END
+	
+	// check in GIT for new version
+	$plugin_data  = get_plugin_data(__FILE__);
+	$curr_version = (int) str_replace('.', '', $plugin_data['Version']);
+	$git_version  = 0;
+	$date_check   = 0;
+	
+	if (!file_exists($file)) {
+		$data = nuvei_get_file_form_git();
+		
+		if (!empty($data['git_v'])) {
+			$git_version = $data['git_v'];
+		}
+		if (!empty($data['date'])) {
+			$date_check = $data['date'];
+		}
+	}
+	
+	// read file if need to
+	if (0 == $date_check || 0 == $git_version) {
+		$version_file_data = json_decode(file_get_contents($file), true);
+		
+		if (!empty($version_file_data['date'])) {
+			$date_check = $version_file_data['date'];
+		}
+		if (!empty($version_file_data['git_v'])) {
+			$git_version = $version_file_data['git_v'];
+		}
+	}
+	
+	// check file date and get new file if current one is more than a week old
+	if (strtotime('-1 Week') > strtotime($date_check)) {
+		$data = nuvei_get_file_form_git();
+		
+		if (!empty($data['git_v'])) {
+			$git_version = $data['git_v'];
+		}
+		if (!empty($data['date'])) {
+			$date_check = $data['date'];
+		}
+	}
+	
+	// compare versions and show message if need to
+	if ($git_version > $curr_version) {
+		add_action('admin_notices', function() {
+			$class     = 'notice notice-info is-dismissible';
+			$url       = 'https://github.com/SafeChargeInternational/nuvei_woocommerce_plugin/blob/main/changelog.txt';
+			$message_1 = __('There is a new version of Nuvei Plugin available.', 'nuvei_woocommerce' );
+			$message_2 = __('View version details.', 'nuvei_woocommerce' );
+			
+			printf(
+				'<div class="%1$s"><p>%2$s <a href="%3$s" target="_blank">%4$s</a></p></div>',
+				esc_attr($class),
+				esc_html($message_1),
+				esc_url($url),
+				esc_html($message_2)
+			);
+		});
+	}
+	// check in GIT for new version END
 }
 
 function nuvei_init() {
@@ -152,8 +152,8 @@ function nuvei_init() {
 	add_filter('woocommerce_order_button_text', 'nuvei_edit_order_buttons');
 	
 	// those actions are valid only when the plugin is enabled
-    $plugin_enabled = isset($wc_nuvei->settings['enabled']) ? $wc_nuvei->settings['enabled'] : 'no';
-    
+	$plugin_enabled = isset($wc_nuvei->settings['enabled']) ? $wc_nuvei->settings['enabled'] : 'no';
+	
 	if ('yes' == $plugin_enabled) {
 		// for WPML plugin
 		if (
@@ -881,30 +881,30 @@ function nuvei_edit_my_account_orders_col( $order) {
  * @return array
  */
 function nuvei_get_file_form_git() {
-    $file = dirname(__FILE__) . '/tmp/nuvei-latest-version.json';
-    
-    $ch = curl_init();
+	$file = dirname(__FILE__) . '/tmp/nuvei-latest-version.json';
+	
+	$ch = curl_init();
 
-    curl_setopt(
-        $ch,
-        CURLOPT_URL,
-        'https://raw.githubusercontent.com/SafeChargeInternational/nuvei_woocommerce_plugin/main/index.php'
-    );
+	curl_setopt(
+		$ch,
+		CURLOPT_URL,
+		'https://raw.githubusercontent.com/SafeChargeInternational/nuvei_woocommerce_plugin/main/index.php'
+	);
 
-    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+	curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+	curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
 
-    $file_text = curl_exec($ch);
-    curl_close($ch);
+	$file_text = curl_exec($ch);
+	curl_close($ch);
 
-    preg_match('/(\s?\*\s?Version\s?:\s?)(.*\s?)(\n)/', $file_text, $matches);
+	preg_match('/(\s?\*\s?Version\s?:\s?)(.*\s?)(\n)/', $file_text, $matches);
 
-    $array = array(
-        'date'  => date('Y-m-d H:i:s', time()),
-        'git_v' => (int) str_replace('.', '', trim($matches[2])),
-    );
+	$array = array(
+		'date'  => gmdate('Y-m-d H:i:s', time()),
+		'git_v' => (int) str_replace('.', '', trim($matches[2])),
+	);
 
-    file_put_contents($file, json_encode($array));
-    
-    return $array;
+	file_put_contents($file, json_encode($array));
+	
+	return $array;
 }

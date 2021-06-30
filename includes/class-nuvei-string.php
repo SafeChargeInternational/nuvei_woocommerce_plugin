@@ -13,10 +13,10 @@ class Nuvei_String {
 	 * @return string
 	 */
 	public static function get_notify_url( $plugin_settings) {
-		$url_part   = get_site_url();
-        $save_logs  = isset($plugin_settings['save_logs']) ? $plugin_settings['save_logs'] : 'no';  
-        $test_mode  = isset($plugin_settings['test']) ? $plugin_settings['test'] : 'yes';
-        $use_http   = isset($plugin_settings['use_http']) ? $plugin_settings['use_http'] : 'yes';
+		$url_part  = get_site_url();
+		$save_logs = isset($plugin_settings['save_logs']) ? $plugin_settings['save_logs'] : 'no';  
+		$test_mode = isset($plugin_settings['test']) ? $plugin_settings['test'] : 'yes';
+		$use_http  = isset($plugin_settings['use_http']) ? $plugin_settings['use_http'] : 'yes';
 			
 		//      $url = $url_part . ( strpos($url_part, '?') !== false ? '&' : '?' )
 		//          . 'wc-api=sc_listener&stop_dmn=' . NUVEI_STOP_DMN;
