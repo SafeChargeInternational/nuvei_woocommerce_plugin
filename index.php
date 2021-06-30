@@ -41,6 +41,7 @@ function nuvei_admin_init() {
 	// check if there is the version with "nuvei" in the name of directory, in this case deactivate the current plugin END
 	
 	// check in GIT for new version
+	$file         = dirname(__FILE__) . '/tmp/nuvei-latest-version.json';
 	$plugin_data  = get_plugin_data(__FILE__);
 	$curr_version = (int) str_replace('.', '', $plugin_data['Version']);
 	$git_version  = 0;
@@ -144,7 +145,7 @@ function nuvei_init() {
 			&& NUVEI_GATEWAY_NAME == $data['payment_method'] 
 			&& empty(Nuvei_Http::get_param('sc_payment_method'))
 		) {
-			$content = $wc_nuvei->get_payment_methods();
+			$wc_nuvei->get_payment_methods();
 		}
 	}, 9999, 2);
 	
@@ -666,8 +667,6 @@ function nuvei_rewrite_return_url() {
  * @return string $order_received_url
  */
 function nuvei_wpml_thank_you_page( $order_received_url, $order) {
-	global $wc_nuvei;
-	
 	$lang_code          = get_post_meta($order->id, 'wpml_language', true);
 	$order_received_url = apply_filters('wpml_permalink', $order_received_url, $lang_code);
 	
@@ -714,11 +713,9 @@ function nuvei_change_title_order_received( $title, $id) {
  * Call this on Store when the logged user is in My Account section
  * 
  * @global type $wp
- * @global WC_SC $wc_nuvei
- * @global type $woocommerce
  */
 function nuvei_user_orders() {
-	global $wp, $wc_nuvei, $woocommerce;
+	global $wp;
 	
 	$url_key              = Nuvei_Http::get_param('key');
 	$order                = wc_get_order($wp->query_vars['order-pay']);
@@ -749,8 +746,6 @@ function nuvei_user_orders() {
 
 // on reorder, show warning message to the cart if need to
 function nuvei_show_message_on_cart( $data) {
-	global $wc_nuvei;
-	
 	echo '<script>jQuery("#content .woocommerce:first").append("<div class=\'woocommerce-warning\'>'
 		. wp_kses_post(Nuvei_Http::get_param('sc_msg')) . '</div>");</script>';
 }
@@ -797,8 +792,6 @@ function nuvei_edit_term_meta_form( $term, $taxonomy) {
 }
 
 function nuvei_save_term_meta( $term_id, $tt_id) {
-	global $wc_nuvei;
-	
 	$taxonomy      = 'pa_' . Nuvei_String::get_slug(NUVEI_GLOB_ATTR_NAME);
 	$post_taxonomy = Nuvei_Http::get_param('taxonomy', 'string');
 	
@@ -820,8 +813,6 @@ function nuvei_save_term_meta( $term_id, $tt_id) {
 }
 
 function nuvei_edit_term_meta( $term_id, $tt_id) {
-	global $wc_nuvei;
-	
 	$taxonomy      = 'pa_' . Nuvei_String::get_slug(NUVEI_GLOB_ATTR_NAME);
 	$post_taxonomy = Nuvei_Http::get_param('taxonomy', 'string');
 	
@@ -880,10 +871,9 @@ function nuvei_edit_my_account_orders_col( $order) {
  * 
  * @return array
  */
-function nuvei_get_file_form_git() {
-	$file = dirname(__FILE__) . '/tmp/nuvei-latest-version.json';
-	
-	$ch = curl_init();
+function nuvei_get_file_form_git( $file) {
+	$matches = array();
+	$ch      = curl_init();
 
 	curl_setopt(
 		$ch,

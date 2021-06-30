@@ -491,6 +491,11 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 		ob_end_flush();
 	}
 	
+	/**
+	 * Get the APMs, the UPOs and other important data and echo all as json.
+	 * 
+	 * @global type $woocommerce
+	 */
 	public function get_payment_methods() {
 		global $woocommerce;
 		
