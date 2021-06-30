@@ -1,5 +1,8 @@
 *** WooCommerce Extension Changelog ***
 
+version 4.1.2
+	* Added version checker in the plugin. If the version in Git is bigger, a message will appear.
+
 version 4.1.1
 	* Added few variables checks.
 
