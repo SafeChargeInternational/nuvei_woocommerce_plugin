@@ -1771,7 +1771,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 					$currency_symbol = get_woocommerce_currency_symbol( $currency_code );
 					
 					if (isset($refunds[Nuvei_Http::get_param('TransactionID', 'int')]['refund_amount'])) {
-						$message .= '<br/>' . __('<b>Refund Amount:</b>') . ': ' . $currency_symbol
+						$message .= '<br/>' . __('<b>Refund Amount:</b>') . ' ' . $currency_symbol
 							. number_format($refunds[Nuvei_Http::get_param('TransactionID', 'int')]['refund_amount'], 2, '.', '')
 							. '<br/>' . __('<b>Refund:</b>') . ' #' 
 							. $refunds[Nuvei_Http::get_param('TransactionID', 'int')]['wc_id'];
