@@ -17,11 +17,7 @@ class Nuvei_String {
 		$save_logs = isset($plugin_settings['save_logs']) ? $plugin_settings['save_logs'] : 'no';  
 		$test_mode = isset($plugin_settings['test']) ? $plugin_settings['test'] : 'yes';
 		$use_http  = isset($plugin_settings['use_http']) ? $plugin_settings['use_http'] : 'yes';
-			
-		//      $url = $url_part . ( strpos($url_part, '?') !== false ? '&' : '?' )
-		//          . 'wc-api=sc_listener&stop_dmn=' . NUVEI_STOP_DMN;
-		
-		$url = $url_part . ( strpos($url_part, '?') !== false ? '&' : '?' ) . 'wc-api=nuvei_listener'
+		$url       = $url_part . ( strpos($url_part, '?') !== false ? '&' : '?' ) . 'wc-api=nuvei_listener'
 			. '&save_logs=' . $save_logs . '&test_mode=' . $test_mode . '&stop_dmn=' . NUVEI_STOP_DMN;
 		
 		// some servers needs / before ?

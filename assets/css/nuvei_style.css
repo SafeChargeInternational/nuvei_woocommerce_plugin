@@ -216,6 +216,9 @@
 #sc_second_step_form span, #sc_second_step_form #nuvei-apple-pay-error 
 { display: none; }
 
+#sc_second_step_form .apm_title span
+{ display: inline-block; }
+
 /* for the 3DS modal */
 .sfcModal-dialog {
 	width: 50%;

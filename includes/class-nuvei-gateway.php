@@ -216,9 +216,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 
 		ob_start();
 		
-		$field = $this->plugin_id . $this->id . '_' . $key;
-		$data  = wp_parse_args($data, $defaults);
-		
+		$data = wp_parse_args($data, $defaults);
 		require_once dirname(NUVEI_PLUGIN_FILE) . '/templates/admin/download_payments_plans_btn.php';
 		
 		return ob_get_clean();
@@ -482,12 +480,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 		}
 		
 		ob_start();
-		
-		$plugin_url          = plugin_dir_url(NUVEI_PLUGIN_FILE);
-		$force_user_token_id = $force_flag;
-		
 		require_once dirname(NUVEI_PLUGIN_FILE) . '/templates/sc_second_step_form.php';
-		
 		ob_end_flush();
 	}
 	
@@ -554,7 +547,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 		$cart       = $woocommerce->cart;
 		$cart_items = $cart->get_cart();
 		
-		foreach ($cart_items as $item => $values) {
+		foreach ($cart_items as $values) {
 			$product    = wc_get_product($values['data']->get_id());
 			$attributes = $product->get_attributes();
 			
@@ -755,8 +748,10 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 				__('<b>Subscription Payment</b> with Status %s was made.', 'nuvei_woocommerce'),
 				$req_status
 			)
-				. '<br/>' . __('<b>Plan ID:</b> ', 'nuvei_woocommerce') . Nuvei_Http::get_param('planId', 'int') . '.'
-				. '<br/>' . __('<b>Subscription ID:</b> ', 'nuvei_woocommerce') . Nuvei_Http::get_param('subscriptionId', 'int') . '.'
+				. '<br/>' . __('<b>Plan ID:</b> ', 'nuvei_woocommerce') 
+				. Nuvei_Http::get_param('planId', 'int') . '.'
+				. '<br/>' . __('<b>Subscription ID:</b> ', 'nuvei_woocommerce') 
+				. Nuvei_Http::get_param('subscriptionId', 'int') . '.'
 				. '<br/>' . __('<b>Amount:</b> ', 'nuvei_woocommerce') . $this->sc_order->get_currency() . ' '
 				. Nuvei_Http::get_param('totalAmount', 'float') . '.'
 				. '<br/>' . __('<b>TransactionId:</b> ', 'nuvei_woocommerce') . $TransactionID;
@@ -867,11 +862,6 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 		exit;
 	}
 	
-	/** TODO - do we use this function */
-	//  public function showMessage( $content) {
-	//      return '<div class="box ' . $this->msg['class'] . '-box">' . $this->msg['message'] . '</div>' . $content;
-	//  }
-
 	/**
 	 * Function process_refund
 	 * A overwrite original function to enable auto refund in WC.
@@ -1346,6 +1336,8 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 			exit;
 		}
 		
+		Nuvei_Logger::write('is_order_vali() - the Order is valid.');
+		
 		// in case of Subscription states DMNs - stop proccess here. We will save only a message to the Order.
 		if ('subscription' == Nuvei_Http::get_param('dmnType')) {
 			return true;
@@ -1405,8 +1397,12 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 	 */
 	public function open_order( $is_ajax = false ) {
 		// new
-		$oo_obj = new Nuvei_Open_Order($this->settings, $is_ajax);
-		$oo_obj->process();
+		try {
+			$oo_obj = new Nuvei_Open_Order($this->settings, $is_ajax);
+			$oo_obj->process();
+		} catch (Exception $e) {
+			Nuvei_Logger::write($e->getMessage(), 'open_order exception');
+		}
 		exit;
 	}
 	
@@ -1465,7 +1461,6 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 		if (is_wp_error($attribute_id)) {
 			Nuvei_Logger::write(
 				array(
-					'$data'     => $data,
 					'$args'     => $args,
 					'message'   => $attribute_id->get_error_message(), 
 				),
@@ -1520,7 +1515,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 		// 2 - incoming Product without plan
 		// 2.1 - the cart is not empty
 		if (count($cart_items) > 0) {
-			foreach ($cart_items as $item_id => $item) {
+			foreach ($cart_items as $item) {
 				$cart_product   = wc_get_product( $item['product_id'] );
 				$cart_prod_attr = $cart_product->get_attributes();
 
@@ -1563,6 +1558,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 			return;
 		}
 		
+		// this is the only place to pass the Order ID, we will need it later, to identify the Order
 		$prod_plan['clientRequestId'] = $order_id . '_' . uniqid();
 		
 		$ns_obj = new Nuvei_Subscription($this->settings);
@@ -1585,7 +1581,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 			$resp = $ns_obj->process($prod_plan);
 		
 			// On Error
-			if (!$resp || !is_array($resp) || 'SUCCESS' != $resp['status']) {
+			if (!$resp || !is_array($resp) || empty($resp['status']) || 'SUCCESS' != $resp['status']) {
 				$msg = __('<b>Error</b> when try to start a Subscription by the Order.', 'nuvei_woocommerce');
 
 				if (!empty($resp['reason'])) {
@@ -1622,7 +1618,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 		$subscr_ids = json_decode($this->sc_order->get_meta(NUVEI_ORDER_SUBSCR_IDS));
 
 		if (empty($subscr_ids) || !is_array($subscr_ids)) {
-			Nuvei_Logger::write($subscr_ids_data, 'DMN Message - there is no Subscription to be canceled.');
+			Nuvei_Logger::write($subscr_ids, 'DMN Message - there is no Subscription to be canceled.');
 			return;
 		}
 
@@ -1696,7 +1692,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 		// remove parameters not part of the checksum
 		$dmn_params = array_diff_key($request_arr, $custom_params);
 		
-		foreach ($dmn_params as $name => $value) {
+		foreach ($dmn_params as $value) {
 			$concat .= $value;
 		}
 		

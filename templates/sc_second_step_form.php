@@ -1,3 +1,8 @@
+<?php
+	$plugin_url          = plugin_dir_url(NUVEI_PLUGIN_FILE);
+	$force_user_token_id = $force_flag;
+?>
+
 <div id="sc_checkout_messages"></div>
 
 <div id="sc_second_step_form" style="display: none;">

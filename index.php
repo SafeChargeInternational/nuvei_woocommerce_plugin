@@ -3,7 +3,7 @@
  * Plugin Name: Nuvei Payments
  * Plugin URI: https://github.com/SafeChargeInternational/safecharge_woocommerce_plugin
  * Description: Nuvei Gateway for WooCommerce
- * Version: 4.1.2
+ * Version: 4.1.3
  * Author: Nuvei
  * Author URI: https://nuvei.com
  * Text Domain: nuvei_woocommerce
@@ -48,7 +48,7 @@ function nuvei_admin_init() {
 	$date_check   = 0;
 	
 	if (!file_exists($file)) {
-		$data = nuvei_get_file_form_git();
+		$data = nuvei_get_file_form_git($file);
 		
 		if (!empty($data['git_v'])) {
 			$git_version = $data['git_v'];
@@ -72,7 +72,7 @@ function nuvei_admin_init() {
 	
 	// check file date and get new file if current one is more than a week old
 	if (strtotime('-1 Week') > strtotime($date_check)) {
-		$data = nuvei_get_file_form_git();
+		$data = nuvei_get_file_form_git($file);
 		
 		if (!empty($data['git_v'])) {
 			$git_version = $data['git_v'];
@@ -533,7 +533,7 @@ function nuvei_add_buttons() {
 		$refunds_exists       = false;
 		
 		if (!empty($order_refunds) && is_array($order_refunds)) {
-			foreach ($order_refunds as $tr_id => $data) {
+			foreach ($order_refunds as $data) {
 				if ('approved' == $data['status']) {
 					$refunds_exists = true;
 					break;
@@ -562,11 +562,8 @@ function nuvei_add_buttons() {
 	if (in_array($order_status, array('completed', 'pending', 'failed'))) {
 		global $wc_nuvei;
 
-		$time        = gmdate('YmdHis', time());
-		$order_tr_id = $order->get_meta(NUVEI_TRANS_ID);
 		// we do not set this meta anymore, keep it only because of the orders made before v3.5 of the plugin
 		$order_has_refund = $order->get_meta(NUVEI_ORDER_HAS_REFUND);
-		$notify_url       = Nuvei_String::get_notify_url($wc_nuvei->settings);
 		
 		// Show VOID button
 		if (
@@ -717,11 +714,8 @@ function nuvei_change_title_order_received( $title, $id) {
 function nuvei_user_orders() {
 	global $wp;
 	
-	$url_key              = Nuvei_Http::get_param('key');
-	$order                = wc_get_order($wp->query_vars['order-pay']);
-	$order_status         = strtolower($order->get_status());
-	$order_payment_method = $order->get_meta('_paymentMethod');
-	$order_key            = $order->get_order_key();
+	$order     = wc_get_order($wp->query_vars['order-pay']);
+	$order_key = $order->get_order_key();
 	
 	// check for 'sc' also, because of the older Orders
 	if (!in_array($order->get_payment_method(), array(NUVEI_GATEWAY_NAME, 'sc'))) {
@@ -734,7 +728,7 @@ function nuvei_user_orders() {
 	
 	$prods_ids = array();
 	
-	foreach ($order->get_items() as $prod_id => $data) {
+	foreach ($order->get_items() as $data) {
 		$prods_ids[] = $data->get_product_id();
 	}
 	
@@ -869,6 +863,7 @@ function nuvei_edit_my_account_orders_col( $order) {
 /**
  * Repeating code from Version Checker logic.
  * 
+ * @param string $file the path to the file we will save
  * @return array
  */
 function nuvei_get_file_form_git( $file) {

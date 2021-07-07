@@ -1,3 +1,5 @@
+<?php $field = $this->plugin_id . $this->id . '_' . $key; ?>
+
 <tr valign="top">
 	<th scope="row" class="titledesc">
 		<label for="<?php echo esc_attr($field); ?>"><?php echo esc_html($data['title']); ?></label>

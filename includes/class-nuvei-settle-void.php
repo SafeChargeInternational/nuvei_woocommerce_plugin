@@ -25,9 +25,7 @@ class Nuvei_Settle_Void extends Nuvei_Request {
 			return false;
 		}
 		
-		$order      = wc_get_order($data['order_id']);
-		$notify_url = Nuvei_String::get_notify_url($this->plugin_settings);
-		
+		$order  = wc_get_order($data['order_id']);
 		$params = array(
 			'clientUniqueId'        => $data['order_id'],
 			'amount'                => (string) $order->get_total(),

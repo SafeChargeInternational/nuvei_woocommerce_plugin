@@ -24,8 +24,7 @@ class Nuvei_Refund extends Nuvei_Request {
 			return false;
 		}
 		
-		$notify_url	= Nuvei_String::get_notify_url($this->plugin_settings);
-		$time		= gmdate('YmdHis', time());
+		$time = gmdate('YmdHis', time());
 		
 		$ref_parameters = array(
 			'clientRequestId'       => $data['order_id'] . '_' . $time . '_' . uniqid(),

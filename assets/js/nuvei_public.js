@@ -538,7 +538,7 @@ function scPrintApms(data) {
 						+ '<input id="sc_payment_method_' + data.upos[i]['userPaymentOptionId'] + '" type="radio" class="input-radio sc_payment_method_field" name="sc_payment_method" value="' + data.upos[i]['userPaymentOptionId'] + '" data-upo-name="' + data.upos[i]['paymentMethodName'] + '" />&nbsp;'
 						+ img + '&nbsp;&nbsp;'
 						+ '<span>';
-				
+			
 			// add upo identificator
 			if ('cc_card' == data.upos[i]['paymentMethodName']) {
 				upoHtml += data.upos[i]['upoData']['ccCardNumber'];

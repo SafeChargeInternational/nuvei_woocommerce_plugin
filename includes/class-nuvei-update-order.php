@@ -46,12 +46,17 @@ class Nuvei_Update_Order extends Nuvei_Request {
 		$addresses    = $this->get_order_addresses();
 		$product_data = $this->get_products_data();
 		
+		// prevent update with empty values
+		foreach ($addresses['billingAddress'] as $key => $val) {
+			if (empty(trim($val))) {
+				unset($addresses['billingAddress'][$key]);
+			}
+		}
 		
 		// create Order upgrade
 		$params = array(
 			'sessionToken'		=> $nuvei_last_open_order_details['sessionToken'],
 			'orderId'			=> $nuvei_last_open_order_details['orderId'],
-			'clientRequestId'	=> $nuvei_last_open_order_details['clientRequestId'],
 			'currency'			=> get_woocommerce_currency(),
 			'amount'			=> $cart_amount,
 			'billingAddress'	=> $addresses['billingAddress'],

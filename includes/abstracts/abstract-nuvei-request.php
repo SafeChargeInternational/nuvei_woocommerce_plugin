@@ -121,9 +121,20 @@ abstract class Nuvei_Request {
 	abstract public function process();
 	abstract protected function get_checksum_params();
 
+	/**
+	 * Set variables.
+	 * Description of merchantDetails:
+	 * 
+	 * 'merchantDetails'	=> array(
+	 *      'customField1'  => string,  // subscription details as json
+	 *      'customField2'  => string,  // item details as json
+	 *      'customField3'  => int,     // create time time()
+	 *  ),
+	 * 
+	 * @param array $plugin_settings
+	 */
 	public function __construct( array $plugin_settings) {
 		$time                  = gmdate('Ymdhis');
-		$all_prod_data         = $this->get_products_data();
 		$this->plugin_settings = $plugin_settings;
 		$notify_url            = Nuvei_String::get_notify_url($plugin_settings);
 		
@@ -137,7 +148,7 @@ abstract class Nuvei_Request {
 			'encoding'          => 'UTF-8',
 			'deviceDetails'     => $this->get_device_details(),
 			'merchantDetails'	=> array(
-				'customField3'      => time(),                          // create time
+				'customField3'      => time(), // create time
 			),
 			'urlDetails'        => array(
 				'notificationUrl'   => $notify_url,
@@ -155,57 +166,73 @@ abstract class Nuvei_Request {
 	protected function get_order_addresses() {
 		global $woocommerce;
 		
-		$form_params = array();
-		$addresses   = array();
-		$cart        = $woocommerce->cart;
+		$form_params    = array();
+		$billingAddress = array();
+		$cart           = $woocommerce->cart;
 		
 		if (!empty(Nuvei_Http::get_param('scFormData'))) {
 			parse_str(Nuvei_Http::get_param('scFormData'), $form_params); 
 		}
 		
-		# set params
-		// billing
-		$bfn = Nuvei_Http::get_param('billing_first_name', 'string', '', $form_params);
+		# set billing params
+		// billing_first_name
+		$bfn = trim(Nuvei_Http::get_param('billing_first_name', 'string', '', $form_params));
 		if (empty($bfn)) {
 			$bfn = $cart->get_customer()->get_billing_first_name();
 		}
+		$billingAddress['firstName'] = !empty($bfn) ? $bfn : 'Missing parameter';
 		
-		$bln = Nuvei_Http::get_param('billing_last_name', 'string', '', $form_params);
+		// billing_last_name
+		$bln = trim(Nuvei_Http::get_param('billing_last_name', 'string', '', $form_params));
 		if (empty($bln)) {
 			$bln = $cart->get_customer()->get_billing_last_name();
 		}
-		
-		$ba = Nuvei_Http::get_param('billing_address_1', 'string', '', $form_params)
-			. ' ' . Nuvei_Http::get_param('billing_address_1', 'string', '', $form_params);
-		if (empty($ba)) {
+		$billingAddress['lastName'] = !empty($bln) ? $bln : 'Missing parameter';
+
+		// address
+		$ba = trim(Nuvei_Http::get_param('billing_address_1', 'string', '', $form_params)) . ' '
+			. trim(Nuvei_Http::get_param('billing_address_2', 'string', '', $form_params));
+		if (empty(trim($ba))) {
 			$ba = $cart->get_customer()->get_billing_address() . ' '
 				. $cart->get_customer()->get_billing_address_2();
 		}
+		$billingAddress['address'] = !empty(trim($ba)) ? $ba : 'Missing parameter';
 		
-		$bp = Nuvei_Http::get_param('billing_phone', 'string', '', $form_params);
+		// billing_phone
+		$bp = trim(Nuvei_Http::get_param('billing_phone', 'string', '', $form_params));
 		if (empty($bp)) {
 			$bp = $cart->get_customer()->get_billing_phone();
 		}
-		
-		$bz = Nuvei_Http::get_param('billing_postcode', 'int', 0, $form_params);
+		$billingAddress['phone'] = !empty($bp) ? $bp : 'Missing parameter';
+
+		// billing_postcode
+		$bz = trim(Nuvei_Http::get_param('billing_postcode', 'int', 0, $form_params));
 		if (empty($bz)) {
 			$bz = $cart->get_customer()->get_billing_postcode();
 		}
-		
-		$bc = Nuvei_Http::get_param('billing_city', 'string', '', $form_params);
+		$billingAddress['zip'] = !empty($bz) ? $bz : 'Missing parameter';
+
+		// billing_city
+		$bc = trim(Nuvei_Http::get_param('billing_city', 'string', '', $form_params));
 		if (empty($bc)) {
 			$bc = $cart->get_customer()->get_billing_city();
 		}
-		
-		$bcn = Nuvei_Http::get_param('billing_country', 'string', '', $form_params);
+		$billingAddress['city'] = !empty($bc) ? $bc : 'Missing parameter';
+
+		// billing_country
+		$bcn = trim(Nuvei_Http::get_param('billing_country', 'string', '', $form_params));
 		if (empty($bcn)) {
 			$bcn = $cart->get_customer()->get_billing_country();
 		}
-		
+		$billingAddress['country'] = $bcn;
+
+		// billing_email
 		$be = Nuvei_Http::get_param('billing_email', 'mail', '', $form_params);
 		if (empty($be)) {
 			$be = $cart->get_customer()->get_billing_email();
 		}
+		$billingAddress['email'] = $be;
+		# set billing params END
 		
 		// shipping
 		$sfn = Nuvei_Http::get_param('shipping_first_name', 'string', '', $form_params);
@@ -239,20 +266,9 @@ abstract class Nuvei_Request {
 		if (empty($scn)) {
 			$scn = $cart->get_customer()->get_shipping_country();
 		}
-		# set params END
 		
 		return array(
-			'billingAddress'	=> array(
-				'firstName'	=> $bfn,
-				'lastName'	=> $bln,
-				'address'	=> $ba,
-				'phone'		=> $bp,
-				'zip'		=> $bz,
-				'city'		=> $bc,
-				'country'	=> $bcn,
-				'email'		=> $be,
-			),
-			
+			'billingAddress'	=> $billingAddress,
 			'shippingAddress'	=> array(
 				'firstName'	=> $sfn,
 				'lastName'  => $sln,
@@ -283,13 +299,13 @@ abstract class Nuvei_Request {
 			return $params;
 		}
 		
-		$all_params = array_merge_recursive($this->request_base_params, $params);
+		$all_params = array_merge($this->request_base_params, $params);
 		
 		// add the checksum
 		$checksum_keys = $this->get_checksum_params();
 		
 		if (is_array($checksum_keys)) {
-			foreach ($checksum_keys as $idx => $key) {
+			foreach ($checksum_keys as $key) {
 				if (isset($all_params[$key])) {
 					$concat .= $all_params[$key];
 				}
@@ -457,7 +473,7 @@ abstract class Nuvei_Request {
 			'products_data'	=> array(),
 		);
 		
-		foreach ($items as $item_id => $item) {
+		foreach ($items as $item) {
 			$cart_product   = wc_get_product( $item['product_id'] );
 			$cart_prod_attr = $cart_product->get_attributes();
 
@@ -586,6 +602,10 @@ abstract class Nuvei_Request {
 				}
 				
 				$params[$key1] = filter_var($new_val, $this->params_validation[$key1]['flag']);
+				
+				if (!$params[$key1]) {
+					$params[$key1] = 'The value is not valid.';
+				}
 			} elseif (is_array($val1) && !empty($val1)) {
 				foreach ($val1 as $key2 => $val2) {
 					if (!is_array($val2) && !empty($val2) && array_key_exists($key2, $this->params_validation)) {
@@ -596,6 +616,10 @@ abstract class Nuvei_Request {
 						}
 
 						$params[$key1][$key2] = filter_var($new_val, $this->params_validation[$key2]['flag']);
+						
+						if (!$params[$key1][$key2]) {
+							$params[$key1][$key2] = 'The value is not valid.';
+						}
 					}
 				}
 			}
