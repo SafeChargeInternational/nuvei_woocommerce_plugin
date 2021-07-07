@@ -21,6 +21,7 @@ class Nuvei_Subscription extends Nuvei_Request {
 				'userPaymentOptionId'   => Nuvei_Http::get_param('userPaymentOptionId', 'int'),
 				'userTokenId'           => Nuvei_Http::get_param('user_token_id', 'mail'),
 				'currency'              => Nuvei_Http::get_param('currency'),
+				'initialAmount'         => 0,
 			),
 			$prod_plan
 		);
