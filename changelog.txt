@@ -1,5 +1,8 @@
 *** WooCommerce Extension Changelog ***
 
+version 4.1.5
+	* Add option to turn on and off the APMs names on the Checkout page.
+
 version 4.1.4
 	* When start a Subscription force Initial Amount to be 0 in the request.
 

@@ -3,7 +3,7 @@
  * Plugin Name: Nuvei Payments
  * Plugin URI: https://github.com/SafeChargeInternational/safecharge_woocommerce_plugin
  * Description: Nuvei Gateway for WooCommerce
- * Version: 4.1.4
+ * Version: 4.1.5
  * Author: Nuvei
  * Author URI: https://nuvei.com
  * Text Domain: nuvei_woocommerce
@@ -401,6 +401,7 @@ function nuvei_load_styles_scripts( $styles) {
 			'wcThSep'               => $wcThSep,
 			'wcDecSep'              => $wcDecSep,
 			'useUpos'               => $wc_nuvei->can_use_upos(),
+			'showApmsNames'         => $wc_nuvei->show_apms_names(),
 			'isUserLogged'          => is_user_logged_in() ? 1 : 0,
 			'paymentGatewayName'    => NUVEI_GATEWAY_NAME,
 			

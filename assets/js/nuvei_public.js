@@ -464,9 +464,9 @@ function scPrintApms(data) {
 	applePayLabel				= data.applePayLabel;
 	
 	// Apple Pay
-	if(typeof data.applePay == 'object' 
+	if(typeof window.ApplePaySession == 'function' 
+		&& typeof data.applePay == 'object' 
 		&& Object.keys(data.applePay).length > 0
-		//&& typeof ApplePaySession == 'function' 
 	) {
 		var applePayHtml	= '';
 		var pmMsg			= '';
@@ -610,8 +610,32 @@ function scPrintApms(data) {
 						+ '<label class="apm_title">'
 							+ '<input id="sc_payment_method_' + data.apms[j]['paymentMethod'] + '" type="radio" class="input-radio sc_payment_method_field" name="sc_payment_method" value="' + data.apms[j]['paymentMethod'] + '" data-nuvei-is-direct="'
 								+ ( typeof data.apms[j]['isDirect'] != 'undefined' ? data.apms[j]['isDirect'] : 'false' ) + '" />&nbsp;'
-							+ newImg
-						+ '</label>';
+							+ newImg;
+			
+			// optional set APM label
+			if(1 == scTrans.showApmsNames) {
+				apmHmtl += '&nbsp;&nbsp;';
+				
+				console.log(data.apms[j]['paymentMethodDisplayName'][0]['message'])
+				
+				if(typeof data.apms[j]['paymentMethodDisplayName'][0]['message'] != 'undefined' 
+					&& '' != data.apms[j]['paymentMethodDisplayName'][0]['message']
+				) {
+					apmHmtl += data.apms[j]['paymentMethodDisplayName'][0]['message'];
+				}
+				else {
+					var nuveiApmName = data.apms[j]['paymentMethod'];
+					
+					nuveiApmName = nuveiApmName.replace('apmgw_', '');
+					nuveiApmName = nuveiApmName.replace('ppp_', '');
+					nuveiApmName = nuveiApmName.replace('_', ' ');
+					
+					apmHmtl += nuveiApmName;
+				}
+			}
+			
+			apmHmtl +=
+						'</label>';
 			
 			// CC
 			if ('cc_card' == data.apms[j]['paymentMethod']) {

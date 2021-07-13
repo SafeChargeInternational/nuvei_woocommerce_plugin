@@ -138,6 +138,14 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 					1 => 'Yes',
 				)
 			),
+			'show_apms_names' => array(
+				'title' => __('Show APMs names', 'nuvei_woocommerce'),
+				'type' => 'select',
+				'options' => array(
+					0 => 'No',
+					1 => 'Yes',
+				)
+			),
 			'apple_pay_label' => array(
 				'title' => __('Apple Pay Label', 'nuvei_woocommerce'),
 				'type' => 'text',
@@ -1407,7 +1415,19 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 	}
 	
 	public function can_use_upos() {
-		return $this->settings['use_upos'];
+        if(isset($this->settings['use_upos'])) {
+            return $this->settings['use_upos'];
+        }
+		
+        return 0;
+	}
+    
+	public function show_apms_names() {
+        if(isset($this->settings['show_apms_names'])) {
+            return $this->settings['show_apms_names'];
+        }
+        
+        return 0;
 	}
 	
 	public function create_nuvei_global_attribute() {
