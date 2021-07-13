@@ -353,7 +353,7 @@ function nuvei_load_styles_scripts( $styles) {
 		'nuvei_js_public',
 		$plugin_url . 'assets/js/nuvei_public.js',
 		array('jquery'),
-		'1.3'
+		'1.4'
 	);
 	
 	// reorder js
