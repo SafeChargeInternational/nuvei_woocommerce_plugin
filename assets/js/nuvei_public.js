@@ -616,8 +616,6 @@ function scPrintApms(data) {
 			if(1 == scTrans.showApmsNames) {
 				apmHmtl += '&nbsp;&nbsp;';
 				
-				console.log(data.apms[j]['paymentMethodDisplayName'][0]['message'])
-				
 				if(typeof data.apms[j]['paymentMethodDisplayName'][0]['message'] != 'undefined' 
 					&& '' != data.apms[j]['paymentMethodDisplayName'][0]['message']
 				) {
